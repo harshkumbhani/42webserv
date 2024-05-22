@@ -6,11 +6,127 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 18:55:01 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/05/22 11:01:02 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/05/22 11:46:18 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Reading.hpp"
+
+//construction
+Reading::Reading(){}
+//destruction
+Reading::~Reading(){}
+
+//getters
+std::string	Reading::getBuffer(void) const {
+	return (this->_Buffer);
+}
+
+std::string	Reading::getHttpMethod(void) const {
+	return (this->_HttpMethod);
+}
+
+std::string	Reading::getUrl(void) const {
+	return (this->_Url);
+}
+
+std::string	Reading::getHttpVers(void) const {
+	return (this->_HttpVers);
+}
+
+std::string	Reading::getHeadStorage(void) const {
+	return (this->_HeadStorage);
+}
+
+std::string	Reading::getHost(void) const {
+	return (this->_Host);
+}
+
+std::string	Reading::getUserAgent(void) const {
+	return (this->_UserAgent);
+}
+
+std::string	Reading::getAccept(void) const {
+	return (this->_Accept);
+}
+
+std::string	Reading::getBody(void) const {
+	return (this->_Body);
+}
+
+std::string	Reading::getCurrentLine(void) const {
+	return (this->_CurrentLine);
+}
+
+int			Reading::getIndex(void) const {
+	return (this->_Index);
+}
+
+int			Reading::getLen(void) const {
+	return (this->_Len);
+}
+
+bool		Reading::getFlag(void) const {
+	return (this->_Flag);
+}
+
+
+//setters
+void	Reading::setBuffer(std::string buffer) {
+	
+}
+
+void	Reading::setHttpMethod(std::string httpMethod) {
+	
+}
+
+void	Reading::setUrl(std::string url) {
+	
+}
+
+void	Reading::setHttpVers(std::string httpVers) {
+	
+}
+
+void	Reading::setHeadStorage(std::string headStorage) {
+	
+}
+
+void	Reading::setHost(std::string host) {
+	
+}
+
+void	Reading::setUserAgent(std::string userAgent) {
+	
+}
+
+void	Reading::setAccept(std::string accept) {
+	
+}
+
+void	Reading::setBody(std::string body) {
+	
+}
+
+void	Reading::setCurrentLine(std::string currentLine) {
+	
+}
+
+void	Reading::setIndex(int index) {
+	
+}
+
+void	Reading::setLen(int len) {
+	
+}
+
+void	Reading::setFlag(bool flag) {
+	
+}
+
+
+//Functions
+void	trimming(std::string str);
 
 //Requests
 //-->GET<--
