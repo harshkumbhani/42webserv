@@ -73,60 +73,62 @@ bool		Reading::getFlag(void) const {
 
 //setters
 void	Reading::setBuffer(std::string buffer) {
-	
+	this->_Buffer = buffer;
 }
 
 void	Reading::setHttpMethod(std::string httpMethod) {
-	
+	this->_HttpMethod = httpMethod;
 }
 
 void	Reading::setUrl(std::string url) {
-	
+	this->_Url = url;
 }
 
 void	Reading::setHttpVers(std::string httpVers) {
-	
+	this->_HttpVers = httpVers;
 }
 
 void	Reading::setHeadStorage(std::string headStorage) {
-	
+	this->_HeadStorage = headStorage;
 }
 
 void	Reading::setHost(std::string host) {
-	
+	this->_Host = host;
 }
 
 void	Reading::setUserAgent(std::string userAgent) {
-	
+	this->_UserAgent = userAgent;
 }
 
 void	Reading::setAccept(std::string accept) {
-	
+	this->_Accept = accept;
 }
 
 void	Reading::setBody(std::string body) {
-	
+	this->_Body = body;
 }
 
 void	Reading::setCurrentLine(std::string currentLine) {
-	
+	this->_CurrentLine = currentLine;
 }
 
 void	Reading::setIndex(int index) {
-	
+	this->_Index = index;
 }
 
 void	Reading::setLen(int len) {
-	
+	this->_Len = len;
 }
 
 void	Reading::setFlag(bool flag) {
-	
+	this->_Flag = flag;
 }
 
 
 //Functions
-void	trimming(std::string str);
+void	Reading::trimming(std::string str) {
+	;
+}
 
 //Requests
 //-->GET<--
