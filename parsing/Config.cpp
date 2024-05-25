@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/25 12:38:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/05/25 14:24:42 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/05/25 15:54:28 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,6 +77,7 @@ int		Config::readConfigurations(std::string file) {
 	while (std::getline(infile, byline)) {
 		// std::istringstream iss(byline);
 		std::cout << byline << std::endl;
+		//tokenization by HARSH
 	}
 	infile.close();
 	return (0);
