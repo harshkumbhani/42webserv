@@ -1,14 +1,17 @@
 #ifndef LEXER_HPP
 #define LEXER_HPP
 
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
+#include <map>
 
 enum token {
+  SERVERBLOCK,
   KEEPALIVE_TIMEOUT, // default
-  SEND_TIMEOUT, // default
+  SEND_TIMEOUT,      // default
   LISTEN,
   SERVER_NAME,
   ROOT,
@@ -22,6 +25,7 @@ enum token {
   OPEN_CURLY_BRACKET,
   CLOSED_CURLY_BRACKET,
   SEMICOLON,
+  UNKNOWN
 };
 
 struct lexer_node {
@@ -32,17 +36,22 @@ struct lexer_node {
 
 class Lexer {
 private:
-  std::vector<lexer_node> lexer;
-  std::string filename;
+  std::vector<lexer_node> lexer; // Stores all tokens
+  std::string filepath; // Config file name
+  std::string buffer; // Stores the file stream
+  std::map<std::string, token> directive_lookup;
 
 public:
-  Lexer(const std::string filename);
-  ~Lexer();
+  Lexer(const char *filename);
+  ~Lexer(); // Destructor
 
+  void  readfileintobuffer();
   token getTokenType(const std::string &type);
-  void  tokenize(std::string filename);
+  void tokenize(std::string &buffer);
 
   std::vector<lexer_node> getLexer() const;
 };
+
+std::ostream &operator<<(std::ostream &output, const Lexer &lexer);
 
 #endif
