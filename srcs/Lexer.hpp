@@ -9,6 +9,7 @@
 #include <map>
 
 enum token {
+  HTTP,
   SERVERBLOCK,
   KEEPALIVE_TIMEOUT, // default
   SEND_TIMEOUT,      // default
