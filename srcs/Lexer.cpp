@@ -46,31 +46,43 @@ token Lexer::getTokenType(const std::string &type) {
   return UNKNOWN;
 }
 
-static void trimSpaces(std::string &line) {
+static void trim(std::string &line) {
   size_t  start = line.find_first_not_of(" \n\v\t\r\f");
   if (start == std::string::npos) {
     line = "";
     return;
   }
-  line = line.substr(start);
+
+  size_t  end = line.find_last_not_of(" \n\v\t\r\f") + 1;
+  line = line.substr(start, end);
 }
 
 void Lexer::tokenize(std::string &buffer) {
   std::istringstream ss(buffer);
   std::string line;
 
-  lexer_node node;
-
   while (std::getline(ss, line)) {
-    trimSpaces(line);
+    trim(line);
     if (line.empty() == true || line[0] == '#')
       continue;
     break;
   }
+  if (line != "http {")
+    throw std::runtime_error("Error in the config file: Expected 'http'");
 
-  while (ss.eof() != true) {
-    std::cout << line << std::endl;
-    std::getline(ss, line);
+  while(std::getline(ss, line)) {
+    trim(line);
+    lexer_node node;
+    std::istringstream lineStream(line);
+    std::string word;
+
+    lineStream >> word;
+      node.type = getTokenType(word);
+      node.key = word;
+      lineStream >> word;
+      node.value = word;
+    lexer.push_back(node);
+    lineStream.clear();
   }
 }
 

@@ -1,7 +1,6 @@
-#include <iostream>
-#include <exception>
 #include "Lexer.hpp"
-
+#include <exception>
+#include <iostream>
 
 int main(int argc, char *argv[]) {
   const char *configfile_path = "./config/default.config";
@@ -11,7 +10,12 @@ int main(int argc, char *argv[]) {
   }
   if (argc == 2)
     configfile_path = argv[1];
-  Lexer tokens(configfile_path);
-  tokens.readfileintobuffer();
+  try {
+    Lexer tokens(configfile_path);
+    std::cout << tokens << std::endl;
+    // tokens.readfileintobuffer();
+  } catch (std::runtime_error const &e) {
+    std::cerr << e.what() << std::endl;
+  }
   return 0;
 }
