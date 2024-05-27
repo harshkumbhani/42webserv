@@ -189,7 +189,8 @@ void Lexer::tokenize(std::string &buffer) {
     trim(line);
     parseString(line);
   }
-  lexer.pop_back();
+  if (lexer[lexer.size() - 1].value == "}")
+  	lexer.pop_back();
 }
 
 std::vector<lexer_node> Lexer::getLexer() const { return this->lexer; }
