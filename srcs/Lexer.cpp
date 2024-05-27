@@ -72,13 +72,14 @@ static bool checkHttpContext(std::string &line) {
   return true;
 }
 
-void Lexer::createToken(std::vector<std::string>::iterator &begin, std::vector<std::string> &words, lexer_node &node){
-	node.key = *begin;
-	if (words.size() == 3 && ++begin != words.end())
-		node.value = *begin;
-	else {
-		throw std::runtime_error("Syntax Error near: " + node.key);
-	}
+void Lexer::createToken(std::vector<std::string>::iterator &begin,
+                        std::vector<std::string> &words, lexer_node &node) {
+  node.key = *begin;
+  if (words.size() == 3 && ++begin != words.end())
+    node.value = *begin;
+  else {
+    throw std::runtime_error("Syntax Error near: " + node.key);
+  }
 }
 
 void Lexer::parseString(const std::string &line) {
@@ -90,10 +91,10 @@ void Lexer::parseString(const std::string &line) {
     if (directive[0] == '#')
       break;
     if (directive.find(';') != std::string::npos) {
-    	directive = directive.substr(0, directive.find_first_of(";"));
-		if (words.size() != 2 && directive.empty() != true)
-			words.push_back(directive);
-    	words.push_back(";");
+      directive = directive.substr(0, directive.find_first_of(";"));
+      if (words.size() != 2 && directive.empty() != true)
+        words.push_back(directive);
+      words.push_back(";");
     } else {
       words.push_back(directive);
     }
@@ -106,60 +107,36 @@ void Lexer::parseString(const std::string &line) {
     node.type = getTokenType(*it);
 
     switch (node.type) {
-	case SERVERBLOCK:
-    	node.value = "server";
-    	break;
-	case OPEN_CURLY_BRACKET:
-    	node.value = "{";
-    	break;
-	case CLOSED_CURLY_BRACKET:
-    	node.value = "}";
-    	break;
-	case SEMICOLON:
-    	node.value = ";";
-    	break;
+    case SERVERBLOCK:
+      node.value = "server";
+      break;
+    case OPEN_CURLY_BRACKET:
+    case CLOSED_CURLY_BRACKET:
+    case SEMICOLON:
+      node.value = *it;
+      break;
     case KEEPALIVE_TIMEOUT:
-    	createToken(it, words, node);
-    	break;
-	case SEND_TIMEOUT:
-		createToken(it, words, node);
-		break;
-	case LISTEN:
-		createToken(it, words, node);
-		break;
-	case SERVER_NAME:
-		createToken(it, words, node);
-		break;
-	case ROOT:
-		createToken(it, words, node);
-		break;
-	case AUTOINDEX:
-		createToken(it, words, node);
-		break;
-	case INDEX:
-		createToken(it, words, node);
-		break;
-	case DIR_LISTING:
-		createToken(it, words, node);
-		break;
-	case CLIENT_BODY_SIZE:
-		createToken(it, words, node);
-		break;
-	case LOCATION:
-		createToken(it, words, node);
-		break;
-	case REDIRECT:
-		createToken(it, words, node);
-		break;
-	case METHODS:
-		node.key = *it;
-		while (++it != words.end() && *it != ";") {
-			node.value = node.value + " " + *it;
-			counter++;
-		}
-		if (counter >= 3)
-			throw std::runtime_error("Too many arguments: " + node.key);
-		break;
+    case SEND_TIMEOUT:
+    case LISTEN:
+    case SERVER_NAME:
+    case ROOT:
+    case AUTOINDEX:
+    case INDEX:
+    case DIR_LISTING:
+    case CLIENT_BODY_SIZE:
+    case LOCATION:
+    case REDIRECT:
+      createToken(it, words, node);
+      break;
+    case METHODS:
+      node.key = *it;
+      while (++it != words.end() && *it != ";") {
+        node.value += (node.value.empty() ? "" : " ") + *it;
+        counter++;
+      }
+      if (counter >= 3)
+        throw std::runtime_error("Too many arguments: " + node.key);
+      break;
     case UNKNOWN:
       throw std::runtime_error("Unkown token type " + *it);
     default:
@@ -190,7 +167,7 @@ void Lexer::tokenize(std::string &buffer) {
     parseString(line);
   }
   if (lexer.empty() == false && lexer.back().value == "}")
-  	lexer.pop_back();
+    lexer.pop_back();
 }
 
 std::vector<lexer_node> Lexer::getLexer() const { return this->lexer; }
