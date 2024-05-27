@@ -11,8 +11,6 @@
 #include <exception>
 
 enum token {
-  COMMENT,
-  HTTP,
   SERVERBLOCK,
   KEEPALIVE_TIMEOUT, // default
   SEND_TIMEOUT,      // default
