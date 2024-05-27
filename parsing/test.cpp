@@ -6,57 +6,73 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/26 10:34:40 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/05/26 12:07:59 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/05/27 14:56:32 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Config.hpp"
 
 int main() {
-	std::vector<lexer_node> configData = {
-		{OPEN_CURLY_BRACKET, "", "http"},
-		{OPEN_CURLY_BRACKET, "", "server"},
-		{KEEPALIVE_TIMEOUT, "", "30"},
-		{SEND_TIMEOUT, "", "30"},
+	std::vector<lexer_node> configLexa = {
+		{SERVER, "", ""},
+		{OPEN_CURLY_BRACKET, "", ""},
+		{KEEPALIVE_TIMEOUT, "", "30s"},
+		{SEMICOLON, "", ""},
+		{SEND_TIMEOUT, "", "5s"},
+		{SEMICOLON, "", ""},
 		{LISTEN, "", "8080"},
+		{SEMICOLON, "", ""},
 		{SERVER_NAME, "", "example.com"},
+		{SEMICOLON, "", ""},
 		{ROOT, "", "/var/www/html"},
+		{SEMICOLON, "", ""},
 		{AUTOINDEX, "", "on"},
+		{SEMICOLON, "", ""},
 		{INDEX, "", "index.html"},
-		{DIR_LISTING, "", "off"},
+		{SEMICOLON, "", ""},
+		{DIR_LISTING, "", "on"},
+		{SEMICOLON, "", ""},
 		{CLIENT_BODY_SIZE, "", "1000000"},
-		{OPEN_CURLY_BRACKET, "", "location"},
-		{METHODS, "", "GET"},
+		{SEMICOLON, "", ""},
+		{LOCATION, "/", ""},
+		{OPEN_CURLY_BRACKET, "", ""},
+		{METHODS, "GET POST", ""},
+		{SEMICOLON, "", ""},
 		{CLOSED_CURLY_BRACKET, "", ""},
-		{OPEN_CURLY_BRACKET, "", "location"},
-		{METHODS, "", "POST"},
 		{CLOSED_CURLY_BRACKET, "", ""},
-		{CLOSED_CURLY_BRACKET, "", ""},
-		{CLOSED_CURLY_BRACKET, "", ""}
 	};
 
-	// Parse configurations
-	Config config;
-	int result = config.parseConfigurations(configData);
+	try {
+		Config config;
+		if (config.parseConfigurations(configLexa) != 0)
+			std::cout << "Error" << std::endl;
+			
+		std::cout << "Server Configuration:" << std::endl;
+		std::cout << "Keepalive Timeout: " << config.serv.keepalive_timeout << "s" << std::endl;
+		std::cout << "Send Timeout: " << config.serv.send_timeout << "s" << std::endl;
+		std::cout << "Listen: " << config.serv.listen << std::endl;
+		std::cout << "Server Name: " << config.serv.server_name << std::endl;
+		std::cout << "Root: " << config.serv.root << std::endl;
+		std::cout << "Autoindex: " << config.serv.autoindex << std::endl;
+		std::cout << "Index: " << config.serv.index << std::endl;
+		std::cout << "Directory Listing: " << config.serv.directory_listing << std::endl;
+		std::cout << "Client Body Size: " << config.serv.client_body_size << std::endl;
 
-	// Check result
-	if (result == 0) {
-		std::cout << "KEEPALIVE_TIMEOUT: " << config.serv.keepalive_timeout << std::endl;
-		std::cout << "SEND_TIMEOUT: " << config.serv.send_timeout << std::endl;
-		std::cout << "LISTEN: " << config.serv.listen << std::endl;
-		std::cout << "SERVER_NAME: " << config.serv.server_name << std::endl;
-		std::cout << "ROOT: " << config.serv.root << std::endl;
-		std::cout << "AUTOINDEX: " << config.serv.autoindex << std::endl;
-		std::cout << "INDEX: " << config.serv.index << std::endl;
-		std::cout << "DIR_LISTING: " << config.serv.directory_listing << std::endl;
-		std::cout << "CLIENT_BODY_SIZE: " << config.serv.client_body_size << std::endl;
-		// std::cout << "METHODS: " << config.loc.methods << std::endl;
-	
-		std::cout << "Configurations parsed successfully." << std::endl;
-	} else {
-		std::cout << "Error parsing configurations." << std::endl;
+		// for (const Config::Location& loc : server.locations) {
+		// 	std::cout << "Location Path: " << loc.path << std::endl;
+		// 	std::cout << "Methods: ";
+		// 	for (const std::string& method : loc.methods) {
+		// 		std::cout << method << " ";
+		// 	}
+		// 	std::cout << std::endl;
+		// 	if (!loc.redirect.empty()) {
+		// 		std::cout << "Redirect: " << loc.redirect << std::endl;
+		// 	}
+		// }
+		
+	} catch (const std::runtime_error& e) {
+		std::cerr << "Error: " << e.what() << std::endl;
 	}
 
 	return 0;
 }
-

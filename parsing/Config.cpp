@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/25 12:38:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/05/27 10:41:21 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/05/27 13:50:52 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,94 +77,155 @@ void		Config::setRootPath(std::string rootPath) {
 // 	return (0);
 // }
 
-int	Config::toInt(std::string str) {
-	std::istringstream iss(str);
-	int num;
-	iss >> num;
-	if (iss.fail()) {
-		std::cerr << "Num Conversion failed for: " << str << std::endl;
-		return 0;
-	}
-	return num;
-}
-
-inline void Config::error(const std::string& s){
-    throw runtime_error(s);
+inline void Config::error(const std::string& str){
+    throw std::runtime_error(str);
 }
 
 int		Config::parseConfigurations(std::vector<lexer_node> lexa) {
+	int countCurlBrackets = 0;
 	for (std::vector<lexer_node>::iterator it = lexa.begin(); it != lexa.end(); ++it) {
 		Location	location;
-		// set_defaults(server);
-		int countCurlBrackets = 0;
 		switch (it->type)
 		{
 		case(SERVER):
 			it++;
-			if (it->type != OPEN_CURLY_BRACKET) {
-				std::cout << "Missing Open Curly Bracket at the Server Directive!" << std::endl;
-				return (1);
-			}
+			if (it->type != OPEN_CURLY_BRACKET)
+				error("Open Curly Bracket missing at the Server Directive Block!");
 			countCurlBrackets++;
 			break;
-		case(KEEPALIVE_TIMEOUT):
-			it++;
-			if (it->type != SEMICOLON) {
-				std::cout << "Missing Semi-Colon at Keepalive timeout!" << std::endl;
-				return (1);
+		case(KEEPALIVE_TIMEOUT): {
+			int seconds;
+			std::string measure;
+			std::istringstream iss(it->value);
+			if (!(iss >> seconds)) {
+				error("Invalid integer for keepalive_timeout!");
+			} else {
+				if (iss >> measure) {
+					if (measure != "s") {
+						error("Wrong measurement! Should be seconds(s)(keepalive timeout)");
+					}
+				} else if (!iss.eof()) {
+					error("Invalid format for keepalive_timeout!");
+				}
 			}
-			serv.keepalive_timeout = toInt(it->value);
+			serv.keepalive_timeout = seconds;
+			++it;
+			if (it->type != SEMICOLON)
+				error("Keepalive timeout is missing semi-colon!");
 			break;
-		case(SEND_TIMEOUT):
-			serv.send_timeout = toInt(it->value);
+		} case(SEND_TIMEOUT): {
+			int seconds;
+			std::string measure;
+			std::istringstream iss(it->value);
+			if (!(iss >> seconds)) {
+				error("Invalid integer for Send timeout!");
+			} else {
+				if (iss >> measure) {
+					if (measure != "s") {
+						error("Wrong measurement! Should be seconds(s) (Send timeout)");
+					}
+				} else if (!iss.eof()) {
+					error("Invalid format for Send timeout!");
+				}
+			}
+			serv.send_timeout = seconds;
+			it++;
+			if (it->type != SEMICOLON)
+				error("Send timeout is missing semi-colon!");
 			break;
-		case(LISTEN):
-			serv.listen = toInt(it->value);
+		} case(LISTEN): {
+			int port;
+			std::istringstream iss(it->value);
+			if (!(iss >> port)) {
+				error("Invalid integer for listen!");
+			} else if (!iss.eof()) {
+				error("Invalid format for listen!");
+			}
+			serv.listen = port;
+			it++;
+			if (it->type != SEMICOLON)
+				error("Listen dir is missing semicolon!");
 			break;
-		case(SERVER_NAME):
+		} case(SERVER_NAME):
 			serv.server_name = it->value;
+			it++;
+			if (it->type != SEMICOLON)
+				error("Servername dir is missing semi-colon");
 			break;
 		case(ROOT):
 			serv.root = it->value;
+			it++;
+			if (it->type != SEMICOLON)
+				error("Root dir is missing semi-colon!");
 			break;
 		case(AUTOINDEX):
 			serv.autoindex = it->value;
+			it++;
+			if (it->type != SEMICOLON)
+				error("Autoindex dir is missing semi colon!");
 			break;
 		case(INDEX):
 			serv.index = it->value;
+			it++;
+			if (it->type != SEMICOLON)
+				error("Index dir is missing semi colon!");
 			break;
 		case(DIR_LISTING):
 			serv.directory_listing = it->value;
+			it++;
+			if (it->type != SEMICOLON)
+				error("Dir Listing is missing semi colon!");
 			break;
-		case(CLIENT_BODY_SIZE):
-			serv.client_body_size = toInt(it->value); //gonna have prob here, converting to int not enough for long long var
+		case(CLIENT_BODY_SIZE): {
+			long long size;
+			std::istringstream iss(it->value);
+			if (!(iss >> size)) {
+				error("Invalid Num for size!");
+			} else if (!iss.eof()) {
+				error("Invalid format for size!");
+			}
+			serv.client_body_size = size;
+			it++;
+			if (it->type != SEMICOLON)
+				error("Client Body Size is missing semi colon!");
 			break;
-		case(LOCATION):
+		} case(LOCATION):
 			location.path = it->key;
+			it++;
+			if (it->type != OPEN_CURLY_BRACKET)
+				error("Open Curly Bracket missing at the Location Directive!");
+			countCurlBrackets++;
+			it++;
+			if (it->type == METHODS) {
+				std::istringstream iss(it->key);
+				std::string	methos;
+				while (iss >> methos) {
+					loc.methods.push_back(methos);
+				}
+				it++;
+				if (it->type != SEMICOLON)
+					error("Method dir is missing semi colon!");
+			} else if (it->type == REDIRECT) {
+				loc.redirect = it->value;
+				it++;
+				if (it->type != SEMICOLON)
+					error("Method dir is missing semi colon!");
+			} else
+				error("Empty Location Block!");
+			it++;
+			if (it->type != CLOSED_CURLY_BRACKET)
+				error("Closed Curly Bracket missing at the Location Directive Block!");
+			countCurlBrackets--;
 			break ;
-		case(OPEN_CURLY_BRACKET):
-			break;
-		case (METHODS):
-			std::istringstream iss(it->key);
-			std::string	methos;
-			while (iss >> methos)
-				loc.methods.push_back(methos);
-			break;
-		case (REDIRECT):
-			loc.redirect = it->value;
-			break;
-		case(CLOSED_CURLY_BRACKET):
-			break;
-		case(SEMICOLON):
+		case (CLOSED_CURLY_BRACKET):
+			countCurlBrackets--;
 			break;
 		default:
 			break;
 		}
 	}
-	if (countCurlBracket != 0) {
-		std::cout << "Curr brackets error" << std::endl;
-		return (1);
-	}
+	if (countCurlBrackets != 0)
+		error("Curr brackets error");
 	return (0);
 }
 
