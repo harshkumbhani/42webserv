@@ -148,6 +148,9 @@ void Lexer::parseString(const std::string &line) {
 	case LOCATION:
 		createToken(it, words, node);
 		break;
+	case REDIRECT:
+		createToken(it, words, node);
+		break;
 	case METHODS:
 		node.key = *it;
 		while (++it != words.end() && *it != ";") {
@@ -156,9 +159,6 @@ void Lexer::parseString(const std::string &line) {
 		}
 		if (counter >= 3)
 			throw std::runtime_error("Too many arguments: " + node.key);
-		break;
-	case REDIRECT:
-		createToken(it, words, node);
 		break;
     case UNKNOWN:
       throw std::runtime_error("Unkown token type " + *it);
@@ -184,22 +184,23 @@ void Lexer::tokenize(std::string &buffer) {
     throw std::runtime_error("Error in the config file: Expected 'http'");
 
   while (std::getline(ss, line)) {
-    if (line.empty() == true)
+    if (line.empty() == true || line[0] == '#')
       continue;
     trim(line);
     parseString(line);
   }
-  if (lexer[lexer.size() - 1].value == "}")
+  if (lexer.empty() == false && lexer.back().value == "}")
   	lexer.pop_back();
 }
 
 std::vector<lexer_node> Lexer::getLexer() const { return this->lexer; }
 
 std::ostream &operator<<(std::ostream &output, const Lexer &lexer) {
-  std::vector<lexer_node>::iterator it;
-  for (it = lexer.getLexer().begin(); it != lexer.getLexer().end(); it++) {
+  const std::vector<lexer_node> &nodes = lexer.getLexer();
+  std::vector<lexer_node>::const_iterator it;
+  for (it = nodes.begin(); it != nodes.end(); it++) {
     output << "Type: " << it->type << ", Key: " << it->key
-           << ", value: " << it->value << std::endl;
+           << ", value: " << it->value << "\n";
   }
   return output;
 }
