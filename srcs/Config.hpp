@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/25 19:00:17 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/05/28 10:35:18 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/05/28 12:03:49 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,8 @@
 # define green "\033[22;32m";
 
 enum token {
-	SERVER,
+	HTTP,
+	SERVERBLOCK,
 	KEEPALIVE_TIMEOUT, // default
 	SEND_TIMEOUT, // default
 	LISTEN,
@@ -81,6 +82,7 @@ class Config {
 		struct Location {
 			std::vector <std::string>		methods;
 			std::string						redirect;
+			std::string						root;
 			std::string						path;
 		};
 
@@ -94,13 +96,12 @@ class Config {
 			std::string						index;
 			std::string						directory_listing;
 			long long						client_body_size;
-			// std::vector<Location>			location;
+			std::vector<Location>			location;
 		};
 		ServerConfig	serv;
 		Location		loc;
 		void			error(const std::string& s);
 		std::vector <ServerConfig>	servers;
-
 		std::stack <std::string> contextStack;
 
 		std::map <std::string, ServerConfig> ServerConfigs;

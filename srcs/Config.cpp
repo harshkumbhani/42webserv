@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/25 12:38:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/05/28 10:35:24 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/05/28 13:03:33 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,22 +61,6 @@ void		Config::setRootPath(std::string rootPath) {
 	_RootPath = rootPath;
 }
 
-// int		Config::readConfigurations(std::string file) {
-// 	std::ifstream	infile(file);
-// 	if (!infile.is_open()) {
-// 		std::cout << "File failed to open!" << std::endl;
-// 		return (1);
-// 	}
-// 	std::string		byline;
-// 	while (std::getline(infile, byline)) {
-// 		// std::istringstream iss(byline);
-// 		std::cout << byline << std::endl;
-// 		//tokenization by HARSH
-// 	}
-// 	infile.close();
-// 	return (0);
-// }
-
 inline void Config::error(const std::string& str){
     throw std::runtime_error(str);
 }
@@ -87,11 +71,21 @@ int		Config::parseConfigurations(std::vector<lexer_node> lexa) {
 		Location	location;
 		switch (it->type)
 		{
-		case(SERVER):
+		case(HTTP):
+			it++;
+			if (it->type != OPEN_CURLY_BRACKET)
+				error("Open Curly Bracket missing at the HTTP Directive Block!");
+			countCurlBrackets++;
+			if (it->type == OPEN_CURLY_BRACKET && (it + 1)->type == CLOSED_CURLY_BRACKET)
+				error("An empty Http Block!");
+			break;
+		case(SERVERBLOCK):
 			it++;
 			if (it->type != OPEN_CURLY_BRACKET)
 				error("Open Curly Bracket missing at the Server Directive Block!");
 			countCurlBrackets++;
+			if (it->type == OPEN_CURLY_BRACKET && (it + 1)->type == CLOSED_CURLY_BRACKET)
+				error("An empty Server Block!");
 			break;
 		case(KEEPALIVE_TIMEOUT): {
 			int seconds;
@@ -194,32 +188,45 @@ int		Config::parseConfigurations(std::vector<lexer_node> lexa) {
 			location.path = it->key;
 			it++;
 			if (it->type != OPEN_CURLY_BRACKET)
-				error("Open Curly Bracket missing at the Location Directive!");
+				error("Open Curly Bracket missing at the Location Block!");
 			countCurlBrackets++;
-			it++;
-			if (it->type == METHODS) {
-				std::istringstream iss(it->key);
-				std::string	methos;
-				while (iss >> methos) {
-					loc.methods.push_back(methos);
+			if (it->type == OPEN_CURLY_BRACKET && (it + 1)->type == CLOSED_CURLY_BRACKET)
+				error("An empty Location Block!");
+			while (it->type != CLOSED_CURLY_BRACKET) {
+				it++;
+				if (it->type == METHODS) {
+					std::istringstream iss(it->key);
+					std::string	methos;
+					while (iss >> methos) {
+						loc.methods.push_back(methos);
+					}
+					it++;
+					if (it->type != SEMICOLON)
+						error("Method dir is missing semi colon!");
 				}
-				it++;
-				if (it->type != SEMICOLON)
-					error("Method dir is missing semi colon!");
-			} else if (it->type == REDIRECT) {
-				loc.redirect = it->value;
-				it++;
-				if (it->type != SEMICOLON)
-					error("Method dir is missing semi colon!");
-			} else
-				error("Empty Location Block!");
-			it++;
+				if (it->type == REDIRECT) {
+					loc.redirect = it->value;
+					it++;
+					if (it->type != SEMICOLON)
+						error("Method dir is missing semi colon!");
+				} 
+				if (it->type == ROOT) {
+					loc.root = it->value;
+					it++;
+					if (it->type != SEMICOLON)
+						error("Location root is missing semi colon!");
+				}
+			}
 			if (it->type != CLOSED_CURLY_BRACKET)
-				error("Closed Curly Bracket missing at the Location Directive Block!");
+				error("Closed Curly Bracket missing at the Location Block!");
 			countCurlBrackets--;
+			if (countCurlBrackets == 1)
+				serv.location.push_back(loc);
 			break ;
 		case (CLOSED_CURLY_BRACKET):
 			countCurlBrackets--;
+			if (countCurlBrackets == 1)
+				servers.push_back(serv);
 			break;
 		default:
 			break;
@@ -229,25 +236,3 @@ int		Config::parseConfigurations(std::vector<lexer_node> lexa) {
 		error("Curr brackets error");
 	return (0);
 }
-
-
-//=======================
-// location.path = it->key;
-// it++;
-// if (it->type == OPEN_CURLY_BRACKET) {
-// 	countCurlBracket++;
-// 	if (it->type == SEMICOLON)
-// 		it++;
-// 	if (it->type == CLOSED_CURLY_BRACKET)
-// 		it++; countCurlBracket--;
-// 	switch (it->type) {
-// 	case (METHODS):
-// 		location.methods.push_back(it->value);
-// 		break;
-// 	case (REDIRECT):
-// 		location.redirect = it->value;
-// 		break;
-// 	default:
-// 		break;
-// 	}
-// }
