@@ -48,11 +48,11 @@ public:
   Lexer(const char *filename);
   ~Lexer(); // Destructor
 
-  void  readfileintobuffer();
-  token getTokenType(const std::string &type);
-  void  tokenize(std::string &buffer);
+  void	readfileintobuffer();
+  token	getTokenType(const std::string &type);
+  void	tokenize(std::string &buffer);
   void	createToken(std::vector<std::string>::iterator &begin, std::vector<std::string> &words, lexer_node &node);
-  void  parseString(const std::string &line);
+  void	parseString(const std::string &line);
   std::vector<lexer_node> getLexer() const;
 };
 
