@@ -142,9 +142,9 @@ void Lexer::tokenize(std::string &buffer) {
   std::string line;
 
   while (std::getline(ss, line)) {
+    trim(line);
     if (line.empty() == true || line[0] == '#')
       continue;
-    trim(line);
     parseString(line);
   }
 }
