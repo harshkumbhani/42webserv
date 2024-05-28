@@ -13,7 +13,6 @@ int main(int argc, char *argv[]) {
   try {
     Lexer tokens(configfile_path);
     std::cout << tokens << std::endl;
-    // tokens.readfileintobuffer();
   } catch (std::runtime_error const &e) {
     std::cerr << e.what() << std::endl;
   }
