@@ -75,7 +75,8 @@ static bool checkHttpContext(std::string &line) {
 void Lexer::createToken(std::vector<std::string>::iterator &begin,
                         std::vector<std::string> &words, lexer_node &node) {
   node.key = *begin;
-  if (words.size() == 3 && ++begin != words.end())
+  ++begin;
+  if (words.size() == 3 && begin != words.end())
     node.value = *begin;
   else {
     throw std::runtime_error("Syntax Error near: " + node.key);
@@ -101,6 +102,8 @@ void Lexer::parseString(const std::string &line) {
   }
 
   std::vector<std::string>::iterator it;
+  // for(it = words.begin(); it != words.end(); it++)
+  //   std::cout << *it << std::endl;
   size_t counter = -1;
   for (it = words.begin(); it != words.end(); ++it) {
     lexer_node node;
@@ -108,8 +111,6 @@ void Lexer::parseString(const std::string &line) {
 
     switch (node.type) {
     case SERVERBLOCK:
-      node.value = "server";
-      break;
     case OPEN_CURLY_BRACKET:
     case CLOSED_CURLY_BRACKET:
     case SEMICOLON:
@@ -124,9 +125,14 @@ void Lexer::parseString(const std::string &line) {
     case INDEX:
     case DIR_LISTING:
     case CLIENT_BODY_SIZE:
-    case LOCATION:
     case REDIRECT:
       createToken(it, words, node);
+      break;
+    case LOCATION:
+      node.key = *it;
+      ++it;
+      if (it != words.end())
+        node.value = *it;
       break;
     case METHODS:
       node.key = *it;
