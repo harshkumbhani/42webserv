@@ -56,22 +56,6 @@ static void trim(std::string &line) {
   line = line.substr(start, end);
 }
 
-static bool checkHttpContext(std::string &line) {
-  std::vector<std::string> words;
-  std::istringstream ss(line);
-  std::string word;
-
-  while (ss >> word) {
-    if (word[0] == '#')
-      break;
-    words.push_back(word);
-  }
-
-  if (words[0] != "http" && words[1] != "{")
-    return false;
-  return true;
-}
-
 void Lexer::createToken(std::vector<std::string>::iterator &begin,
                         std::vector<std::string> &words, lexer_node &node) {
   node.key = *begin;
@@ -110,43 +94,44 @@ void Lexer::parseString(const std::string &line) {
     node.type = getTokenType(*it);
 
     switch (node.type) {
-    case SERVERBLOCK:
-    case OPEN_CURLY_BRACKET:
-    case CLOSED_CURLY_BRACKET:
-    case SEMICOLON:
-      node.value = *it;
-      break;
-    case KEEPALIVE_TIMEOUT:
-    case SEND_TIMEOUT:
-    case LISTEN:
-    case SERVER_NAME:
-    case ROOT:
-    case AUTOINDEX:
-    case INDEX:
-    case DIR_LISTING:
-    case CLIENT_BODY_SIZE:
-    case REDIRECT:
-      createToken(it, words, node);
-      break;
-    case LOCATION:
-      node.key = *it;
-      ++it;
-      if (it != words.end())
+      case HTTP:
+      case SERVERBLOCK:
+      case OPEN_CURLY_BRACKET:
+      case CLOSED_CURLY_BRACKET:
+      case SEMICOLON:
         node.value = *it;
-      break;
-    case METHODS:
-      node.key = *it;
-      while (++it != words.end() && *it != ";") {
-        node.value += (node.value.empty() ? "" : " ") + *it;
-        counter++;
-      }
-      if (counter >= 3)
-        throw std::runtime_error("Too many arguments: " + node.key);
-      break;
-    case UNKNOWN:
-      throw std::runtime_error("Unkown token type " + *it);
-    default:
-      break;
+        break;
+      case KEEPALIVE_TIMEOUT:
+      case SEND_TIMEOUT:
+      case LISTEN:
+      case SERVER_NAME:
+      case ROOT:
+      case AUTOINDEX:
+      case INDEX:
+      case DIR_LISTING:
+      case CLIENT_BODY_SIZE:
+      case REDIRECT:
+        createToken(it, words, node);
+        break;
+      case LOCATION:
+        node.key = *it;
+        ++it;
+        if (it != words.end())
+          node.value = *it;
+        break;
+      case METHODS:
+        node.key = *it;
+        while (++it != words.end() && *it != ";") {
+          node.value += (node.value.empty() ? "" : " ") + *it;
+          counter++;
+        }
+        if (counter >= 3)
+          throw std::runtime_error("Too many arguments: " + node.key);
+        break;
+      case UNKNOWN:
+        throw std::runtime_error("Unkown token type " + *it);
+      default:
+        break;
     }
     lexer.push_back(node);
   }
@@ -160,20 +145,8 @@ void Lexer::tokenize(std::string &buffer) {
     trim(line);
     if (line.empty() == true || line[0] == '#')
       continue;
-    break;
-  }
-
-  if (checkHttpContext(line) == false)
-    throw std::runtime_error("Error in the config file: Expected 'http'");
-
-  while (std::getline(ss, line)) {
-    if (line.empty() == true || line[0] == '#')
-      continue;
-    trim(line);
     parseString(line);
   }
-  if (lexer.empty() == false && lexer.back().value == "}")
-    lexer.pop_back();
 }
 
 std::vector<lexer_node> Lexer::getLexer() const { return this->lexer; }
