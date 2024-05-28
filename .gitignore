@@ -1,0 +1,7 @@
+*.ccls
+*.ccls-cache
+*.DS_Store
+*.vscode
+*.o
+*.d
+*webserv
