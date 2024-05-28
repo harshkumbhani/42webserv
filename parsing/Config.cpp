@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/25 12:38:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/05/27 13:50:52 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/05/27 19:40:32 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -190,6 +190,7 @@ int		Config::parseConfigurations(std::vector<lexer_node> lexa) {
 				error("Client Body Size is missing semi colon!");
 			break;
 		} case(LOCATION):
+			//root and know how to receive multiple locations in case
 			location.path = it->key;
 			it++;
 			if (it->type != OPEN_CURLY_BRACKET)
