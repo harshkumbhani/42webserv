@@ -10,6 +10,8 @@
 #include <map>
 #include <exception>
 
+#include "EventLogger.hpp"
+
 enum token {
   HTTP,
   SERVERBLOCK,
