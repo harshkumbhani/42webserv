@@ -79,7 +79,7 @@ void Lexer::parseString(const std::string &line) {
       break;
     if (directive.find(';') != std::string::npos) {
       directive = directive.substr(0, directive.find_first_of(";"));
-      if (words.size() != 2 && directive.empty() != true)
+      if (directive.empty() != true)
         words.push_back(directive);
       words.push_back(";");
     } else {
@@ -127,6 +127,8 @@ void Lexer::parseString(const std::string &line) {
           node.value += (node.value.empty() ? "" : " ") + *it;
           counter++;
         }
+        if (it != words.end() && *it == ";")
+          --it;
         if (counter >= 3)
           throw std::runtime_error("Too many arguments: " + node.key);
         break;
