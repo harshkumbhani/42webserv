@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <ctime>
 
 const std::string RESET = "\033[0m";
 const std::string GREEN = "\033[32m";        // SUCCESS
@@ -48,7 +49,7 @@ class EventLogger;
   {                                                                            \
     std::ostringstream log;                                                    \
     log << message;                                                            \
-    EventLogger::log(log.str(), __FILE__, __LINE__, GREEN,                      \
+    EventLogger::log(log.str(), __FILE__, __LINE__, GREEN,                     \
                      EventLogger::SUCCESS);                                    \
   }
 
@@ -61,6 +62,7 @@ public:
 
   ~EventLogger();
 
+  static std::string displayTimeStamp();
   static std::string getLevel(logLevel color);
   static void log(const std::string &message, const char *filename, int lineNumber,
                   const std::string &color, logLevel level);
