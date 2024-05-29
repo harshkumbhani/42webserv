@@ -1,6 +1,7 @@
 #include "Lexer.hpp"
 
 Lexer::Lexer(const char *filename) : filepath(filename) {
+  INFO("Tokenising " + std::string(filename) + " file");
   directive_lookup["http"] = HTTP;
   directive_lookup["server"] = SERVERBLOCK;
   directive_lookup["keepalive_timeout"] = KEEPALIVE_TIMEOUT;
@@ -21,6 +22,7 @@ Lexer::Lexer(const char *filename) : filepath(filename) {
 
   readfileintobuffer();
   tokenize(buffer);
+  SUCCESS("Tokenised " + std::string(filename) + " file");
 }
 
 Lexer::~Lexer() {}
