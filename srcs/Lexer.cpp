@@ -94,7 +94,6 @@ void Lexer::parseString(const std::string &line) {
   for (it = words.begin(); it != words.end(); ++it) {
     lexer_node node;
     node.type = getTokenType(*it);
-	//DEBUG(*it);
     switch (node.type) {
       case HTTP:
       case SERVERBLOCK:
@@ -124,7 +123,6 @@ void Lexer::parseString(const std::string &line) {
       case METHODS:
         node.key = *it;
         while (++it != words.end() && *it != ";") {
-			DEBUG(*it);
           node.value += (node.value.empty() ? "" : " ") + *it;
           counter++;
         }
