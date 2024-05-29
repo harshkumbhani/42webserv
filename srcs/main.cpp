@@ -1,10 +1,13 @@
 #include "Lexer.hpp"
-#include "Config.hpp"
+#include <exception>
+#include <iostream>
+#include "EventLogger.hpp"
 
 int main(int argc, char *argv[]) {
+  INFO("Web server initialising");
   const char *configfile_path = "./config/default.config";
   if (argc > 2) {
-    std::cerr << "Usage: ./webserv [Path to configfile]" << std::endl;
+    ERROR("Usage: ./webserv or ./webserv [Path to configfile]");
     return 1;
   }
   if (argc == 2)
@@ -15,7 +18,9 @@ int main(int argc, char *argv[]) {
     // std::cout << tokens << std::endl;
 
   } catch (std::runtime_error const &e) {
-    std::cerr << e.what() << std::endl;
+    ERROR(e.what());
+    // std::cerr << e.what() << std::endl;
+    return 1;
   }
   return 0;
 }
