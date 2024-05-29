@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/25 19:00:17 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/05/29 13:55:59 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/05/29 18:32:17 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,39 +22,40 @@
 # define yellow "\033[01;33m";
 # define green "\033[22;32m";
 
+struct Location {
+	std::vector <std::string>		methods;
+	std::string						redirect;
+	std::string						root;
+	std::string						path;
+};
+struct	ServerConfig {
+	int								keepalive_timeout;
+	int								send_timeout;
+	int								listen;
+	std::string						server_name;
+	std::string						root;
+	std::string						autoindex;
+	std::string						index;
+	std::string						directory_listing;
+	size_t							client_body_size;
+	std::vector<Location>			location;
+};
+
 class Config {
 	private:
 		std::vector<lexer_node> lexer;
+		std::vector<ServerConfig>	servers;
 	
 	public:
 		
 		//construction n destruction
 		Config(std::vector<lexer_node> lexer);
 		~Config();
+
+		// getter
+
+		std::vector<ServerConfig> getParser() const;
 		
-		
-		struct Location {
-			std::vector <std::string>		methods;
-			std::string						redirect;
-			std::string						root;
-			std::string						path;
-		};
-
-		struct	ServerConfig {
-			int								keepalive_timeout;
-			int								send_timeout;
-			int								listen;
-			std::string						server_name;
-			std::string						root;
-			std::string						autoindex;
-			std::string						index;
-			std::string						directory_listing;
-			size_t							client_body_size;
-			std::vector<Location>			location;
-		};
-
-		std::vector <ServerConfig>	servers;
-
 		//functions
 		int			parseConfigurations(std::vector<lexer_node> lexa);
 		void		error(const std::string& s);
@@ -78,3 +79,4 @@ class Config {
 		void	parseLocationRoot(std::vector<lexer_node>::iterator &it, Location loc);
 };
 
+std::ostream &operator<<(std::ostream &output, const Config &parser);

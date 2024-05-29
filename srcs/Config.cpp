@@ -6,15 +6,21 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/25 12:38:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/05/29 17:12:21 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/05/29 19:31:15 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Config.hpp"
 
-Config::Config(std::vector<lexer_node> lexer) : lexer(lexer) {}
+Config::Config(std::vector<lexer_node> lexer) : lexer(lexer) {
+	parseConfigurations(this->lexer);
+}
 
 Config::~Config() {}
+
+std::vector<ServerConfig> Config::getParser() const {
+	return this->servers;
+}
 
 inline void Config::error(const std::string& str){
 	throw std::runtime_error(str);
@@ -118,10 +124,13 @@ void	Config::parseClientBodySize(std::vector<lexer_node>::iterator &it, ServerCo
 }
 
 void	Config::parseMethods(std::vector<lexer_node>::iterator &it, Location loc) {
-	std::istringstream iss(it->key);
+	std::istringstream iss(it->value);
 	std::string	methos;
-	while (iss >> methos)
+	while (iss >> methos) {
+		DEBUG(methos);
 		loc.methods.push_back(methos);
+	}
+	
 	if ((it + 1) != lexer.end() && (it + 1)->type != SEMICOLON)
 		error("Method dir is missing semi colon!");
 }
@@ -140,12 +149,13 @@ void	Config::parseLocationRoot(std::vector<lexer_node>::iterator &it, Location l
 
 void	Config::parseLocationBlock(std::vector<lexer_node>::iterator &it, int &countCurlBrackets, ServerConfig &server) {
 	Location	loc;
-	loc.path = it->key;
+	loc.path = it->value;
 	if ((it + 1) != lexer.end() && (it + 1)->type != OPEN_CURLY_BRACKET)
 		error("Open Curly Bracket missing at the Location Block!");
 	countCurlBrackets++;
 	if ((it + 2) != lexer.end() && (it + 2)->type == CLOSED_CURLY_BRACKET)
 		error("An empty Location Block!");
+	DEBUG(countCurlBrackets);
 	while (it != lexer.end()) {
 		if (countCurlBrackets == 2)
 			break ;
@@ -161,6 +171,9 @@ void	Config::parseLocationBlock(std::vector<lexer_node>::iterator &it, int &coun
 			parseLocationRoot(it, loc);
 			break;
 		case (SEMICOLON):
+			break;
+		case (OPEN_CURLY_BRACKET):
+			countCurlBrackets++;
 			break;
 		case (CLOSED_CURLY_BRACKET):
 			countCurlBrackets--;
@@ -233,6 +246,7 @@ void	Config::parseServerBlock(std::vector<lexer_node>::iterator &it, int &countC
 
 int		Config::parseConfigurations(std::vector<lexer_node> lexa) {
 	int countCurlBrackets = 0;
+	INFO("Parsing initiated");
 	for (std::vector<lexer_node>::iterator it = lexa.begin(); it != lexa.end(); ++it) {
 		switch (it->type)
 		{
@@ -251,10 +265,29 @@ int		Config::parseConfigurations(std::vector<lexer_node> lexa) {
 			break;
 		}
 	}
-	// countCurlBrackets--;
+	countCurlBrackets--;
 	if (countCurlBrackets != 0) {
 		std::cout << countCurlBrackets << std::endl;
 		error("Curr brackets error");
 	}
+	INFO("Parsing completed");
 	return (1);
+}
+
+std::ostream &operator<<(std::ostream &output, const Config &parser) {
+  const std::vector<ServerConfig> &nodes = parser.getParser();
+  std::vector<ServerConfig>::const_iterator it;
+  for (it = nodes.begin(); it != nodes.end(); it++) {
+    output << "keepalive_timeout: " << it->keepalive_timeout
+			<< "\nsend timeout: " << it->send_timeout
+			<< "\nlisten: " << it->listen
+			<< "\nserver_name: " << it->server_name
+			<< "\nroot: " << it->root
+			<< "\nautoindex: " << it->autoindex
+			<< "\nindex: " << it->index
+			<< "\ndirectory listing: " << it->directory_listing
+			<< "\nclient body size: " << it->client_body_size
+			<< std::endl;
+  }
+  return output;
 }

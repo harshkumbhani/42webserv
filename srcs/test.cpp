@@ -6,11 +6,12 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/26 10:34:40 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/05/29 16:22:56 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/05/29 19:11:00 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Config.hpp"
+#include "EventLogger.hpp"
 
 int main() {
 	try {
@@ -57,33 +58,33 @@ int main() {
 		config.parseConfigurations(lexer);
 
 		// If no exception is thrown, print success message
-		std::cout << "Configuration parsed successfully!" << std::endl;
+		// std::cout << "Configuration parsed successfully!" << std::endl;
 
 		// Optionally, print out the parsed server configurations
-		for (size_t i = 0; i < config.servers.size(); ++i) {
-			std::cout << "Server " << i + 1 << ":" << std::endl;
-			std::cout << "  Keepalive Timeout: " << config.servers[i].keepalive_timeout << std::endl;
-			std::cout << "  Send Timeout: " << config.servers[i].send_timeout << std::endl;
-			std::cout << "  Listen: " << config.servers[i].listen << std::endl;
-			std::cout << "  Server Name: " << config.servers[i].server_name << std::endl;
-			std::cout << "  Root: " << config.servers[i].root << std::endl;
-			std::cout << "  Autoindex: " << config.servers[i].autoindex << std::endl;
-			std::cout << "  Index: " << config.servers[i].index << std::endl;
-			std::cout << "  Directory Listing: " << config.servers[i].directory_listing << std::endl;
-			std::cout << "  Client Body Size: " << config.servers[i].client_body_size << std::endl;
-			for (size_t j = 0; j < config.servers[i].location.size(); ++j) {
-				std::cout << "  Location " << j + 1 << ":" << std::endl;
-				std::cout << "    Path: " << config.servers[i].location[j].path << std::endl;
-				std::cout << "    Root: " << config.servers[i].location[j].root << std::endl;
-				std::cout << "    Redirect: " << config.servers[i].location[j].redirect << std::endl;
-				std::cout << "    Methods: ";
-				for (size_t k = 0; k < config.servers[i].location[j].methods.size(); ++k) {
-					std::cout << config.servers[i].location[j].methods[k] << " ";
-				}
-				std::cout << std::endl;
-			}
-		}
-		std::cout << "Printed Successfully!" << std::endl;
+		// for (size_t i = 0; i < config.servers.size(); ++i) {
+		// 	std::cout << "Server " << i + 1 << ":" << std::endl;
+		// 	std::cout << "  Keepalive Timeout: " << config.servers[i].keepalive_timeout << std::endl;
+		// 	std::cout << "  Send Timeout: " << config.servers[i].send_timeout << std::endl;
+		// 	std::cout << "  Listen: " << config.servers[i].listen << std::endl;
+		// 	std::cout << "  Server Name: " << config.servers[i].server_name << std::endl;
+		// 	std::cout << "  Root: " << config.servers[i].root << std::endl;
+		// 	std::cout << "  Autoindex: " << config.servers[i].autoindex << std::endl;
+		// 	std::cout << "  Index: " << config.servers[i].index << std::endl;
+		// 	std::cout << "  Directory Listing: " << config.servers[i].directory_listing << std::endl;
+		// 	std::cout << "  Client Body Size: " << config.servers[i].client_body_size << std::endl;
+		// 	for (size_t j = 0; j < config.servers[i].location.size(); ++j) {
+		// 		std::cout << "  Location " << j + 1 << ":" << std::endl;
+		// 		std::cout << "    Path: " << config.servers[i].location[j].path << std::endl;
+		// 		std::cout << "    Root: " << config.servers[i].location[j].root << std::endl;
+		// 		std::cout << "    Redirect: " << config.servers[i].location[j].redirect << std::endl;
+		// 		std::cout << "    Methods: ";
+		// 		for (size_t k = 0; k < config.servers[i].location[j].methods.size(); ++k) {
+		// 			std::cout << config.servers[i].location[j].methods[k] << " ";
+		// 		}
+		// 		std::cout << std::endl;
+		// 	}
+		// }
+		// std::cout << "Printed Successfully!" << std::endl;
 		
 
 	} catch (const std::runtime_error &e) {
