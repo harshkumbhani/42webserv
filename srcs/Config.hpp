@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/25 19:00:17 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/05/29 02:05:08 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/05/29 13:55:59 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ class Config {
 			std::string						autoindex;
 			std::string						index;
 			std::string						directory_listing;
-			long long						client_body_size;
+			size_t							client_body_size;
 			std::vector<Location>			location;
 		};
 
@@ -75,6 +75,6 @@ class Config {
 		void 	parseLocationBlock(std::vector<lexer_node>::iterator &it, int &countCurlBrackets, ServerConfig &server);
 		void 	parseMethods(std::vector<lexer_node>::iterator &it, Location loc);
 		void 	parseRedirect(std::vector<lexer_node>::iterator &it, Location loc);
-		void	parseLocationRoot(std::vector<lexer_node>::iterator &it, Location loc)
+		void	parseLocationRoot(std::vector<lexer_node>::iterator &it, Location loc);
 };
 
