@@ -17,7 +17,6 @@ int main(int argc, char *argv[]) {
     std::cout << tokens << std::endl;
   } catch (std::runtime_error const &e) {
     ERROR(e.what());
-    // std::cerr << e.what() << std::endl;
     return 1;
   }
   return 0;

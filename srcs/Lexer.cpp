@@ -94,7 +94,6 @@ void Lexer::parseString(const std::string &line) {
   for (it = words.begin(); it != words.end(); ++it) {
     lexer_node node;
     node.type = getTokenType(*it);
-
     switch (node.type) {
       case HTTP:
       case SERVERBLOCK:
@@ -127,7 +126,7 @@ void Lexer::parseString(const std::string &line) {
           node.value += (node.value.empty() ? "" : " ") + *it;
           counter++;
         }
-        if (it != words.end() && *it == ";")
+        if (it == words.end() || *it == ";")
           --it;
         if (counter >= 3)
           throw std::runtime_error("Too many arguments: " + node.key);
