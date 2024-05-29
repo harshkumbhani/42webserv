@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/25 19:00:17 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/05/29 18:32:17 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/05/29 20:46:16 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,13 +47,11 @@ class Config {
 		std::vector<ServerConfig>	servers;
 	
 	public:
-		
 		//construction n destruction
 		Config(std::vector<lexer_node> lexer);
 		~Config();
 
 		// getter
-
 		std::vector<ServerConfig> getParser() const;
 		
 		//functions

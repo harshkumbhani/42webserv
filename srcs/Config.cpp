@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/25 12:38:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/05/29 19:31:15 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/05/29 20:17:34 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,6 +100,7 @@ void	Config::parseAutoindex(std::vector<lexer_node>::iterator &it, ServerConfig 
 
 void	Config::parseIndex(std::vector<lexer_node>::iterator &it, ServerConfig &server) {
 	server.index = it->value;
+	DEBUG(it->value);
 	if ((it + 1) != lexer.end() && (it + 1)->type != SEMICOLON)
 		error("Index dir is missing semi colon!");
 }
@@ -127,7 +128,6 @@ void	Config::parseMethods(std::vector<lexer_node>::iterator &it, Location loc) {
 	std::istringstream iss(it->value);
 	std::string	methos;
 	while (iss >> methos) {
-		DEBUG(methos);
 		loc.methods.push_back(methos);
 	}
 	
@@ -148,17 +148,16 @@ void	Config::parseLocationRoot(std::vector<lexer_node>::iterator &it, Location l
 }
 
 void	Config::parseLocationBlock(std::vector<lexer_node>::iterator &it, int &countCurlBrackets, ServerConfig &server) {
+	DEBUG("Location " << countCurlBrackets);
 	Location	loc;
 	loc.path = it->value;
 	if ((it + 1) != lexer.end() && (it + 1)->type != OPEN_CURLY_BRACKET)
 		error("Open Curly Bracket missing at the Location Block!");
-	countCurlBrackets++;
+	// countCurlBrackets++;
+	it++;
 	if ((it + 2) != lexer.end() && (it + 2)->type == CLOSED_CURLY_BRACKET)
 		error("An empty Location Block!");
-	DEBUG(countCurlBrackets);
 	while (it != lexer.end()) {
-		if (countCurlBrackets == 2)
-			break ;
 		switch (it->type)
 		{
 		case (METHODS):
@@ -174,13 +173,17 @@ void	Config::parseLocationBlock(std::vector<lexer_node>::iterator &it, int &coun
 			break;
 		case (OPEN_CURLY_BRACKET):
 			countCurlBrackets++;
+			DEBUG("{ increment " << countCurlBrackets);
 			break;
 		case (CLOSED_CURLY_BRACKET):
 			countCurlBrackets--;
+			DEBUG("} decrement " << countCurlBrackets);
 			break;
 		default:
 			break;
 		}
+		if (countCurlBrackets == 2)
+			break ;
 		++it;
 	}
 	server.location.push_back(loc);
@@ -230,9 +233,11 @@ void	Config::parseServerBlock(std::vector<lexer_node>::iterator &it, int &countC
 			break;
 		case (OPEN_CURLY_BRACKET):
 			countCurlBrackets++;
+			// DEBUG("{ increment " << countCurlBrackets);
 			break;
 		case (CLOSED_CURLY_BRACKET):
 			countCurlBrackets--;
+			// DEBUG("} decrement " << countCurlBrackets);
 			break;
 		default:
 			break;
@@ -253,6 +258,8 @@ int		Config::parseConfigurations(std::vector<lexer_node> lexa) {
 		case (HTTP):
 			break;
 		case (SERVERBLOCK):
+			DEBUG(it->value + " " << countCurlBrackets);
+			DEBUG("Entering server block");
 			parseServerBlock(it, countCurlBrackets);
 			break;
 		case (OPEN_CURLY_BRACKET):
@@ -265,7 +272,6 @@ int		Config::parseConfigurations(std::vector<lexer_node> lexa) {
 			break;
 		}
 	}
-	countCurlBrackets--;
 	if (countCurlBrackets != 0) {
 		std::cout << countCurlBrackets << std::endl;
 		error("Curr brackets error");

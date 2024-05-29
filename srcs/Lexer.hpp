@@ -17,14 +17,14 @@ enum token {
   SERVERBLOCK,
   KEEPALIVE_TIMEOUT, // default
   SEND_TIMEOUT,      // default
-  LISTEN,
-  SERVER_NAME,
-  ROOT,
-  AUTOINDEX,
+  LISTEN, // must
+  SERVER_NAME, // must
+  ROOT, // needed
+  AUTOINDEX, // default
   INDEX, // default
-  DIR_LISTING,
+  DIR_LISTING, // default
   CLIENT_BODY_SIZE, // default
-  LOCATION,
+  LOCATION, // needed
   METHODS,
   REDIRECT,
   OPEN_CURLY_BRACKET,
