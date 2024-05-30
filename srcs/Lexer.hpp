@@ -15,24 +15,24 @@
 #include "EventLogger.hpp"
 
 enum token {
-  HTTP,
-  SERVERBLOCK,
-  KEEPALIVE_TIMEOUT, // default
-  SEND_TIMEOUT,      // default
-  LISTEN, // must
-  SERVER_NAME, // must
-  ROOT, // needed
-  AUTOINDEX, // default
-  INDEX, // default
-  DIR_LISTING, // default
-  CLIENT_BODY_SIZE, // default
-  LOCATION, // needed
-  METHODS,
-  REDIRECT,
-  OPEN_CURLY_BRACKET,
-  CLOSED_CURLY_BRACKET,
-  SEMICOLON,
-  UNKNOWN
+  HTTP = 0, // 0
+  SERVERBLOCK = 1, // 1
+  KEEPALIVE_TIMEOUT = 2, // default  2
+  SEND_TIMEOUT = 3,      // default 3
+  LISTEN = 4, // must 4
+  SERVER_NAME = 5, // must 5
+  ROOT = 6, // needed
+  AUTOINDEX = 7, // default
+  INDEX = 8, // default
+  DIR_LISTING = 9, // default
+  CLIENT_BODY_SIZE = 10, // default
+  LOCATION = 11, // needed
+  METHODS = 12,
+  REDIRECT = 13,
+  OPEN_CURLY_BRACKET = 14,
+  CLOSED_CURLY_BRACKET = 15,
+  SEMICOLON = 16,
+  UNKNOWN = 17
 };
 
 struct lexer_node {

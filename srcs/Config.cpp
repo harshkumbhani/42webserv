@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/25 12:38:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/05/30 15:34:12 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/05/30 17:32:40 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,11 +22,7 @@ std::vector<ServerConfig> Config::getParser() const {
 	return this->servers;
 }
 
-inline void Config::error(const std::string& str){
-	throw std::runtime_error(str);
-}
-
-//-->server features
+//-->Server features
 void	Config::parseKeepaliveTimeout(std::vector<lexer_node>::iterator &it, ServerConfig &server) {
 	int seconds;
 	std::string measure;
@@ -123,6 +119,7 @@ void	Config::parseClientBodySize(std::vector<lexer_node>::iterator &it, ServerCo
 		throw std::runtime_error("Client Body Size is missing semi colon!");
 }
 
+//-->Location features
 void	Config::parseMethods(std::vector<lexer_node>::iterator &it, Location &loc) {
 	std::istringstream iss(it->value);
 	std::string	methos;
@@ -222,7 +219,7 @@ void	Config::finaliseServer(ServerConfig &server) {
 	if (server.directory_listing == "")
 		server.directory_listing = "no";
 	if (server.client_body_size == 0)
-		server.client_body_size = 2000000;
+		server.client_body_size = 5000000;
 	std::vector<Location>::iterator it;
 	for (it = server.location.begin(); it != server.location.end(); ++it)
 		finaliseLocation(*it, server);
@@ -287,14 +284,15 @@ void	Config::parseServerBlock(std::vector<lexer_node>::iterator &it, int &countC
 	servers.push_back(server);
 }
 
-int		Config::parseConfigurations(std::vector<lexer_node> lexa) {
+int		Config::parseConfigurations(std::vector<lexer_node> &lexa) {
 	int countCurlBrackets = 0;
 	INFO("Parsing initiated");
-	// checkMandatoryConfigs(lexa);
 	for (std::vector<lexer_node>::iterator it = lexa.begin(); it != lexa.end(); ++it) {
 		switch (it->type)
 		{
 		case (HTTP):
+			if (((it + 1) != lexa.end()) && (it + 1)->type != OPEN_CURLY_BRACKET)
+				throw std::runtime_error("Expected token } near HTTP");
 			break;
 		case (SERVERBLOCK):
 			parseServerBlock(it, countCurlBrackets);
@@ -308,12 +306,15 @@ int		Config::parseConfigurations(std::vector<lexer_node> lexa) {
 		default:
 			break;
 		}
+		if (it == lexa.end()) {
+			break;
+		}
 	}
 	if (countCurlBrackets != 0) {
 		throw std::runtime_error("One of the blocks has missing brackets");
 	}
 	if (servers.empty() == true)
-		throw std::runtime_error("Your mama eat the server block!");
+		throw std::runtime_error("Did you magically make server block disapper?");
 	INFO("Parsing completed");
 	return (1);
 }
