@@ -9,6 +9,8 @@
 #include <cstdlib>
 #include <map>
 #include <exception>
+#include <algorithm>
+#include <set>
 
 #include "EventLogger.hpp"
 

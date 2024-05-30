@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/25 12:38:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/05/30 12:01:07 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/05/30 15:34:12 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,12 +17,6 @@ Config::Config(std::vector<lexer_node> lexer) : lexer(lexer) {
 }
 
 Config::~Config() {}
-
-// initializer:
-// lexer->keepalive_timeout(75) \
-// , send_timeout(50), listen(8080), server_name("default_server_name"), \
-// root("/default/root"), autoindex("off"), index("index.html"), directory_listing("off"), \
-// client_body_size(1048576)
 
 std::vector<ServerConfig> Config::getParser() const {
 	return this->servers;
@@ -38,19 +32,19 @@ void	Config::parseKeepaliveTimeout(std::vector<lexer_node>::iterator &it, Server
 	std::string measure;
 	std::istringstream iss(it->value);
 	if (!(iss >> seconds)) {
-		error("Invalid integer for keepalive_timeout!");
+		throw std::runtime_error("Invalid integer for keepalive_timeout!");
 	} else {
 		if (iss >> measure) {
 			if (measure != "s") {
-				error("Wrong measurement! Should be seconds(s)(keepalive timeout)");
+				throw std::runtime_error("Wrong measurement! Should be seconds(s)(keepalive timeout)");
 			}
 		} else if (!iss.eof()) {
-			error("Invalid format for keepalive_timeout!");
+			throw std::runtime_error("Invalid format for keepalive_timeout!");
 		}
 	}
 	server.keepalive_timeout = seconds;
 	if ((it + 1) != lexer.end() && (it + 1)->type != SEMICOLON)
-		error("Keepalive timeout is missing a semi-colon!");
+		throw std::runtime_error("Keepalive timeout is missing a semi-colon!");
 }
 
 void	Config::parseSendTimeout(std::vector<lexer_node>::iterator &it, ServerConfig &server) {
@@ -58,110 +52,123 @@ void	Config::parseSendTimeout(std::vector<lexer_node>::iterator &it, ServerConfi
 	std::string measure;
 	std::istringstream iss(it->value);
 	if (!(iss >> seconds)) {
-		error("Invalid integer for Send timeout!");
+		throw std::runtime_error("Invalid integer for Send timeout!");
 	} else {
 		if (iss >> measure) {
 			if (measure != "s") {
-				error("Wrong measurement! Should be seconds(s) (Send timeout)");
+				throw std::runtime_error("Wrong measurement! Should be seconds(s) (Send timeout)");
 			}
 		} else if (!iss.eof()) {
-			error("Invalid format for Send timeout!");
+			throw std::runtime_error("Invalid format for Send timeout!");
 		}
 	}
 	server.send_timeout = seconds;
 	if ((it + 1) != lexer.end() && (it + 1)->type != SEMICOLON)
-		error("Send timeout is missing semi-colon!");
+		throw std::runtime_error("Send timeout is missing semi-colon!");
 }
 
 void	Config::parseListen(std::vector<lexer_node>::iterator &it, ServerConfig &server) {
 	int port;
 	std::istringstream iss(it->value);
 	if (!(iss >> port)) {
-		error("Invalid integer for listen!");
+		throw std::runtime_error("Invalid integer for listen!");
 	} else if (!iss.eof()) {
-		error("Invalid format for listen!");
+		throw std::runtime_error("Invalid format for listen!");
 	}
 	server.listen = port;
 	if ((it + 1) != lexer.end() && (it + 1)->type != SEMICOLON)
-		error("Listen dir is missing semicolon!");
+		throw std::runtime_error("Listen dir is missing semicolon!");
 }
 
 void	Config::parseServerName(std::vector<lexer_node>::iterator &it, ServerConfig &server) {
 	server.server_name = it->value;
 	if ((it + 1) != lexer.end() && (it + 1)->type != SEMICOLON)
-		error("Servername dir is missing semi-colon");
+		throw std::runtime_error("Servername dir is missing semi-colon");
 }
 
 void	Config::parseRoot(std::vector<lexer_node>::iterator &it, ServerConfig &server) {
 	server.root = it->value;
 	if ((it + 1) != lexer.end() && (it + 1)->type != SEMICOLON)
-		error("Root dir is missing semi-colon!");
+		throw std::runtime_error("Root dir is missing semi-colon!");
 }
 
 void	Config::parseAutoindex(std::vector<lexer_node>::iterator &it, ServerConfig &server) {
 	server.autoindex = it->value;
 	if ((it + 1) != lexer.end() && (it + 1)->type != SEMICOLON)
-		error("Autoindex dir is missing semi colon!");
+		throw std::runtime_error("Autoindex dir is missing semi colon!");
 }
 
 void	Config::parseIndex(std::vector<lexer_node>::iterator &it, ServerConfig &server) {
 	server.index = it->value;  
 	if ((it + 1) != lexer.end() && (it + 1)->type != SEMICOLON)
-		error("Index dir is missing semi colon!");
+		throw std::runtime_error("Index dir is missing semi colon!");
 }
 
 void	Config::parseDirListing(std::vector<lexer_node>::iterator &it, ServerConfig &server) {
 	server.directory_listing = it->value;
 	if ((it + 1) != lexer.end() && (it + 1)->type != SEMICOLON)
-		error("Dir Listing is missing semi colon!");
+		throw std::runtime_error("Dir Listing is missing semi colon!");
 }
 
 void	Config::parseClientBodySize(std::vector<lexer_node>::iterator &it, ServerConfig &server) {
 	size_t size;
 	std::istringstream iss(it->value);
 	if (!(iss >> size)) {
-		error("Invalid Num for size!");
+		throw std::runtime_error("Invalid Num for size!");
 	} else if (!iss.eof()) {
-		error("Invalid format for size!");
+		throw std::runtime_error("Invalid format for size!");
 	}
 	server.client_body_size = size;
 	if ((it + 1) != lexer.end() && (it + 1)->type != SEMICOLON)
-		error("Client Body Size is missing semi colon!");
+		throw std::runtime_error("Client Body Size is missing semi colon!");
 }
 
 void	Config::parseMethods(std::vector<lexer_node>::iterator &it, Location &loc) {
 	std::istringstream iss(it->value);
 	std::string	methos;
 	while (iss >> methos) {
-		DEBUG(methos);
 		loc.methods.push_back(methos);
 	}
 	
 	if ((it + 1) != lexer.end() && (it + 1)->type != SEMICOLON)
-		error("Method dir is missing semi colon!");
+		throw std::runtime_error("Method dir is missing semi colon!");
 }
 
 void	Config::parseRedirect(std::vector<lexer_node>::iterator &it, Location &loc) {
 	loc.redirect = it->value;
 	if ((it + 1) != lexer.end() && (it + 1)->type != SEMICOLON)
-		error("Method dir is missing semi colon!");
+		throw std::runtime_error("Method dir is missing semi colon!");
 }
 
 void	Config::parseLocationRoot(std::vector<lexer_node>::iterator &it, Location &loc) {
 	loc.root = it->value;
 	if ((it + 1) != lexer.end() && (it + 1)->type != SEMICOLON)
-		error("Location root is missing semi colon!");
+		throw std::runtime_error("Location root is missing semi colon!");
+}
+
+void	Config::parseLocationIndex(std::vector<lexer_node>::iterator &it, Location &loc) {
+	loc.index = it->value;  
+	if ((it + 1) != lexer.end() && (it + 1)->type != SEMICOLON)
+		throw std::runtime_error("Index dir is missing semi colon!");
+}
+
+void	Config::finaliseLocation(Location &loc, ServerConfig &server) {
+	if (loc.root == "")
+		loc.root = server.root;
+	if (loc.index == "")
+		loc.index = server.index;
 }
 
 void	Config::parseLocationBlock(std::vector<lexer_node>::iterator &it, int &countCurlBrackets, ServerConfig &server) {
-	Location	loc;
+	Location loc = (struct Location){};
+	if (it->value == "")
+		throw std::runtime_error("Missing Location Path");
 	loc.path = it->value;
 	if ((it + 1) != lexer.end() && (it + 1)->type != OPEN_CURLY_BRACKET)
-		error("Open Curly Bracket missing at the Location Block!");
-	// countCurlBrackets++;
+		throw std::runtime_error("Open Curly Bracket missing at the Location Block!");
 	it++;
 	if ((it + 2) != lexer.end() && (it + 2)->type == CLOSED_CURLY_BRACKET)
-		error("An empty Location Block!");
+		throw std::runtime_error("An empty Location Block!");
 	while (it != lexer.end()) {
 		switch (it->type)
 		{
@@ -173,6 +180,9 @@ void	Config::parseLocationBlock(std::vector<lexer_node>::iterator &it, int &coun
 			break;
 		case (ROOT):
 			parseLocationRoot(it, loc);
+			break;
+		case (INDEX):
+			parseLocationIndex(it, loc);
 			break;
 		case (SEMICOLON):
 			break;
@@ -192,12 +202,38 @@ void	Config::parseLocationBlock(std::vector<lexer_node>::iterator &it, int &coun
 	server.location.push_back(loc);
 }
 
+void	Config::finaliseServer(ServerConfig &server) {
+	if (server.keepalive_timeout == 0)
+		server.keepalive_timeout = 60;
+	if (server.send_timeout == 0)
+		server.send_timeout = 100;
+	if (server.autoindex == "")
+		server.autoindex = "off";
+	if (server.listen == 0)
+		throw std::runtime_error("Listen directive not defined inside a server block");
+	if (server.server_name == "")
+		throw std::runtime_error("Server Name directive not defined inside a server block");
+	if (server.root == "")
+		throw std::runtime_error("Root directive not defined inside a server block");
+	if ((server.index == "") && (server.autoindex == "off"))
+		throw std::runtime_error("Index directive not defined inside a server block");
+	else if ((server.index == "") && (server.autoindex == "on"))
+		server.index = "index.html";
+	if (server.directory_listing == "")
+		server.directory_listing = "no";
+	if (server.client_body_size == 0)
+		server.client_body_size = 2000000;
+	std::vector<Location>::iterator it;
+	for (it = server.location.begin(); it != server.location.end(); ++it)
+		finaliseLocation(*it, server);
+}
+
 void	Config::parseServerBlock(std::vector<lexer_node>::iterator &it, int &countCurlBrackets) {
-	ServerConfig	server;
+	ServerConfig	server = (struct ServerConfig){};
 	if ((it + 1) != lexer.end() && (it + 1)->type != OPEN_CURLY_BRACKET)
-		error("Open Curly Bracket missing at the Server Block!");
+		throw std::runtime_error("Open Curly Bracket missing at the Server Block!");
 	if ((it + 2) != lexer.end() && (it + 2)->type == CLOSED_CURLY_BRACKET)
-		error("An empty Server Block!");
+		throw std::runtime_error("An empty Server Block!");
 	it++;
 	while (it != lexer.end()) {
 		switch (it->type)
@@ -247,20 +283,20 @@ void	Config::parseServerBlock(std::vector<lexer_node>::iterator &it, int &countC
 			break ;
 		it++;
 	}
+	finaliseServer(server);
 	servers.push_back(server);
 }
 
 int		Config::parseConfigurations(std::vector<lexer_node> lexa) {
 	int countCurlBrackets = 0;
 	INFO("Parsing initiated");
+	// checkMandatoryConfigs(lexa);
 	for (std::vector<lexer_node>::iterator it = lexa.begin(); it != lexa.end(); ++it) {
 		switch (it->type)
 		{
 		case (HTTP):
 			break;
 		case (SERVERBLOCK):
-			DEBUG(it->value + " " << countCurlBrackets);
-			DEBUG("Entering server block");
 			parseServerBlock(it, countCurlBrackets);
 			break;
 		case (OPEN_CURLY_BRACKET):
@@ -274,9 +310,10 @@ int		Config::parseConfigurations(std::vector<lexer_node> lexa) {
 		}
 	}
 	if (countCurlBrackets != 0) {
-		std::cout << countCurlBrackets << std::endl;
-		error("Curr brackets error");
+		throw std::runtime_error("One of the blocks has missing brackets");
 	}
+	if (servers.empty() == true)
+		throw std::runtime_error("Your mama eat the server block!");
 	INFO("Parsing completed");
 	return (1);
 }
@@ -286,6 +323,7 @@ std::ostream &operator<<(std::ostream &output, const Location &location) {
 	output << "redirect: " << location.redirect
 			<< "\nroot: " << location.root
 			<< "\npath: " << location.path
+			<< "\nindex: " << location.index
 			<< "\nmethods: ";
 	
 	std::vector<std::string>::const_iterator it;
