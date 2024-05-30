@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/25 19:00:17 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/05/29 20:46:16 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/05/30 11:57:55 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,9 +72,14 @@ class Config {
 		void 	parseClientBodySize(std::vector<lexer_node>::iterator &it, ServerConfig &server);
 
 		void 	parseLocationBlock(std::vector<lexer_node>::iterator &it, int &countCurlBrackets, ServerConfig &server);
-		void 	parseMethods(std::vector<lexer_node>::iterator &it, Location loc);
-		void 	parseRedirect(std::vector<lexer_node>::iterator &it, Location loc);
-		void	parseLocationRoot(std::vector<lexer_node>::iterator &it, Location loc);
+		void 	parseMethods(std::vector<lexer_node>::iterator &it, Location &loc);
+		void 	parseRedirect(std::vector<lexer_node>::iterator &it, Location &loc);
+		void	parseLocationRoot(std::vector<lexer_node>::iterator &it, Location &loc);
+
+		// void	openCurlyBracket(int &countCurlBrackets);
+		// void	closedCurlyBracket(int &countCurlBrackets);
+		// void	semiColon(std::vector<lexer_node>::iterator it);
 };
 
 std::ostream &operator<<(std::ostream &output, const Config &parser);
+std::ostream &operator<<(std::ostream &output, const Location &location);

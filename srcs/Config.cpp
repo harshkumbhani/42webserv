@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/25 12:38:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/05/29 20:17:34 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/05/30 12:01:07 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,12 @@ Config::Config(std::vector<lexer_node> lexer) : lexer(lexer) {
 }
 
 Config::~Config() {}
+
+// initializer:
+// lexer->keepalive_timeout(75) \
+// , send_timeout(50), listen(8080), server_name("default_server_name"), \
+// root("/default/root"), autoindex("off"), index("index.html"), directory_listing("off"), \
+// client_body_size(1048576)
 
 std::vector<ServerConfig> Config::getParser() const {
 	return this->servers;
@@ -99,8 +105,7 @@ void	Config::parseAutoindex(std::vector<lexer_node>::iterator &it, ServerConfig 
 }
 
 void	Config::parseIndex(std::vector<lexer_node>::iterator &it, ServerConfig &server) {
-	server.index = it->value;
-	DEBUG(it->value);
+	server.index = it->value;  
 	if ((it + 1) != lexer.end() && (it + 1)->type != SEMICOLON)
 		error("Index dir is missing semi colon!");
 }
@@ -124,10 +129,11 @@ void	Config::parseClientBodySize(std::vector<lexer_node>::iterator &it, ServerCo
 		error("Client Body Size is missing semi colon!");
 }
 
-void	Config::parseMethods(std::vector<lexer_node>::iterator &it, Location loc) {
+void	Config::parseMethods(std::vector<lexer_node>::iterator &it, Location &loc) {
 	std::istringstream iss(it->value);
 	std::string	methos;
 	while (iss >> methos) {
+		DEBUG(methos);
 		loc.methods.push_back(methos);
 	}
 	
@@ -135,20 +141,19 @@ void	Config::parseMethods(std::vector<lexer_node>::iterator &it, Location loc) {
 		error("Method dir is missing semi colon!");
 }
 
-void	Config::parseRedirect(std::vector<lexer_node>::iterator &it, Location loc) {
+void	Config::parseRedirect(std::vector<lexer_node>::iterator &it, Location &loc) {
 	loc.redirect = it->value;
 	if ((it + 1) != lexer.end() && (it + 1)->type != SEMICOLON)
 		error("Method dir is missing semi colon!");
 }
 
-void	Config::parseLocationRoot(std::vector<lexer_node>::iterator &it, Location loc) {
+void	Config::parseLocationRoot(std::vector<lexer_node>::iterator &it, Location &loc) {
 	loc.root = it->value;
 	if ((it + 1) != lexer.end() && (it + 1)->type != SEMICOLON)
 		error("Location root is missing semi colon!");
 }
 
 void	Config::parseLocationBlock(std::vector<lexer_node>::iterator &it, int &countCurlBrackets, ServerConfig &server) {
-	DEBUG("Location " << countCurlBrackets);
 	Location	loc;
 	loc.path = it->value;
 	if ((it + 1) != lexer.end() && (it + 1)->type != OPEN_CURLY_BRACKET)
@@ -173,11 +178,9 @@ void	Config::parseLocationBlock(std::vector<lexer_node>::iterator &it, int &coun
 			break;
 		case (OPEN_CURLY_BRACKET):
 			countCurlBrackets++;
-			DEBUG("{ increment " << countCurlBrackets);
 			break;
 		case (CLOSED_CURLY_BRACKET):
 			countCurlBrackets--;
-			DEBUG("} decrement " << countCurlBrackets);
 			break;
 		default:
 			break;
@@ -233,11 +236,9 @@ void	Config::parseServerBlock(std::vector<lexer_node>::iterator &it, int &countC
 			break;
 		case (OPEN_CURLY_BRACKET):
 			countCurlBrackets++;
-			// DEBUG("{ increment " << countCurlBrackets);
 			break;
 		case (CLOSED_CURLY_BRACKET):
 			countCurlBrackets--;
-			// DEBUG("} decrement " << countCurlBrackets);
 			break;
 		default:
 			break;
@@ -280,10 +281,26 @@ int		Config::parseConfigurations(std::vector<lexer_node> lexa) {
 	return (1);
 }
 
+std::ostream &operator<<(std::ostream &output, const Location &location) {
+	output << "\nLocation block start: \n";
+	output << "redirect: " << location.redirect
+			<< "\nroot: " << location.root
+			<< "\npath: " << location.path
+			<< "\nmethods: ";
+	
+	std::vector<std::string>::const_iterator it;
+	for(it = location.methods.begin(); it != location.methods.end(); it++) {
+		output << *it << ", ";
+	}
+	output << "\n";
+	return output;
+}
+
 std::ostream &operator<<(std::ostream &output, const Config &parser) {
   const std::vector<ServerConfig> &nodes = parser.getParser();
   std::vector<ServerConfig>::const_iterator it;
   for (it = nodes.begin(); it != nodes.end(); it++) {
+	INFO("Server printing started\n");
     output << "keepalive_timeout: " << it->keepalive_timeout
 			<< "\nsend timeout: " << it->send_timeout
 			<< "\nlisten: " << it->listen
@@ -293,7 +310,12 @@ std::ostream &operator<<(std::ostream &output, const Config &parser) {
 			<< "\nindex: " << it->index
 			<< "\ndirectory listing: " << it->directory_listing
 			<< "\nclient body size: " << it->client_body_size
-			<< std::endl;
+			<< "\nLocation: \n";
+	std::vector<Location>::const_iterator itl;
+	for(itl = it->location.begin(); itl != it->location.end(); itl++) {
+		output << *itl;
+	}
+	INFO("Server printing ended\n");
   }
   return output;
 }

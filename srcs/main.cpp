@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
     configfile_path = argv[1];
   try {
     Lexer tokens(configfile_path);
-    std::cout << tokens << std::endl;
+    // std::cout << tokens << std::endl;
 	Config parser(tokens.getLexer());
 	std::cout << parser << std::endl;
 
