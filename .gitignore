@@ -1,8 +1,9 @@
 *.ccls
 *.ccls-cache
 *.DS_Store
-*.vscode
+*.vscode/
 *.o
 *.d
 *webserv
 *.out
+*test.txt

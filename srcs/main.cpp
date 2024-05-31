@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
   try {
     Lexer tokens(configfile_path);
     std::cout << tokens << std::endl;
-	Config parser(tokens.getLexer());
+	Parser parser(tokens.getLexer());
 	std::cout << parser << std::endl;
 
   } catch (std::runtime_error const &e) {

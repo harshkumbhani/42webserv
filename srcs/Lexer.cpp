@@ -144,6 +144,8 @@ void Lexer::tokenize(std::string &buffer) {
   std::istringstream ss(buffer);
   std::string line;
 
+  if (buffer.empty() == true)
+    throw std::runtime_error("Empty config file");
   while (std::getline(ss, line)) {
     trim(line);
     if (line.empty() == true || line[0] == '#')
