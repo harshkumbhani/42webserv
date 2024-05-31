@@ -1,4 +1,5 @@
 #include "Lexer.hpp"
+#include "Config.hpp"
 #include <exception>
 #include <iostream>
 #include "EventLogger.hpp"
@@ -15,6 +16,9 @@ int main(int argc, char *argv[]) {
   try {
     Lexer tokens(configfile_path);
     std::cout << tokens << std::endl;
+	Parser parser(tokens.getLexer());
+	std::cout << parser << std::endl;
+
   } catch (std::runtime_error const &e) {
     ERROR(e.what());
     return 1;
