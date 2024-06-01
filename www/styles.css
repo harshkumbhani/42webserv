@@ -59,7 +59,7 @@ h2 {
 .button-style {
 	padding: 10px 20px;
 	margin: 5px;
-	background-color: hsl(275, 58%, 45%);
+	background-color: hsl(212, 72%, 33%);
 	color: white;
 	font-size: 20px;
 	border-radius: 10px;
@@ -84,7 +84,7 @@ h2 {
 }
 
 button:hover {
-	background-color: #310250;
+	background-color: #022050;
 }
 
 /* Add these styles to your existing styles.css */
@@ -105,7 +105,7 @@ button:hover {
 
 /* Modal Content/Box */
 .modal-content {
-    background-color: #423651;
+    background-color: #036574;
     margin: 5% auto; /* 15% from the top and centered */
     padding: 20px;
     border: 1px solid #030000;
