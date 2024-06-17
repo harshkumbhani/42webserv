@@ -1,8 +1,9 @@
+#include "EventLogger.hpp"
 #include "Lexer.hpp"
-#include "Config.hpp"
+#include "Parser.hpp"
+#include "SocketManager.hpp"
 #include <exception>
 #include <iostream>
-#include "EventLogger.hpp"
 
 int main(int argc, char *argv[]) {
   INFO("Web server initialising");
@@ -15,10 +16,9 @@ int main(int argc, char *argv[]) {
     configfile_path = argv[1];
   try {
     Lexer tokens(configfile_path);
-    std::cout << tokens << std::endl;
-	Parser parser(tokens.getLexer());
-	std::cout << parser << std::endl;
-
+    Parser parser(tokens.getLexer());
+    std::cout << parser << std::endl;
+    SocketManager sockets(parser.getParser());
   } catch (std::runtime_error const &e) {
     ERROR(e.what());
     return 1;
