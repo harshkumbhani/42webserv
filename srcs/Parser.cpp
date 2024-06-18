@@ -355,8 +355,8 @@ std::ostream &operator<<(std::ostream &output, const Location &location) {
   return output;
 }
 
-std::ostream &operator<<(std::ostream &output, const Parser &parser) {
-  const std::vector<ServerParser> &nodes = parser.getParser();
+std::ostream &operator<<(std::ostream &output, const std::vector<ServerParser> &nodes) {
+  // const std::vector<ServerParser> &nodes = parser.getParser();
   std::vector<ServerParser>::const_iterator it;
   for (it = nodes.begin(); it != nodes.end(); it++) {
     INFO("Server printing started\n");

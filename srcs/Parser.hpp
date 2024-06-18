@@ -88,5 +88,6 @@ public:
   void parseLocationIndex(std::vector<lexer_node>::iterator &it, Location &loc);
 };
 
-std::ostream &operator<<(std::ostream &output, const Parser &parser);
+std::ostream &operator<<(std::ostream &output,
+                         const std::vector<ServerParser> &nodes);
 std::ostream &operator<<(std::ostream &output, const Location &location);

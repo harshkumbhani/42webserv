@@ -31,7 +31,7 @@ vpath %.cpp $(SRC_DIRS)
 ###############                  SOURCE FILES                     ##############
 ################################################################################
 
-SRCS := main.cpp Lexer.cpp EventLogger.cpp Parser.cpp SockerManager.cpp
+SRCS := main.cpp Lexer.cpp EventLogger.cpp Parser.cpp SocketManager.cpp
 
 OBJS := $(addprefix $(OBJ_DIR)/, $(SRCS:%.cpp=%.o))
 
