@@ -6,12 +6,11 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 18:55:01 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/06/18 12:45:28 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/06/18 19:04:25 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HttpRequest.hpp"
-
 
 HttpRequest::HttpRequest(){}
 
@@ -24,7 +23,6 @@ void HttpRequest::request_blocks(std::string request) {
 	std::string::size_type blocks_pos = request.find("\r\n\r\n");
 	if (blocks_pos == std::string::npos)
 		throw std::runtime_error("Request must contain at least a method and header");
-
 	std::string::size_type req_line_pos = request.find("\r\n");
 	if (req_line_pos == std::string::npos)
 		throw std::runtime_error("Invalid request format");
@@ -34,6 +32,8 @@ void HttpRequest::request_blocks(std::string request) {
 
 	std::string header = request.substr(req_line_pos + 2, blocks_pos - (req_line_pos + 2));
 	receive_request_header(header);
+
+	receive_request_body(request);
 }
 
 // POST /submit-form HTTP/1.1\r\n
@@ -43,15 +43,15 @@ void	HttpRequest::receive_request_line(std::string line) {
 	while (!ss.eof()) {
 		std::string	method;
 		ss>>method;
-		ReqLine.insert({"method", method});
+		ReqLine.insert(std::make_pair("method", method));
 
 		std::string	url;
 		ss>>url;
-		ReqLine.insert({"url", url});
+		ReqLine.insert(std::make_pair("url", url));
 
 		std::string	httpversion;
 		ss>>httpversion;
-		ReqLine.insert({"httpversion", httpversion});
+		ReqLine.insert(std::make_pair("httpversion", httpversion));
 	}
 }
 
@@ -59,89 +59,66 @@ void	HttpRequest::receive_request_line(std::string line) {
 // Content-Type: application/x-www-form-urlencoded\r\n
 // Content-Length: 27\r\n
 // \r\n
-void	HttpRequest::receive_request_header(std::string header) {
-	size_t pos = 0;
-	std::string token;
-	std::string delimit1 = "\r\n";
-
-	while ((pos = header.find(delimit1)) != std::string::npos) {
-		token = header.substr(0, pos);
-		size_t colon = 0;
-		std::map <std::string, std::string> head_content;
-		std::string key;
-		std::string value;
-		std::string delimit2 = ":";
-		while ((colon = token.find(delimit2)) != std::string::npos) {
-			key = token.substr(0, colon);
-			if (key == "Content-Length") {
-				int	len = 0;
-				std::istringstream(token.substr(colon + 1, colon + delimit2.length())) >> len;
-				_ContentLen = len;
-				header.erase(0, pos + delimit1.length());
-				break ;
-			}
-			value = token.substr(colon + 1, colon + delimit2.length());
-			head_content.insert({key, value});
+void HttpRequest::receive_request_header(std::string header) {
+	std::stringstream ss(header);
+	std::string line;
+	while (std::getline(ss, line)) {
+		if (!line.empty() && *line.rbegin() == '\r')
+			line.erase(line.length() - 1);
+		std::size_t pos = line.find(':');
+		if (pos != std::string::npos) {
+			std::string key = line.substr(0, pos);
+			std::string value = line.substr(pos + 1);
+			std::string::iterator it = value.begin();
+			while (it != value.end() && std::isspace(*it))
+				++it;
+			value.erase(value.begin(), it);
+			_Header.insert(std::make_pair(key, value));
 		}
-		_Header.push_back(head_content);
-		header.erase(0, pos + delimit1.length());
 	}
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//bodylen=23
+//key1=value1&key2=value2
+void HttpRequest::receive_request_body(std::string request) {
+	std::size_t len;
+	std::map<std::string, std::string>::const_iterator it = _Header.find("Content-Length");
+	if (it != _Header.end())
+		len = atoi(it->second.c_str());
+	else
+		len = 0;
+    std::string::size_type pos = request.find("\r\n\r\n");
+	if (len > 0 || pos != std::string::npos)
+        _Body = request.substr(pos + 4, pos + 4 + len);
+    else
+        _Body = "";
+}
 
 //My Notes
 //Requests
 //-->GET<--
 //purpose: retrieves data, parameters in URL, no body
-//mandatory method('GET'), \
-			path('/search?q=example'), \
-			http version('HTTP/1.1'), \
-			end of headers('\r\n\r\n')
+//mandatory method('GET'),
+			// path('/search?q=example'),
+			// http version('HTTP/1.1'),
+			// end of headers('\r\n\r\n')
 //optional headers(host, user_agent,accept)
 
 //-->POST<--
 //purpose: sends data to server, parameters in body, creates/updates resources
-//mandatory method('POST'), \
-			path('/submit-form'), \
-			http version('HTTP/1.1'), \
-			headers(host, content-length, user_agent, content-type), \
-			end of headers('\r\n\r\n') \
-			body('name=John+Doe&age=30&city=NY')
+//mandatory method('POST'),
+			// path('/submit-form'),1
+			// http version('HTTP/1.1'),
+			// headers(host, content-length, user_agent, content-type),
+			// end of headers('\r\n\r\n')
+			// body('name=John+Doe&age=30&city=NY')
 
 //-->DELETE<--
 //requests resource deletion, no body
-//mandatory method('DELETE'), \
-			path('/delete-profile/123'), \
-			http version('HTTP/1.1'), \
-			end of headers('\r\n\r\n')
+//mandatory method('DELETE'),
+			// path('/delete-profile/123'),
+			// http version('HTTP/1.1'),
+			// end of headers('\r\n\r\n')
 //optional headers(host, user_agent,accept)
 
 // POST /submit-form HTTP/1.1\r\n

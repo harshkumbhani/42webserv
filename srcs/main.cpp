@@ -1,9 +1,9 @@
-#include "Lexer.hpp"
-#include "Parser.hpp"
-#include "HttpRequest.hpp"
-#include <exception>
-#include <iostream>
-#include "EventLogger.hpp"
+// #include "Lexer.hpp"
+// #include "Parser.hpp"
+// #include "HttpRequest.hpp"
+// #include <exception>
+// #include <iostream>
+// #include "EventLogger.hpp"
 
 // int main(int argc, char *argv[]) {
 // INFO("Web server initialising");
@@ -27,26 +27,55 @@
 // return 0;
 // }
 
-int main() {
-	int server_socket = socket(AF_INET, SOCK_STREAM, 0);
+//TEMPORARY SOCKET FOR TESTING PURPOSES
+// int main() {
+// 	int server_socket = socket(AF_INET, SOCK_STREAM, 0);
 	
-	sockaddr_in	serverAddress;
-	serverAddress.sin_family = AF_INET;
-	serverAddress.sin_port = htons(8080);
-	serverAddress.sin_addr.s_addr = INADDR_ANY;
+// 	sockaddr_in	serverAddress;
+// 	serverAddress.sin_family = AF_INET;
+// 	serverAddress.sin_port = htons(8080);
+// 	serverAddress.sin_addr.s_addr = INADDR_ANY;
 
-	bind(server_socket, (struct sockaddr *)& serverAddress, sizeof(serverAddress));
+// 	bind(server_socket, (struct sockaddr *)& serverAddress, sizeof(serverAddress));
 
-	listen(server_socket, 5);
+// 	listen(server_socket, 5);
 
-	int client_socket = accept(server_socket, NULL, NULL);
+// 	int client_socket = accept(server_socket, NULL, NULL);
 
-	char buffer[1024] = {0};
-	recv(client_socket, buffer, sizeof(buffer), 0);
+// 	char buffer[1024] = {0};
+// 	recv(client_socket, buffer, sizeof(buffer), 0);
 
-	std::cout << "Received message: " << buffer << std::endl;
+// 	std::cout << "Received message: " << buffer << std::endl;
 
-	close(client_socket);
-	close(server_socket);
+// 	close(client_socket);
+// 	close(server_socket);
+// 	return 0;
+// }
+
+//TEMPORARY SOCKET FOR TESTING PURPOSES
+#include "HttpRequest.hpp"
+
+int main() {
+	HttpRequest httpRequest;
+	std::string request = "GET /index.html HTTP/1.1\r\nHost: www.example.com\r\nConnection: keep-alive\r\nContent-Length: 13\r\n\r\nHello, world!";
+
+	httpRequest.request_blocks(request);
+
+	std::cout << "Request Line:\n" << std::endl;
+	std::map<std::string, std::string>::const_iterator reqLineIter;
+	for (reqLineIter = httpRequest.ReqLine.begin(); reqLineIter != httpRequest.ReqLine.end(); ++reqLineIter) {
+		std::cout << reqLineIter->first << ": " << reqLineIter->second << std::endl;
+	}
+
+	std::cout << "\nHeaders:\n" << std::endl;
+	std::map<std::string, std::string>::const_iterator i;
+	for (i = httpRequest._Header.begin(); i != httpRequest._Header.end(); ++i) {
+		std::cout << i->first << ": " << i->second << std::endl;
+	}
+	std::cout << std::endl;
+
+	std::cout << "\nBody:\n" << std::endl;
+	std::cout << httpRequest._Body << std::endl;
+
 	return 0;
 }
