@@ -17,8 +17,8 @@ int main(int argc, char *argv[]) {
   try {
     Lexer tokens(configfile_path);
     Parser parser(tokens.getLexer());
-    std::cout << parser << std::endl;
     SocketManager sockets(parser.getParser());
+    // std::cout << sockets.getServers() << std::endl;
   } catch (std::runtime_error const &e) {
     ERROR(e.what());
     return 1;
