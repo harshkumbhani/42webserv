@@ -246,6 +246,7 @@ void Parser::finaliseServer(ServerParser &server) {
 void Parser::parseServerBlock(std::vector<lexer_node>::iterator &it,
                               int &countCurlBrackets) {
   ServerParser server = (struct ServerParser){};
+  server.sockfd = -1;
   if ((it + 1) != lexer.end() && (it + 1)->type != OPEN_CURLY_BRACKET)
     throw std::runtime_error("Open Curly Bracket missing at the Server Block!");
   if ((it + 2) != lexer.end() && (it + 2)->type == CLOSED_CURLY_BRACKET)
@@ -337,7 +338,7 @@ void Parser::parseConfigurations(std::vector<lexer_node> &lexa) {
   }
   if (servers.empty() == true)
     throw std::runtime_error("Did you magically make server block disapper?");
-  INFO("Parsing completed");
+  SUCCESS("Parsing completed");
 }
 
 std::ostream &operator<<(std::ostream &output, const Location &location) {
@@ -360,6 +361,7 @@ std::ostream &operator<<(std::ostream &output, const Parser &parser) {
   for (it = nodes.begin(); it != nodes.end(); it++) {
     INFO("Server printing started\n");
     output << "keepalive_timeout: " << it->keepalive_timeout
+           << "\nsockfd: " << it->sockfd
            << "\nsend timeout: " << it->send_timeout
            << "\nlisten: " << it->listen << "\nserver_name: " << it->server_name
            << "\nroot: " << it->root << "\nautoindex: " << it->autoindex

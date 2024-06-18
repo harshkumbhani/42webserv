@@ -30,6 +30,7 @@ struct ServerParser {
   int keepalive_timeout;
   int send_timeout;
   int listen;
+  int sockfd;
   std::string server_name;
   std::string root;
   std::string autoindex;
