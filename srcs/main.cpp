@@ -1,6 +1,6 @@
 #include "Lexer.hpp"
 #include "Parser.hpp"
-#include "Request.hpp"
+#include "HttpRequest.hpp"
 #include <exception>
 #include <iostream>
 #include "EventLogger.hpp"
