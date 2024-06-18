@@ -8,15 +8,21 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/socket.h>
+#include <poll.h>
 
 class SocketManager {
 private:
   std::vector<int> serverSocketsFds;
   std::vector<ServerParser> servers;
+  std::vector<struct pollfd> pollFds;
 
 public:
   SocketManager(std::vector<ServerParser> parser);
   ~SocketManager();
+
+  // Getters
+  std::vector<ServerParser> getServers() const;
 
   void createServerSockets();
 };
