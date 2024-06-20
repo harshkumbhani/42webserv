@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:09:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/06/18 19:10:37 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/06/19 11:39:32 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,10 +21,16 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include "HttpRequest.hpp"
 
-class HttpRequest {
+class HttpRequest;
+
+class HttpResponse {
 	public:
+		HttpResponse();
+		~HttpResponse();
 
+		void	handle_request(HttpRequest const &req);
 	private:
 };
 
