@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:09:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/06/19 11:39:32 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/06/21 12:23:44 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,18 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <fstream>
+#include <ctime>
+#include <fstream>
+#include <sstream>
 #include "HttpRequest.hpp"
+#include "EventLogger.hpp"
+
+enum status {
+  OK = 200,
+  NOT_FOUND = 404,
+  BAD_REQUEST = 400
+};
 
 class HttpRequest;
 
@@ -30,8 +41,19 @@ class HttpResponse {
 		HttpResponse();
 		~HttpResponse();
 
-		void	handle_request(HttpRequest const &req);
+		std::string	_StatusLine;
+		std::string	_Header;
+		std::string	_Body;
+		std::string	_Response;
+
+		void	respond(HttpRequest const &req);
+
+		std::string	respond_Get(HttpRequest const &req);
+		void	response_Post(HttpRequest const &req);
+	
 	private:
+
 };
 
 #endif
+

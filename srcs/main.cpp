@@ -54,54 +54,74 @@
 
 //TEMPORARY SOCKET FOR TESTING PURPOSES
 #include "HttpRequest.hpp"
+#include "HttpResponse.hpp"
 
 int main() {
-	HttpRequest httpRequest;
-	std::string request = "GET /index.html HTTP/1.1\r\nHost: www.example.com\r\nConnection: keep-alive\r\nContent-Length: 13\r\n\r\nHello, world!";
+	try
+	{
+		HttpRequest httpRequest;
+		// std::string request = "GET /index.html HTTP/1.1\r\nHost: www.example.com\r\nConnection: keep-alive\r\nContent-Length: 13\r\n\r\nHello, world!";
+		std::string request = "GET /x.html HTTP/1.1\r\nHost: www.example.com\r\nConnection: keep-alive\r\nContent-Length: 13\r\n\r\nHello, world!";
 
-	httpRequest.request_blocks(request);
+		httpRequest.request_blocks(request);
 
-	std::cout << "Request Line:\n" << std::endl;
-	std::map<std::string, std::string>::const_iterator reqLineIter;
-	for (reqLineIter = httpRequest.ReqLine.begin(); reqLineIter != httpRequest.ReqLine.end(); ++reqLineIter) {
-		std::cout << reqLineIter->first << ": " << reqLineIter->second << std::endl;
+		std::cout << "======================================================" << std::endl;
+		std::cout << "||                      REQUEST                     ||" << std::endl;
+		std::cout << "======================================================" << std::endl;
+		std::cout << "Request Line:\n" << std::endl;
+		std::map<std::string, std::string>::const_iterator reqLineIter;
+		for (reqLineIter = httpRequest.ReqLine.begin(); reqLineIter != httpRequest.ReqLine.end(); ++reqLineIter) {
+			std::cout << reqLineIter->first << ": " << reqLineIter->second << std::endl;
+		}
+
+		std::cout << "\nHeaders:\n" << std::endl;
+		std::map<std::string, std::string>::const_iterator i;
+		for (i = httpRequest._Header.begin(); i != httpRequest._Header.end(); ++i) {
+			std::cout << i->first << ": " << i->second << std::endl;
+		}
+		std::cout << std::endl;
+
+		std::cout << "\nBody:\n" << std::endl;
+		std::cout << httpRequest._Body << std::endl;
+
+		HttpResponse	HttpResponse;
+		HttpResponse.respond(httpRequest);
+		std::cout << "======================================================" << std::endl;
+		std::cout << "||                     RESPONSE                     ||" << std::endl;
+		std::cout << "======================================================" << std::endl;
+		std::cout << "Response:\n" << std::endl;
+		std::cout << HttpResponse._Response << std::endl;
 	}
-
-	std::cout << "\nHeaders:\n" << std::endl;
-	std::map<std::string, std::string>::const_iterator i;
-	for (i = httpRequest._Header.begin(); i != httpRequest._Header.end(); ++i) {
-		std::cout << i->first << ": " << i->second << std::endl;
+	catch(const std::runtime_error& e)
+	{
+		std::cerr << e.what() << '\n';
 	}
-	std::cout << std::endl;
-
-	std::cout << "\nBody:\n" << std::endl;
-	std::cout << httpRequest._Body << std::endl;
-
+	
 	return 0;
-#include "Parser.hpp"
-#include "EventLogger.hpp"
-#include "Lexer.hpp"
-#include <exception>
-#include <iostream>
+// #include "Parser.hpp"
+// #include "EventLogger.hpp"
+// #include "Lexer.hpp"
+// #include <exception>
+// #include <iostream>
 
-int main(int argc, char *argv[]) {
-  INFO("Web server initialising");
-  const char *configfile_path = "./config/default.config";
-  if (argc > 2) {
-    ERROR("Usage: ./webserv or ./webserv [Path to configfile]");
-    return 1;
-  }
-  if (argc == 2)
-    configfile_path = argv[1];
-  try {
-    Lexer tokens(configfile_path);
-    std::cout << tokens << std::endl;
-    Parser parser(tokens.getLexer());
-    std::cout << parser << std::endl;
+// int main(int argc, char *argv[]) {
+//   INFO("Web server initialising");
+//   const char *configfile_path = "./config/default.config";
+//   if (argc > 2) {
+//     ERROR("Usage: ./webserv or ./webserv [Path to configfile]");
+//     return 1;
+//   }
+//   if (argc == 2)
+//     configfile_path = argv[1];
+//   try {
+//     Lexer tokens(configfile_path);
+//     std::cout << tokens << std::endl;
+//     Parser parser(tokens.getLexer());
+//     std::cout << parser << std::endl;
 
-  } catch (std::runtime_error const &e) {
-    ERROR(e.what());
-    return 1;
-  }
-  return 0;
+//   } catch (std::runtime_error const &e) {
+//     ERROR(e.what());
+//     return 1;
+//   }
+//   return 0;
 }
