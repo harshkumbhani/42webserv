@@ -85,11 +85,13 @@ void SocketManager::pollin(int pollFd) {
     acceptConnection(pollFd);
   } else {
     char buffer[100000];
-	DEBUG("READING FROM " << pollFd);
+    DEBUG("READING FROM " << pollFd);
+  //TODO: Read unitl \n\r\n\r (end of header) and then get the content length.
+    //FIX: Map the file descriptors to the client sockets
     size_t bytesread = recv(pollFd, buffer, sizeof(buffer), 0);
-	std::cout << "B: " << bytesread << std::endl;
+    std::cout << "B: " << bytesread << std::endl;
     std::cout << std::string(buffer) << std::endl;
-    exit(42);
+    // exit(42);
   }
 }
 
@@ -122,18 +124,15 @@ void SocketManager::pollingAndConnections() {
       throw std::runtime_error("Error from poll function: " +
                                std::string(strerror(errno)));
 
-	DEBUG("Looping");
+    DEBUG("Looping");
     std::vector<struct pollfd>::iterator it;
-	for (size_t i = 0; i < pollFds.size(); i++) {
-		if (pollFds[i].revents & POLLIN) {
-			pollin(pollFds[i].fd);
-		}
-	}
-    //for (it = pollFds.begin(); it != pollFds.end(); ++it) {
-	//DEBUG("Checking SOcket: " << it->fd);
-    //  if (it->revents & POLLIN) {
-    //    pollin(it->fd);
-    //  }
-    //}
+    for (size_t i = 0; i < pollFds.size(); i++) {
+      if (pollFds[i].revents & POLLIN) {
+        pollin(pollFds[i].fd);
+      }
+      if (pollFds[i].revents & POLLOUT) {
+        // pollout(pollFds[i].fd);
+      }
+    }
   }
 }
