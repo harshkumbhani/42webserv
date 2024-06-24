@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <errno.h>
 #include <fcntl.h>
+#include <map>
 #include <netinet/in.h>
 #include <poll.h>
 #include <sys/socket.h>
@@ -13,10 +14,15 @@
 #include <unistd.h>
 
 struct clientState {
+  size_t bytesRead;
+  size_t contentLength;
+  time_t startTime;
+  std::string body;
   std::string readString;
   std::string writeString;
-  size_t  bytesRead;
-  size_t  contentLength;
+  std::map<std::string, std::string> requestLine;
+  std::map<std::string, std::string> header;
+  ServerParser serverData;
 };
 
 class SocketManager {
