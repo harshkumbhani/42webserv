@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:09:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/06/21 12:23:44 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/06/25 19:20:07 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,12 +45,17 @@ class HttpResponse {
 		std::string	_Header;
 		std::string	_Body;
 		std::string	_Response;
-
-		void	respond(HttpRequest const &req);
+		
+		std::string	statusCode(int code);
+		void		respond(HttpRequest const &req);
 
 		std::string	respond_Get(HttpRequest const &req);
-		void	response_Post(HttpRequest const &req);
-	
+		std::string	response_Post(HttpRequest const &req);
+		void		response_Delete(HttpRequest const &req);
+
+		//supporting funcs
+		bool	is_valid_str(const std::string &str);
+		bool 	is_valid_char(char c);
 	private:
 
 };

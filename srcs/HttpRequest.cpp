@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 18:55:01 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/06/18 19:04:25 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/06/24 11:22:03 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,15 +43,15 @@ void	HttpRequest::receive_request_line(std::string line) {
 	while (!ss.eof()) {
 		std::string	method;
 		ss>>method;
-		ReqLine.insert(std::make_pair("method", method));
+		_ReqLine.insert(std::make_pair("method", method));
 
 		std::string	url;
 		ss>>url;
-		ReqLine.insert(std::make_pair("url", url));
+		_ReqLine.insert(std::make_pair("url", url));
 
 		std::string	httpversion;
 		ss>>httpversion;
-		ReqLine.insert(std::make_pair("httpversion", httpversion));
+		_ReqLine.insert(std::make_pair("httpversion", httpversion));
 	}
 }
 

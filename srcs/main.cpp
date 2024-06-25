@@ -61,7 +61,8 @@ int main() {
 	{
 		HttpRequest httpRequest;
 		// std::string request = "GET /index.html HTTP/1.1\r\nHost: www.example.com\r\nConnection: keep-alive\r\nContent-Length: 13\r\n\r\nHello, world!";
-		std::string request = "GET /x.html HTTP/1.1\r\nHost: www.example.com\r\nConnection: keep-alive\r\nContent-Length: 13\r\n\r\nHello, world!";
+		// std::string request = "GET /x.html HTTP/1.1\r\nHost: www.example.com\r\nConnection: keep-alive\r\nContent-Length: 13\r\n\r\nHello, world!";
+		std::string request = "POST /submit-form HTTP/1.1\r\nHost: www.example.com\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\r\nAccept-Language: en-US,en;q=0.5\r\nAccept-Encoding: gzip, deflate, br\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 27\r\nConnection: keep-alive\r\nUpgrade-Insecure-Requests: 1\r\n\r\nkey1=value1&key2=value2";
 
 		httpRequest.request_blocks(request);
 
@@ -70,7 +71,7 @@ int main() {
 		std::cout << "======================================================" << std::endl;
 		std::cout << "Request Line:\n" << std::endl;
 		std::map<std::string, std::string>::const_iterator reqLineIter;
-		for (reqLineIter = httpRequest.ReqLine.begin(); reqLineIter != httpRequest.ReqLine.end(); ++reqLineIter) {
+		for (reqLineIter = httpRequest._ReqLine.begin(); reqLineIter != httpRequest._ReqLine.end(); ++reqLineIter) {
 			std::cout << reqLineIter->first << ": " << reqLineIter->second << std::endl;
 		}
 

@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 18:55:04 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/06/19 11:14:15 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/06/24 10:51:06 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ class HttpRequest {
 		HttpRequest();
 		~HttpRequest();
 
-		std::map <std::string, std::string> ReqLine;
+		std::map <std::string, std::string> _ReqLine;
 		std::map <std::string, std::string> _Header;
 		std::string _Body;
 
