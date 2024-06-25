@@ -3,6 +3,7 @@
 
 #include "Parser.hpp"
 #include <algorithm>
+#include <csignal>
 #include <cstdlib>
 #include <errno.h>
 #include <fcntl.h>
@@ -30,7 +31,7 @@ private:
   std::vector<int> serverSocketsFds;
   std::vector<ServerParser> servers;
   std::vector<struct pollfd> pollFds;
-  std::vector<struct clientState> clients;
+  std::map<int, clientState> clients;
   // std::vector<struct pollfd> clientSocketFds;
 
 public:
@@ -40,6 +41,7 @@ public:
   // Getters
   std::vector<ServerParser> getServers() const;
 
+  // other methods for socket manipulation
   void createServerSockets();
   void pollingAndConnections();
 
