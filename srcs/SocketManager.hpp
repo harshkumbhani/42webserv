@@ -32,7 +32,6 @@ private:
   std::vector<ServerParser> servers;
   std::vector<struct pollfd> pollFds;
   std::map<int, clientState> clients;
-  // std::vector<struct pollfd> clientSocketFds;
 
 public:
   SocketManager(std::vector<ServerParser> parser);

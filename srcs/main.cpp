@@ -17,6 +17,7 @@ int main(int argc, char *argv[]) {
   try {
     Lexer tokens(configfile_path);
     Parser parser(tokens.getLexer());
+    DEBUG("Number of servers: " << parser.getParser().size());
     SocketManager sockets(parser.getParser());
     // std::cout << sockets.getServers() << std::endl;
   } catch (std::runtime_error const &e) {
