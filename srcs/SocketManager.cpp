@@ -1,5 +1,7 @@
 #include "SocketManager.hpp"
 
+volatile sig_atomic_t gServerSignal = true;
+
 // Constructor
 SocketManager::SocketManager(std::vector<ServerParser> parser)
     : servers(parser) {
@@ -22,16 +24,23 @@ std::vector<ServerParser> SocketManager::getServers() const {
   return this->servers;
 }
 
+// Signal function
+
+void stopServerLoop(int) {
+  gServerSignal = false;
+  INFO("CTRL + C signal recieved, stopping Server");
+}
+
 // Create Sockets Fds and Poll fds
 
 void SocketManager::createServerSockets() {
   INFO("Booting servers ... ");
+  std::vector<int> ports;
   std::vector<ServerParser>::iterator it;
 
   for (it = servers.begin(); it != servers.end(); it++) {
     it->sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
-    DEBUG("sockfd: " << it->sockfd);
     if (it->sockfd == -1) {
       throw std::runtime_error("Failed to create server socket: " +
                                std::string(strerror(errno)));
@@ -54,15 +63,16 @@ void SocketManager::createServerSockets() {
     serverAddress.sin_port = htons(it->listen);
     serverAddress.sin_addr.s_addr = INADDR_ANY;
 
-    if (bind(it->sockfd, (struct sockaddr *)&serverAddress,
-             sizeof(serverAddress)) < 0) {
-      std::runtime_error("Failed to bind socket to address: " +
-                         std::string(strerror(errno)));
+    if (std::find(ports.begin(), ports.end(), it->listen) != ports.end() &&
+        (bind(it->sockfd, (struct sockaddr *)&serverAddress,
+              sizeof(serverAddress)) < 0)) {
+      throw std::runtime_error("Failed to bind socket to address: " +
+                               std::string(strerror(errno)));
     }
 
     if (listen(it->sockfd, SOMAXCONN) < 0) {
-      std::runtime_error("Failed to listen on socket: " +
-                         std::string(strerror(errno)));
+      throw std::runtime_error("Failed to listen on socket: " +
+                               std::string(strerror(errno)));
     }
 
     struct pollfd pollfd;
@@ -73,7 +83,8 @@ void SocketManager::createServerSockets() {
 
     pollFds.push_back(pollfd);
     serverSocketsFds.push_back(it->sockfd);
-    DEBUG("server: " + it->server_name + ":" << it->listen);
+    ports.push_back(it->listen);
+    // DEBUG("server: " + it->server_name + ":" << it->listen);
   }
 }
 
@@ -85,12 +96,11 @@ void SocketManager::pollin(int pollFd) {
     acceptConnection(pollFd);
   } else {
     char buffer[100000];
-    DEBUG("READING FROM " << pollFd);
-  //TODO: Read unitl \n\r\n\r (end of header) and then get the content length.
-    //FIX: Map the file descriptors to the client sockets
+    // TODO: Read unitl \n\r\n\r (end of header) and then get the content
+    // length. FIX: Map the file descriptors to the client sockets
     size_t bytesread = recv(pollFd, buffer, sizeof(buffer), 0);
-    std::cout << "B: " << bytesread << std::endl;
-    std::cout << std::string(buffer) << std::endl;
+    (void)bytesread;
+    // std::cout << std::string(buffer) << std::endl;
     // exit(42);
   }
 }
@@ -110,13 +120,18 @@ void SocketManager::acceptConnection(int pollFd) {
   }
   struct pollfd clientPollFd = {clientSocket, POLLIN, 0};
   pollFds.push_back(clientPollFd);
+  clientState client = (struct clientState){};
+  clients[pollFd] = client;
+  // TODO: Create a function to return the server block
+  DEBUG("Number of clients: " << clients.size());
   SUCCESS("Accepted new client connection: " << clientSocket);
 }
 
 void SocketManager::pollingAndConnections() {
   if (servers.size() < 1)
     return;
-  while (true) {
+  signal(SIGINT, stopServerLoop);
+  while (gServerSignal) {
     int pollEvent = poll(&pollFds[0], pollFds.size(), servers[0].send_timeout);
     if (pollEvent == 0)
       continue;
@@ -124,7 +139,6 @@ void SocketManager::pollingAndConnections() {
       throw std::runtime_error("Error from poll function: " +
                                std::string(strerror(errno)));
 
-    DEBUG("Looping");
     std::vector<struct pollfd>::iterator it;
     for (size_t i = 0; i < pollFds.size(); i++) {
       if (pollFds[i].revents & POLLIN) {
