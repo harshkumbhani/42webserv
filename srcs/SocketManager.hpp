@@ -15,8 +15,11 @@
 #include <unistd.h>
 
 struct clientState {
+  bool  flagHeaderRead;
+  bool  flagBodyRead;
   size_t bytesRead;
   size_t contentLength;
+  size_t headerEndPosition;
   time_t startTime;
   std::string body;
   std::string readString;
@@ -48,5 +51,8 @@ public:
   void pollout(int pollFd);
   void acceptConnection(int pollFd);
 };
+
+
+std::ostream &operator<<(std::ostream &output, const clientState &clientState);
 
 #endif // SOCKET_MANAGER_HPP

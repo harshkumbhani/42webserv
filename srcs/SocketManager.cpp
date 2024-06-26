@@ -84,26 +84,10 @@ void SocketManager::createServerSockets() {
     pollFds.push_back(pollfd);
     serverSocketsFds.push_back(it->sockfd);
     ports.push_back(it->listen);
-    // DEBUG("server: " + it->server_name + ":" << it->listen);
   }
 }
 
 // Polling and Connections
-
-void SocketManager::pollin(int pollFd) {
-  if (std::find(serverSocketsFds.begin(), serverSocketsFds.end(), pollFd) !=
-      serverSocketsFds.end()) {
-    acceptConnection(pollFd);
-  } else {
-    char buffer[100000];
-    // TODO: Read unitl \n\r\n\r (end of header) and then get the content
-    // length. FIX: Map the file descriptors to the client sockets
-    size_t bytesread = recv(pollFd, buffer, sizeof(buffer), 0);
-    (void)bytesread;
-    // std::cout << std::string(buffer) << std::endl;
-    // exit(42);
-  }
-}
 
 void SocketManager::acceptConnection(int pollFd) {
   struct sockaddr_in clientAddress;
@@ -114,6 +98,7 @@ void SocketManager::acceptConnection(int pollFd) {
     throw std::runtime_error("Failed to accept client connection: " +
                              std::string(strerror(errno)));
   }
+  time(&clients[pollFd].startTime);
   if (fcntl(clientSocket, F_SETFL, O_NONBLOCK) < 0) {
     throw std::runtime_error("Failed to make client socket non blocking: " +
                              std::string(strerror(errno)));
@@ -122,16 +107,35 @@ void SocketManager::acceptConnection(int pollFd) {
   pollFds.push_back(clientPollFd);
   clientState client = (struct clientState){};
   clients[pollFd] = client;
+
   // TODO: Create a function to return the server block
+
   DEBUG("Number of clients: " << clients.size());
   SUCCESS("Accepted new client connection: " << clientSocket);
+}
+
+void SocketManager::pollin(int pollFd) {
+  if (std::find(serverSocketsFds.begin(), serverSocketsFds.end(), pollFd) !=
+      serverSocketsFds.end()) {
+    acceptConnection(pollFd);
+  } else {
+    char buffer[4096 * 4];
+    // TODO: Read unitl \n\r\n\r (end of header) and then get the content
+    // length.
+    size_t bytesread = recv(pollFd, buffer, sizeof(buffer), 0);
+    (void)bytesread;
+    this->clients[pollFd].bytesRead += bytesread;
+    std::cout << std::string(buffer) << std::endl;
+  }
 }
 
 void SocketManager::pollingAndConnections() {
   if (servers.size() < 1)
     return;
+  time_t currentTime;
   signal(SIGINT, stopServerLoop);
   while (gServerSignal) {
+    currentTime = 0;
     int pollEvent = poll(&pollFds[0], pollFds.size(), servers[0].send_timeout);
     if (pollEvent == 0)
       continue;
@@ -149,4 +153,15 @@ void SocketManager::pollingAndConnections() {
       }
     }
   }
+}
+
+std::ostream &operator<<(std::ostream &output, const clientState &clientState) {
+  output << "\nHeader Read Flag: " << clientState.flagBodyRead
+        << "\nBody Read Flag: " << clientState.flagBodyRead
+        << "\nbytes read: " << clientState.bytesRead
+        << "\ncontent Length: " << clientState.contentLength
+    << "\nstart time: " << clientState.startTime
+    << "\nbody: " << clientState.body << std::endl;
+
+  return output;
 }
