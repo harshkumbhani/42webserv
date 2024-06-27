@@ -98,25 +98,40 @@ void SocketManager::acceptConnection(int pollFd) {
     throw std::runtime_error("Failed to accept client connection: " +
                              std::string(strerror(errno)));
   }
-  time(&clients[pollFd].startTime);
   if (fcntl(clientSocket, F_SETFL, O_NONBLOCK) < 0) {
     throw std::runtime_error("Failed to make client socket non blocking: " +
                              std::string(strerror(errno)));
   }
   struct pollfd clientPollFd = {clientSocket, POLLIN, 0};
   pollFds.push_back(clientPollFd);
+  clientSocketsFds.push_back(clientSocket);
   clientState client = (struct clientState){};
-  clients[pollFd] = client;
+  clients[clientSocket] = client;
 
+  std::time(&clients[clientSocket].startTime);
+  DEBUG("accept connection time: " << clients[clientSocket].startTime);
   // TODO: Create a function to return the server block
 
   DEBUG("Number of clients: " << clients.size());
   SUCCESS("Accepted new client connection: " << clientSocket);
 }
 
-void SocketManager::pollin(int pollFd) {
+bool SocketManager::isServerFd(int pollFd) {
   if (std::find(serverSocketsFds.begin(), serverSocketsFds.end(), pollFd) !=
-      serverSocketsFds.end()) {
+      serverSocketsFds.end())
+    return true;
+  return false;
+}
+
+bool SocketManager::isClientFd(int pollFd) {
+  if (std::find(clientSocketsFds.begin(), clientSocketsFds.end(), pollFd) !=
+      clientSocketsFds.end())
+    return true;
+  return false;
+}
+
+void SocketManager::pollin(int pollFd) {
+  if (isServerFd(pollFd) == true) {
     acceptConnection(pollFd);
   } else {
     char buffer[4096 * 4];
@@ -126,16 +141,38 @@ void SocketManager::pollin(int pollFd) {
     (void)bytesread;
     this->clients[pollFd].bytesRead += bytesread;
     std::cout << std::string(buffer) << std::endl;
+    // exit(43);
+  }
+}
+
+void SocketManager::checkAndCloseStaleConnections() {
+  time_t currentTime = 0;
+  pollFdsIterator it;
+
+  for (it = pollFds.begin(); it != pollFds.end();) {
+    DEBUG("Looping");
+    if (isClientFd(it->fd) == true) {
+      std::time(&currentTime);
+      if (std::difftime(currentTime, clients[it->fd].startTime) > 5) {
+        INFO("Closing Client Connection on fd: " << it->fd);
+        if (close(it->fd) == -1)
+          throw std::runtime_error("Failed to close client connection!");
+        clients.erase(it->fd);
+        clientSocketsFds.erase(std::find(clientSocketsFds.begin(),
+                                         clientSocketsFds.end(), it->fd));
+        it = pollFds.erase(it);
+        continue;
+      }
+    }
+    ++it;
   }
 }
 
 void SocketManager::pollingAndConnections() {
   if (servers.size() < 1)
     return;
-  time_t currentTime;
   signal(SIGINT, stopServerLoop);
   while (gServerSignal) {
-    currentTime = 0;
     int pollEvent = poll(&pollFds[0], pollFds.size(), servers[0].send_timeout);
     if (pollEvent == 0)
       continue;
@@ -143,7 +180,8 @@ void SocketManager::pollingAndConnections() {
       throw std::runtime_error("Error from poll function: " +
                                std::string(strerror(errno)));
 
-    std::vector<struct pollfd>::iterator it;
+    checkAndCloseStaleConnections();
+
     for (size_t i = 0; i < pollFds.size(); i++) {
       if (pollFds[i].revents & POLLIN) {
         pollin(pollFds[i].fd);
@@ -157,11 +195,11 @@ void SocketManager::pollingAndConnections() {
 
 std::ostream &operator<<(std::ostream &output, const clientState &clientState) {
   output << "\nHeader Read Flag: " << clientState.flagBodyRead
-        << "\nBody Read Flag: " << clientState.flagBodyRead
-        << "\nbytes read: " << clientState.bytesRead
-        << "\ncontent Length: " << clientState.contentLength
-    << "\nstart time: " << clientState.startTime
-    << "\nbody: " << clientState.body << std::endl;
+         << "\nBody Read Flag: " << clientState.flagBodyRead
+         << "\nbytes read: " << clientState.bytesRead
+         << "\ncontent Length: " << clientState.contentLength
+         << "\nstart time: " << clientState.startTime
+         << "\nbody: " << clientState.body << std::endl;
 
   return output;
 }
