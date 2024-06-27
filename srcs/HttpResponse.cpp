@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:08:24 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/06/25 19:20:11 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/06/27 08:46:42 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -194,17 +194,112 @@ std::string	HttpResponse::response_Post(HttpRequest const &req) {
 	return (_Response);
 }
 
-void	HttpResponse::response_Delete(HttpRequest const &req) {
-	;
+// HTTP/1.1 200 OK
+// Content-Type: application/json
+// Content-Length: 51
+// Date: Mon, 31 May 2024 12:00:00 GMT
+// Connection: keep-alive
+
+// {
+//   "message": "User deleted successfully",
+//   "userId": 123
+// }
+
+std::string	delete_body_sms(int code) {
+	std::string	two_00 = "{\"message\": \"Request deleted successfully\",\"userId\": 123}";
+	std::string	four_04 = "{\"error\": \"Not Found\",\"message\": \"User not found\"}";
+	std::string	five_00 = "{\"error\": \"Internal Server Error\",\"message\": \"An unexpected error occurred.\"}";
+
+	if (code == 200)
+		return (two_00);
+	else if (code == 404)
+		return (four_04);
+	else if (code == 500)
+		return (five_00);
+	DEBUG(code);
+	return ("What type of code");
+}
+
+std::string	HttpResponse::response_Delete(HttpRequest const &req) {
+	std::map<std::string, std::string>::const_iterator	url = req._ReqLine.find("url");
+	if (url != req._ReqLine.end()) {
+		std::string	route = "./www/store/general/" + url->second;
+		std::ifstream route_file(route.c_str());
+		std::string extension = url->second;
+		size_t pos = extension.find_last_of('.');
+		if (is_valid_str(route) == false) {
+			_StatusLine = req._ReqLine.find("httpversion")->second + " " + "400" + " Bad Request\r\n";
+			std::string	status_page = statusCode(400);
+			std::stringstream ss;
+			ss << status_page.size();
+			std::string	pageSize;
+			ss >> pageSize;
+			_Header = "Content-Type: text/html\r\nContent-Length: " + pageSize + "\r\nConnection: close\r\n";
+			_Body = status_page;
+		}else if (route_file.fail() == false) {
+			int content_len;
+			std::stringstream ss;
+			ss << req._Header.find("Content-Length")->second;
+			ss >> content_len;
+			if (content_len == 0 && std::remove(route.c_str()) == 0) {
+				_StatusLine = req._ReqLine.find("httpversion")->second + " " + "204" + " No Content\r\n";
+				_Header = "Connection: keep-alive\r\n";
+			} else if (std::remove(route.c_str()) == 0) {
+				std::string buf = delete_body_sms(200);
+				std::stringstream ss;
+				ss >> buf;
+				route_file.close();
+				std::stringstream sss;
+				sss << buf.size();
+				std::string fileSize;
+				sss >> fileSize;
+				_StatusLine = req._ReqLine.find("httpversion")->second + " " + "200" + " OK\r\n";
+				_Header = "Content-Type: " + extension.substr(pos + 1) + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
+				_Body = buf;
+			} else {
+				std::string buf = delete_body_sms(500);
+				std::stringstream ss;
+				ss >> buf;
+				route_file.close();
+				std::stringstream sss;
+				sss << buf.size();
+				std::string fileSize;
+				sss >> fileSize;
+				_StatusLine = req._ReqLine.find("httpversion")->second + " " + "500" + " Internal Server Error\r\n";
+				_Header = "Content-Type: " + extension.substr(pos + 1) + "\r\nContent-Length: " + fileSize + "\r\nConnection: close\r\n";
+				_Body = buf;
+			}
+		} else {
+			std::string buf = delete_body_sms(404);
+			std::stringstream ss;
+			ss >> buf;
+			route_file.close();
+			std::stringstream sss;
+			sss << buf.size();
+			std::string fileSize;
+			sss >> fileSize;
+			_StatusLine = req._ReqLine.find("httpversion")->second + " " + "404" + " Not Found\r\n";
+			_Header = "Content-Type: " + extension.substr(pos + 1) + "\r\nContent-Length: " + fileSize + "\r\nConnection: close\r\n";
+			_Body = buf;
+			
+		}
+		time_t now = time(0);
+		char	buf[100];
+		strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", gmtime(&now));
+		_Header = _Header + "Date: " + std::string(buf) + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n\r\n";
+	} else {
+		throw std::runtime_error ("Url Missing");
+	}
+	_Response = _StatusLine + _Header + _Body;
+	return (_Response);
 }
 
 void	HttpResponse::respond(HttpRequest const &req) {
 	std::map<std::string, std::string>::const_iterator	metho = req._ReqLine.find("method");
-	if (metho != req._ReqLine.end() && metho->second == "GET") {
+	if (metho != req._ReqLine.end() && metho->second == "GET")
 		respond_Get(req);
-	} else if (metho != req._ReqLine.end() && metho->second == "POST") {
+	else if (metho != req._ReqLine.end() && metho->second == "POST")
 		response_Post(req);
-	} else if (metho != req._ReqLine.end() && metho->second == "DELETE") {
+	else if (metho != req._ReqLine.end() && metho->second == "DELETE")
 		response_Delete(req);
-	}
 }
