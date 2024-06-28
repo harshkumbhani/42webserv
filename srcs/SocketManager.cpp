@@ -150,7 +150,6 @@ void SocketManager::checkAndCloseStaleConnections() {
   pollFdsIterator it;
 
   for (it = pollFds.begin(); it != pollFds.end();) {
-    DEBUG("Looping");
     if (isClientFd(it->fd) == true) {
       std::time(&currentTime);
       if (std::difftime(currentTime, clients[it->fd].startTime) > 5) {
@@ -173,6 +172,7 @@ void SocketManager::pollingAndConnections() {
     return;
   signal(SIGINT, stopServerLoop);
   while (gServerSignal) {
+    // DEBUG("Looping");
     int pollEvent = poll(&pollFds[0], pollFds.size(), servers[0].send_timeout);
     if (pollEvent == 0)
       continue;
@@ -180,7 +180,7 @@ void SocketManager::pollingAndConnections() {
       throw std::runtime_error("Error from poll function: " +
                                std::string(strerror(errno)));
 
-    checkAndCloseStaleConnections();
+    // checkAndCloseStaleConnections();
 
     for (size_t i = 0; i < pollFds.size(); i++) {
       if (pollFds[i].revents & POLLIN) {
