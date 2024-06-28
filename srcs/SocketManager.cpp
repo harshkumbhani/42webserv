@@ -175,7 +175,6 @@ void SocketManager::pollingAndConnections() {
     return;
   signal(SIGINT, stopServerLoop);
   while (gServerSignal) {
-    // DEBUG("Looping");
     int pollEvent = poll(&pollFds[0], pollFds.size(), servers[0].send_timeout);
     checkAndCloseStaleConnections();
     if (pollEvent == 0)
