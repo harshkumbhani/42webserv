@@ -1,6 +1,6 @@
 #include "SocketManager.hpp"
 
-volatile sig_atomic_t gServerSignal = true;
+volatile sig_atomic_t gServerSignal = 1;
 
 // Constructor
 SocketManager::SocketManager(std::vector<ServerParser> parser)
@@ -27,7 +27,7 @@ std::vector<ServerParser> SocketManager::getServers() const {
 // Signal function
 
 void stopServerLoop(int) {
-  gServerSignal = false;
+  gServerSignal = 0;
   INFO("CTRL + C signal recieved, stopping Server");
 }
 
@@ -63,11 +63,12 @@ void SocketManager::createServerSockets() {
     serverAddress.sin_port = htons(it->listen);
     serverAddress.sin_addr.s_addr = INADDR_ANY;
 
-    if (std::find(ports.begin(), ports.end(), it->listen) != ports.end() &&
-        (bind(it->sockfd, (struct sockaddr *)&serverAddress,
-              sizeof(serverAddress)) < 0)) {
-      throw std::runtime_error("Failed to bind socket to address: " +
-                               std::string(strerror(errno)));
+    if (std::find(ports.begin(), ports.end(), it->listen) == ports.end()) {
+      if (bind(it->sockfd, (struct sockaddr *)&serverAddress,
+               sizeof(serverAddress)) < 0) {
+        throw std::runtime_error("Failed to bind socket to address: " +
+                                 std::string(strerror(errno)));
+      }
     }
 
     if (listen(it->sockfd, SOMAXCONN) < 0) {
@@ -84,6 +85,8 @@ void SocketManager::createServerSockets() {
     pollFds.push_back(pollfd);
     serverSocketsFds.push_back(it->sockfd);
     ports.push_back(it->listen);
+    DEBUG("Server Socket fd: " << it->sockfd);
+    DEBUG("URI: " << it->server_name << ":" << it->listen);
   }
 }
 
@@ -174,13 +177,12 @@ void SocketManager::pollingAndConnections() {
   while (gServerSignal) {
     // DEBUG("Looping");
     int pollEvent = poll(&pollFds[0], pollFds.size(), servers[0].send_timeout);
+    checkAndCloseStaleConnections();
     if (pollEvent == 0)
       continue;
     if (pollEvent < 0)
       throw std::runtime_error("Error from poll function: " +
                                std::string(strerror(errno)));
-
-    // checkAndCloseStaleConnections();
 
     for (size_t i = 0; i < pollFds.size(); i++) {
       if (pollFds[i].revents & POLLIN) {
