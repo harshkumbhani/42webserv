@@ -14,6 +14,7 @@ SocketManager::~SocketManager() {
   std::vector<int>::iterator it;
 
   for (it = serverSocketsFds.begin(); it != serverSocketsFds.end(); it++) {
+    INFO("Closing server socket with fd: " << *it);
     close(*it);
   }
 }
