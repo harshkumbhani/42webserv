@@ -180,7 +180,7 @@ void SocketManager::pollingAndConnections() {
     checkAndCloseStaleConnections();
     if (pollEvent == 0)
       continue;
-    if (pollEvent < 0)
+    if (pollEvent < 0 && gServerSignal == 1)
       throw std::runtime_error("Error from poll function: " +
                                std::string(strerror(errno)));
 
