@@ -11,34 +11,33 @@
 /* ************************************************************************** */
 
 #ifndef HTTPREQUEST_HPP
-# define HTTPREQUEST_HPP
+#define HTTPREQUEST_HPP
 
 #include <iostream>
-#include <sstream>
 #include <map>
-#include <string>
-#include <vector>
-#include <sys/socket.h>
 #include <netinet/in.h>
+#include <sstream>
+#include <string>
+#include <sys/socket.h>
 #include <unistd.h>
+#include <vector>
 
 class HttpRequest {
-	public:
-		HttpRequest();
-		~HttpRequest();
+public:
+  HttpRequest();
+  ~HttpRequest();
 
-		std::map <std::string, std::string> _ReqLine;
-		std::map <std::string, std::string> _Header;
-		std::string _Body;
+  std::map<std::string, std::string> ReqLine;
+  std::map<std::string, std::string> Header;
+  std::string Body;
 
-		void	request_blocks(std::string request);
+  void requestBlock(std::string &request);
 
-		void	receive_request_line(std::string request);
-		void	receive_request_header(std::string header);
-		void	receive_request_body(std::string request);
+  void parseRequestLine(std::string &request);
+  void parseRequestHeader(std::string &header);
+  void parseRequestBody(std::string &request);
 
-	private:
-
+private:
 };
 
 #endif
