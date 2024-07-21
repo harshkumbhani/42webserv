@@ -144,6 +144,10 @@ void SocketManager::pollin(int pollFd) {
     size_t bytesread = recv(pollFd, buffer, sizeof(buffer), 0);
     (void)bytesread;
     this->clients[pollFd].bytesRead += bytesread;
+    this->clients[pollFd].readString = "";
+    this->clients[pollFd].readString = std::string(buffer);
+    // std::cout << "Bytes read: " << this->clients[pollFd].bytesRead << std::endl;
+    // std::cout << std::string(buffer).size() << std::endl;
     std::cout << std::string(buffer) << std::endl;
     // exit(43);
   }

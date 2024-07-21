@@ -19,41 +19,41 @@ HttpRequest::~HttpRequest() {}
 // Request Line
 // Header
 // Body-->optional
-void HttpRequest::request_blocks(std::string request) {
-  std::string::size_type blocks_pos = request.find("\r\n\r\n");
-  if (blocks_pos == std::string::npos)
-    throw std::runtime_error(
-        "Request must contain at least a method and header");
-  std::string::size_type req_line_pos = request.find("\r\n");
-  if (req_line_pos == std::string::npos)
-    throw std::runtime_error("Invalid request format");
+void HttpRequest::requestBlock(clientState &clientData) {
+  HttpRequest httpReq;
 
-  std::string request_line = request.substr(0, req_line_pos);
-  receive_request_line(request_line);
+  if (clientData.flagHeaderRead == false) {
+    std::string::size_type headerEndPos =
+        clientData.readString.find("\r\n\r\n");
+    std::string::size_type reqMethodPos = clientData.readString.find("\r\n");
+    std::string requestLine = clientData.readString.substr(0, reqMethodPos);
+    httpReq.parseRequestLine(clientData, requestLine);
 
-  std::string header =
-      request.substr(req_line_pos + 2, blocks_pos - (req_line_pos + 2));
-  receive_request_header(header);
+    std::string reqHeader = clientData.readString.substr(
+        reqMethodPos + 2, headerEndPos - (reqMethodPos + 2));
+    httpReq.parseRequestHeader(clientData, reqHeader);
+    clientData.readString = clientData.readString.substr(headerEndPos + 4);
+  }
 
-  receive_request_body(request);
+  httpReq.parseRequestBody(clientData, clientData.readString);
 }
 
 // POST /submit-form HTTP/1.1\r\n
 // METHOD SP URI SP HTTP-VERSION CRLF
-void HttpRequest::receive_request_line(std::string line) {
+void HttpRequest::parseRequestLine(clientState &clientData, std::string &line) {
   std::stringstream ss(line);
   while (!ss.eof()) {
     std::string method;
     ss >> method;
-    _ReqLine.insert(std::make_pair("method", method));
+    clientData.requestLine.insert(std::make_pair("method", method));
 
     std::string url;
     ss >> url;
-    _ReqLine.insert(std::make_pair("url", url));
+    clientData.requestLine.insert(std::make_pair("url", url));
 
     std::string httpversion;
     ss >> httpversion;
-    _ReqLine.insert(std::make_pair("httpversion", httpversion));
+    clientData.requestLine.insert(std::make_pair("httpversion", httpversion));
   }
 }
 
@@ -61,8 +61,9 @@ void HttpRequest::receive_request_line(std::string line) {
 // Content-Type: application/x-www-form-urlencoded\r\n
 // Content-Length: 27\r\n
 // \r\n
-void HttpRequest::receive_request_header(std::string header) {
-  std::stringstream ss(header);
+void HttpRequest::parseRequestHeader(clientState &clientData,
+                                     std::string &reqheader) {
+  std::stringstream ss(reqheader);
   std::string line;
   while (std::getline(ss, line)) {
     if (!line.empty() && *line.rbegin() == '\r')
@@ -75,26 +76,29 @@ void HttpRequest::receive_request_header(std::string header) {
       while (it != value.end() && std::isspace(*it))
         ++it;
       value.erase(value.begin(), it);
-      _Header.insert(std::make_pair(key, value));
+      clientData.header.insert(std::make_pair(key, value));
     }
   }
+  clientData.flagHeaderRead = true;
 }
 
 // bodylen=23
 // key1=value1&key2=value2
-void HttpRequest::receive_request_body(std::string request) {
-  std::size_t len;
+void HttpRequest::parseRequestBody(clientState &clientData,
+                                   std::string &request) {
   std::map<std::string, std::string>::const_iterator it =
-      _Header.find("Content-Length");
-  if (it != _Header.end())
-    len = atoi(it->second.c_str());
+      clientData.header.find("Content-Length");
+  if (it != header.end())
+    clientData.contentLength = atoi(it->second.c_str());
   else
-    len = 0;
-  std::string::size_type pos = request.find("\r\n\r\n");
-  if (len > 0 || pos != std::string::npos)
-    _Body = request.substr(pos + 4, pos + 4 + len);
-  else
-    _Body = "";
+    clientData.contentLength = 0;
+  if (clientData.contentLength > 0) {
+    if (request.size() > 0)
+      clientData.body += request;
+    std::string::size_type pos = request.find("\r\n\r\n");
+    if (pos != std::string::npos)
+      clientData.flagBodyRead = true;
+  }
 }
 
 // My Notes

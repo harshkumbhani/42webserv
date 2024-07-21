@@ -22,20 +22,22 @@
 #include <unistd.h>
 #include <vector>
 
+#include "SocketManager.hpp"
+
 class HttpRequest {
 public:
   HttpRequest();
   ~HttpRequest();
 
-  std::map<std::string, std::string> ReqLine;
-  std::map<std::string, std::string> Header;
-  std::string Body;
+  std::map<std::string, std::string> reqLine;
+  std::map<std::string, std::string> header;
+  std::string body;
 
-  void requestBlock(std::string &request);
+  static void requestBlock(clientState &clientData);
 
-  void parseRequestLine(std::string &request);
-  void parseRequestHeader(std::string &header);
-  void parseRequestBody(std::string &request);
+  void parseRequestLine(clientState &clientData, std::string &request);
+  void parseRequestHeader(clientState &clientData, std::string &reqheader);
+  void parseRequestBody(clientState &clientData, std::string &request);
 
 private:
 };
