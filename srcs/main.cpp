@@ -1,6 +1,7 @@
-#include "Parser.hpp"
 #include "EventLogger.hpp"
 #include "Lexer.hpp"
+#include "Parser.hpp"
+#include "SocketManager.hpp"
 #include <exception>
 #include <iostream>
 
@@ -15,10 +16,10 @@ int main(int argc, char *argv[]) {
     configfile_path = argv[1];
   try {
     Lexer tokens(configfile_path);
-    std::cout << tokens << std::endl;
     Parser parser(tokens.getLexer());
-    std::cout << parser << std::endl;
-
+    // DEBUG("Number of servers: " << parser.getParser().size());
+    SocketManager sockets(parser.getParser());
+    // std::cout << sockets.getServers() << std::endl;
   } catch (std::runtime_error const &e) {
     ERROR(e.what());
     return 1;

@@ -30,6 +30,7 @@ struct ServerParser {
   int keepalive_timeout;
   int send_timeout;
   int listen;
+  int sockfd;
   std::string server_name;
   std::string root;
   std::string autoindex;
@@ -87,5 +88,6 @@ public:
   void parseLocationIndex(std::vector<lexer_node>::iterator &it, Location &loc);
 };
 
-std::ostream &operator<<(std::ostream &output, const Parser &parser);
+std::ostream &operator<<(std::ostream &output,
+                         const std::vector<ServerParser> &nodes);
 std::ostream &operator<<(std::ostream &output, const Location &location);
