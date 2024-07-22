@@ -24,6 +24,8 @@
 
 #include "SocketManager.hpp"
 
+struct clientState;
+
 class HttpRequest {
 public:
   HttpRequest();

@@ -14,13 +14,18 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "HttpResponse.hpp"
+
+class HttpRequest;
+
+enum methods { GET = 1, POST = 2, DELETE = 3 };
 
 struct clientState {
   bool flagHeaderRead;
   bool flagBodyRead;
+  methods method;
   size_t bytesRead;
   size_t contentLength;
-  size_t headerEndPosition;
   time_t startTime;
   std::string body;
   std::string readString;
@@ -39,7 +44,6 @@ private:
   std::map<int, clientState> clients;
 
 public:
-
   // typedefs
   typedef std::vector<struct pollfd>::iterator pollFdsIterator;
 

@@ -22,6 +22,8 @@ HttpRequest::~HttpRequest() {}
 void HttpRequest::requestBlock(clientState &clientData) {
   HttpRequest httpReq;
 
+  // DEBUG("Request Class: request reciveed");
+  std::cout << clientData.readString << std::endl;
   if (clientData.flagHeaderRead == false) {
     std::string::size_type headerEndPos =
         clientData.readString.find("\r\n\r\n");
@@ -33,9 +35,11 @@ void HttpRequest::requestBlock(clientState &clientData) {
         reqMethodPos + 2, headerEndPos - (reqMethodPos + 2));
     httpReq.parseRequestHeader(clientData, reqHeader);
     clientData.readString = clientData.readString.substr(headerEndPos + 4);
+    INFO("Request Parsing successfull");
   }
 
-  httpReq.parseRequestBody(clientData, clientData.readString);
+  if (clientData.method == POST)
+    httpReq.parseRequestBody(clientData, clientData.readString);
 }
 
 // POST /submit-form HTTP/1.1\r\n
@@ -46,6 +50,9 @@ void HttpRequest::parseRequestLine(clientState &clientData, std::string &line) {
     std::string method;
     ss >> method;
     clientData.requestLine.insert(std::make_pair("method", method));
+
+    if (method == "POST")
+      clientData.method = POST;
 
     std::string url;
     ss >> url;

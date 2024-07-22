@@ -1,8 +1,10 @@
 #include "SocketManager.hpp"
+#include "HttpRequest.hpp"
 
 volatile sig_atomic_t gServerSignal = 1;
 
 // Constructor
+
 SocketManager::SocketManager(std::vector<ServerParser> parser)
     : servers(parser) {
   createServerSockets();
@@ -10,6 +12,7 @@ SocketManager::SocketManager(std::vector<ServerParser> parser)
 }
 
 // Desctructor
+
 SocketManager::~SocketManager() {
   std::vector<int>::iterator it;
 
@@ -86,8 +89,8 @@ void SocketManager::createServerSockets() {
     pollFds.push_back(pollfd);
     serverSocketsFds.push_back(it->sockfd);
     ports.push_back(it->listen);
-    DEBUG("Server Socket fd: " << it->sockfd);
-    DEBUG("URI: " << it->server_name << ":" << it->listen);
+    // DEBUG("Server Socket fd: " << it->sockfd);
+    // DEBUG("URI: " << it->server_name << ":" << it->listen);
   }
 }
 
@@ -113,10 +116,10 @@ void SocketManager::acceptConnection(int pollFd) {
   clients[clientSocket] = client;
 
   std::time(&clients[clientSocket].startTime);
-  DEBUG("accept connection time: " << clients[clientSocket].startTime);
+  // DEBUG("accept connection time: " << clients[clientSocket].startTime);
   // TODO: Create a function to return the server block
 
-  DEBUG("Number of clients: " << clients.size());
+  // DEBUG("Number of clients: " << clients.size());
   SUCCESS("Accepted new client connection: " << clientSocket);
 }
 
@@ -139,17 +142,26 @@ void SocketManager::pollin(int pollFd) {
     acceptConnection(pollFd);
   } else {
     char buffer[4096 * 4];
-    // TODO: Read unitl \n\r\n\r (end of header) and then get the content
-    // length.
     size_t bytesread = recv(pollFd, buffer, sizeof(buffer), 0);
-    (void)bytesread;
     this->clients[pollFd].bytesRead += bytesread;
     this->clients[pollFd].readString = "";
     this->clients[pollFd].readString = std::string(buffer);
-    // std::cout << "Bytes read: " << this->clients[pollFd].bytesRead << std::endl;
-    // std::cout << std::string(buffer).size() << std::endl;
-    std::cout << std::string(buffer) << std::endl;
-    // exit(43);
+    HttpRequest::requestBlock(this->clients[pollFd]);
+
+  }
+}
+
+void SocketManager::pollout(int pollFd) {
+  if (isClientFd(pollFd)) {
+    HttpResponse response;
+
+    this->clients[pollFd].writeString = response.respond(this->clients[pollFd]);
+
+    DEBUG("Crafting response");
+    std::cout << clients[pollFd].writeString << std::endl;
+    send(pollFd, clients[pollFd].writeString.c_str(), clients[pollFd].writeString.size(), 0);
+    // Response class
+    // TODO: SEND CLIENT STATE TO REPSONCE CLASS
   }
 }
 
@@ -191,13 +203,17 @@ void SocketManager::pollingAndConnections() {
     for (size_t i = 0; i < pollFds.size(); i++) {
       if (pollFds[i].revents & POLLIN) {
         pollin(pollFds[i].fd);
+        if (this->clients[pollFds[i].fd].flagHeaderRead == true)
+          pollFds[i].revents = POLLOUT;
       }
       if (pollFds[i].revents & POLLOUT) {
-        // pollout(pollFds[i].fd);
+        pollout(pollFds[i].fd);
       }
     }
   }
 }
+
+// Operator overloads
 
 std::ostream &operator<<(std::ostream &output, const clientState &clientState) {
   output << "\nHeader Read Flag: " << clientState.flagBodyRead
