@@ -24,8 +24,8 @@ struct clientState {
   bool flagHeaderRead;
   bool flagBodyRead;
   methods method;
-  size_t bytesRead;
-  size_t contentLength;
+  ssize_t bytesRead;
+  ssize_t contentLength;
   time_t startTime;
   std::string body;
   std::string readString;
@@ -62,7 +62,7 @@ public:
   bool isClientFd(int pollFd);
 
   void pollin(int pollFd);
-  void pollout(int pollFd);
+  void pollout(pollfd &pollFd);
   void acceptConnection(int pollFd);
   void checkAndCloseStaleConnections();
 };
