@@ -142,26 +142,40 @@ void SocketManager::pollin(int pollFd) {
     acceptConnection(pollFd);
   } else {
     char buffer[4096 * 4];
-    size_t bytesread = recv(pollFd, buffer, sizeof(buffer), 0);
-    this->clients[pollFd].bytesRead += bytesread;
+    ssize_t bytesRead = recv(pollFd, buffer, sizeof(buffer), 0);
+    this->clients[pollFd].bytesRead += bytesRead;
     this->clients[pollFd].readString = "";
     this->clients[pollFd].readString = std::string(buffer);
     HttpRequest::requestBlock(this->clients[pollFd]);
-
   }
 }
 
-void SocketManager::pollout(int pollFd) {
-  if (isClientFd(pollFd)) {
-    HttpResponse response;
+void SocketManager::pollout(pollfd &pollFd) {
+  HttpResponse response;
 
-    this->clients[pollFd].writeString = response.respond(this->clients[pollFd]);
+  this->clients[pollFd.fd].writeString = response.respond(this->clients[pollFd.fd]);
 
-    DEBUG("Crafting response");
-    std::cout << clients[pollFd].writeString << std::endl;
-    send(pollFd, clients[pollFd].writeString.c_str(), clients[pollFd].writeString.size(), 0);
-    // Response class
-    // TODO: SEND CLIENT STATE TO REPSONCE CLASS
+  if (clients[pollFd.fd].writeString.empty() == true) {
+    WARNING("Response buffer Empty on socket: " << pollFd.fd);
+    pollFd.events = POLLIN;
+    return;
+  }
+
+  DEBUG("Crafting response");
+  // std::cout << clients[pollFd.fd].writeString << std::endl;
+  ssize_t bytesSend = send(pollFd.fd, clients[pollFd.fd].writeString.c_str(),
+       clients[pollFd.fd].writeString.size(), 0);
+
+  if (bytesSend > 0) {
+    clients[pollFd.fd].writeString.erase(0, bytesSend);
+    if (clients[pollFd.fd].writeString.empty() == true){
+      pollFd.events = POLLIN;
+      SUCCESS("Response sent successfully on socket: " << pollFd.fd);
+    }
+  } else if (bytesSend == 0) {
+    WARNING("Empty response sent on socket: " << pollFd.fd);
+  } else {
+    ERROR("Failed to send a response on socket: " << pollFd.fd);
   }
 }
 
@@ -204,10 +218,10 @@ void SocketManager::pollingAndConnections() {
       if (pollFds[i].revents & POLLIN) {
         pollin(pollFds[i].fd);
         if (this->clients[pollFds[i].fd].flagHeaderRead == true)
-          pollFds[i].revents = POLLOUT;
+          pollFds[i].events = POLLOUT;
       }
       if (pollFds[i].revents & POLLOUT) {
-        pollout(pollFds[i].fd);
+        pollout(pollFds[i]);
       }
     }
   }
