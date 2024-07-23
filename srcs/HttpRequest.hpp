@@ -13,18 +13,11 @@
 #ifndef HTTPREQUEST_HPP
 #define HTTPREQUEST_HPP
 
-#include <iostream>
-#include <map>
+#include "Structs.hpp"
+#include "EventLogger.hpp"
 #include <netinet/in.h>
-#include <sstream>
-#include <string>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <vector>
-
-#include "SocketManager.hpp"
-
-struct clientState;
 
 class HttpRequest {
 public:

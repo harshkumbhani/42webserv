@@ -3,7 +3,7 @@
 ################################################################################
 
 NAME := webserv
-CC := c++ 
+CC := c++
 CFLAGS = -Wextra -Wall -Werror -std=c++98 -MMD -MP $(addprefix -I, $(INC_DIRS))
 
 ################################################################################
@@ -20,7 +20,7 @@ LOG := printf "[$(BO)$(G)ⓘ INFO$(X)] %s\n"
 ################################################################################
 
 OBJ_DIR := _obj
-INC_DIRS := .
+INC_DIRS := . ./include/
 SRC_DIRS := ./srcs/
 
 # Tell the Makefile where headers and source files are
@@ -31,7 +31,7 @@ vpath %.cpp $(SRC_DIRS)
 ###############                  SOURCE FILES                     ##############
 ################################################################################
 
-SRCS := main.cpp Lexer.cpp EventLogger.cpp Parser.cpp \
+SRCS := main.cpp Lexer.cpp EventLogger.cpp Parser.cpp Utils.cpp \
 		SocketManager.cpp HttpRequest.cpp HttpResponse.cpp
 
 OBJS := $(addprefix $(OBJ_DIR)/, $(SRCS:%.cpp=%.o))

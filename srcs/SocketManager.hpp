@@ -1,39 +1,15 @@
 #ifndef SOCKET_MANAGER_HPP
 #define SOCKET_MANAGER_HPP
 
+#include "HttpResponse.hpp"
 #include "Parser.hpp"
-#include <algorithm>
-#include <csignal>
-#include <cstdlib>
-#include <ctime>
 #include <errno.h>
 #include <fcntl.h>
-#include <map>
 #include <netinet/in.h>
 #include <poll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "HttpResponse.hpp"
-
-class HttpRequest;
-
-enum methods { GET = 1, POST = 2, DELETE = 3 };
-
-struct clientState {
-  bool flagHeaderRead;
-  bool flagBodyRead;
-  methods method;
-  ssize_t bytesRead;
-  ssize_t contentLength;
-  time_t startTime;
-  std::string body;
-  std::string readString;
-  std::string writeString;
-  std::map<std::string, std::string> requestLine;
-  std::map<std::string, std::string> header;
-  ServerParser serverData;
-};
 
 class SocketManager {
 private:

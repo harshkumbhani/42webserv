@@ -27,8 +27,6 @@
 #include <unistd.h>
 #include <vector>
 
-struct clientState;
-
 enum status { OK = 200, NOT_FOUND = 404, BAD_REQUEST = 400 };
 
 class HttpRequest;
