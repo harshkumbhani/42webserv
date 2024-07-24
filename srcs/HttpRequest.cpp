@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 18:55:01 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/06/24 11:22:03 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/07/23 14:42:06 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ void HttpRequest::requestBlock(clientState &clientData) {
   HttpRequest httpReq;
 
   // DEBUG("Request Class: request reciveed");
-  std::cout << clientData.readString << std::endl;
+//   std::cout << clientData.readString << std::endl;
   if (clientData.flagHeaderRead == false) {
     std::string::size_type headerEndPos =
         clientData.readString.find("\r\n\r\n");
@@ -37,7 +37,6 @@ void HttpRequest::requestBlock(clientState &clientData) {
     clientData.readString = clientData.readString.substr(headerEndPos + 4);
     INFO("Request Parsing successfull");
   }
-
   if (clientData.method == POST)
     httpReq.parseRequestBody(clientData, clientData.readString);
 }
@@ -56,6 +55,7 @@ void HttpRequest::parseRequestLine(clientState &clientData, std::string &line) {
 
     std::string url;
     ss >> url;
+	std::cout << "URL: " << url << std::endl;
     clientData.requestLine.insert(std::make_pair("url", url));
 
     std::string httpversion;

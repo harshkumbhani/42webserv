@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:08:24 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/07/23 12:17:38 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/07/24 09:02:46 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,66 +16,48 @@ HttpResponse::HttpResponse() {}
 
 HttpResponse::~HttpResponse() {}
 
+// std::string HttpResponse::statusCode(int code) {
+// 	std::string code_str;
+// 	std::stringstream ss(code);
+// 	ss >> code_str;
+// 	std::ostringstream part;
+// 	part << "<!DOCTYPE html>"
+// 		<< "<html lang=\"en\">"
+// 		<< "<head>"
+// 		<< "<meta charset=\"UTF-8\">"
+// 		<< "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>\""
+// 		<< code_str
+// 		<< "</title></head><body><h1>"
+// 		<< "</h1></body></html>"
+
+// 	if (code == 400)
+// 		return (part1 + " Bad Request " + part2);
+// 	else if (code == 404)
+// 		return (part1 + " Not Found " + part2);
+// 	else if (code == 500)
+// 		return (part1 + " Internal Server Error " + part2);
+// 	return ("NULL");
+// }
+
 std::string HttpResponse::statusCode(int code) {
-std::string code_str;
-std::stringstream ss(code);
-ss >> code_str;
-std::string part1 =
-	"<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\">\
-	<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" +
-	code_str + "</title></head><body><h1>";
-std::string part2 = "</h1></body></html>";
-if (code == 400)
-	return (part1 + " Bad Request" + part2);
-else if (code == 404)
-	return (part1 + " Not Found" + part2);
-else if (code == 500)
-	return (part1 + " Internal Server Error" + part2);
-return ("NULL");
+	std::string code_str;
+	std::stringstream ss(code);
+	ss >> code_str;
+	std::string part1 =
+		"<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\">\
+		<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" +
+		code_str + "</title></head><body><h1>";
+	std::string part2 = "</h1></body></html>";
+	if (code == 400)
+		return (part1 + " Bad Request " + part2);
+	else if (code == 404)
+		return (part1 + " Not Found " + part2);
+	else if (code == 500)
+		return (part1 + " Internal Server Error " + part2);
+	return ("NULL");
 }
 
-std::string HttpResponse::respond_Get(clientState &req) {
-std::map<std::string, std::string>::const_iterator url =
-	req.requestLine.find("url");
-if (url != req.requestLine.end()) {
-	std::string route = "./www";
-	if (url->second == "/")
-		route += "/index.html";
-	else
-		route += url->second;
-	std::ifstream route_file(route.c_str());
-	if (route_file.fail() == true) {
-	_StatusLine = req.requestLine.find("httpversion")->second + " " + "404" +
-					" Not Found\r\n";
-	_Header = "Content-Type: text/html\r\n";
-	std::string status_page = statusCode(404);
-	std::stringstream ss;
-	ss << status_page.size();
-	std::string pageSize;
-	ss >> pageSize;
-
-	_Header =
-		_Header + "Content-Length: " + pageSize + "\r\nConnection: close\r\n";
-	_Body = status_page;
-	} else {
-	std::string buffer;
-	buffer.assign(std::istreambuf_iterator<char>(route_file),
-					std::istreambuf_iterator<char>());
-
-	_StatusLine =
-		req.requestLine.find("httpversion")->second + " " + "200" + " OK\r\n";
-	_Header = "Content-Type: text/html\r\n";
-
-	std::stringstream ss;
-	ss << buffer.size();
-	std::string fileSize;
-	ss >> fileSize;
-
-	_Header = _Header + "Content-Length: " + fileSize +
-				"\r\nConnection: keep-alive\r\n";
-	_Body = buffer;
-	route_file.close();
-	}
+std::string	HttpResponse::metaData(clientState &req) {
 	std::string headerMetaData = "";
 	for (std::map<std::string, std::string>::const_iterator hd = req.header.begin(); hd != req.header.end(); hd++) {
 		if (hd->first == "Content-Length" || hd->first == "Content-Type" || hd->first == "Connection" || hd->first == "Date" || hd->first == "Server")
@@ -84,16 +66,94 @@ if (url != req.requestLine.end()) {
 			headerMetaData = headerMetaData + hd->first + hd->second + "\r\n";
 	}
 	headerMetaData += "\r\n";
+	return (headerMetaData);
+}
+
+std::string HttpResponse::webserverStamp(void) {
 	time_t now = time(0);
 	char buf[100];
 	strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", gmtime(&now));
-	_Header = _Header + "Date: " + std::string(buf) +
-			"\r\nServer: Webserv/harsh/oreste/v1.0" + headerMetaData;
-} else {
-	throw std::runtime_error("Url Missing");
+	return (std::string(buf));
 }
-_Response = _StatusLine + _Header + _Body;
-return (_Response);
+
+std::string	HttpResponse::errorHandling(int code, clientState &req) {
+	std::stringstream err;
+	err << code;
+	std::string errorCode;
+	err >> errorCode;
+	std::string sms;
+	if (code == 400)
+		sms = "Bad Request";
+	else if (code == 404)
+		sms = "Not Found";
+	else if (code == 500)
+		sms = "Internal Server Error";
+	_StatusLine = req.requestLine.find("httpversion")->second + " " + errorCode + sms + "\r\n";
+	std::string status_page = statusCode(code);
+	std::stringstream ss;
+	ss << status_page.size();
+	std::string pageSize;
+	ss >> pageSize;
+	_Header = "Content-Type: text/html\r\nContent-Length: " + pageSize + "\r\nConnection: close\r\n";
+	_Body = status_page;
+	std::string headerMetaData = metaData(req);
+	_Header = _Header + "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+	_Response = _StatusLine + _Header + _Body;
+	return (_Response);
+}
+
+std::string HttpResponse::respond_Get(clientState &req) {
+	std::map<std::string, std::string>::const_iterator url = req.requestLine.find("url");
+	if (url != req.requestLine.end()) {
+		std::string route = "./www";
+		if (url->second == "/")
+			route += "/index.html";
+		else
+			route += url->second;
+		std::ifstream route_file(route.c_str());
+		std::string extension = route;
+		size_t pos = extension.find_last_of('.');
+		if (route_file.fail() == true) {
+			return (errorHandling(404, req));
+		// _StatusLine = req.requestLine.find("httpversion")->second + " " + "404" +
+		// 				" Not Found\r\n";
+		// _Header = "Content-Type: text/html\r\n";
+		// std::string status_page = statusCode(404);
+		// std::stringstream ss;
+		// ss << status_page.size();
+		// std::string pageSize;
+		// ss >> pageSize;
+
+		// _Header =
+		// 	_Header + "Content-Length: " + pageSize + "\r\nConnection: close\r\n";
+		// _Body = status_page;
+		} else {
+			std::string buffer;
+			buffer.assign(std::istreambuf_iterator<char>(route_file), std::istreambuf_iterator<char>());
+			_StatusLine = req.requestLine.find("httpversion")->second + " " + "200" + " OK\r\n";
+
+			std::stringstream ss;
+			ss << buffer.size();
+			std::string fileSize;
+			ss >> fileSize;
+
+			_Header = "Content-Type: " + extension.substr(pos + 1) + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
+			_Body = buffer;
+			route_file.close();
+		}
+		std::string headerMetaData = metaData(req);
+		_Header = _Header + "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+		// time_t now = time(0);
+		// char buf[100];
+		// strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", gmtime(&now));
+		// _Header = _Header + "Date: " + std::string(buf) +
+		// 		"\r\nServer: Webserv/harsh/oreste/v1.0" + headerMetaData;
+	} else {
+		throw std::runtime_error("Url Missing");
+	}
+	_Response = _StatusLine + _Header + _Body;
+	DEBUG("RESPONSE:\n" + _Response);
+	return (_Response);
 }
 
 bool HttpResponse::is_valid_char(char c) {
@@ -118,37 +178,32 @@ for (size_t i = 0; i == str.length(); ++i) {
 return true;
 }
 
-// HTTP/1.1 200 OK
-// Content-Type: application/json
-//  Content-Length: 51
-//  Date: Wed, 31 May 2024 12:34:56 GMT
-//  Server: MySimpleServer/1.0
-//  Connection: keep-alive
-//  {
-//    "message": "Data processed successfully"
-//  }
-
 std::string HttpResponse::response_Post(clientState &req) {
 std::map<std::string, std::string>::const_iterator url =
 	req.requestLine.find("url");
 if (url != req.requestLine.end()) {
-	std::string route = "./www" + url->second;
+	std::string route = "./www";
+	if (url->second == "/")
+		route += "/index.html";
+	else
+		route += url->second;
 	std::ifstream route_file(route.c_str());
 	std::string extension = url->second;
 	size_t pos = extension.find_last_of('.');
 	if (is_valid_str(route) == false) {
-	_StatusLine = req.requestLine.find("httpversion")->second + " " + "400" +
-					" Bad Request\r\n";
-	// std::string error_page = statusCode(400);
-	// page_processing(error_page);
-	std::string status_page = statusCode(400);
-	std::stringstream ss;
-	ss << status_page.size();
-	std::string pageSize;
-	ss >> pageSize;
-	_Header = "Content-Type: text/html\r\nContent-Length: " + pageSize +
-				"\r\nConnection: close\r\n";
-	_Body = status_page;
+		errorHandling(400, req);
+	// _StatusLine = req.requestLine.find("httpversion")->second + " " + "400" +
+	// 				" Bad Request\r\n";
+
+	// std::string status_page = statusCode(400);
+	// std::stringstream ss;
+	// ss << status_page.size();
+	// std::string pageSize;
+	// ss >> pageSize;
+	// _Header = "Content-Type: text/html\r\nContent-Length: " + pageSize +
+	// 			"\r\nConnection: close\r\n";
+	// _Body = status_page;
+	
 	} else if (route_file.fail() == true) {
 	std::ofstream outfile(route);
 	outfile << req.body;
@@ -212,6 +267,7 @@ if (url != req.requestLine.end()) {
 	throw std::runtime_error("Url Missing");
 }
 _Response = _StatusLine + _Header + _Body;
+DEBUG(_Response);
 return (_Response);
 }
 

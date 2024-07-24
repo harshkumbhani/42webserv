@@ -153,6 +153,7 @@ void SocketManager::pollin(int pollFd) {
 void SocketManager::pollout(pollfd &pollFd) {
   HttpResponse response;
 
+  DEBUG("Crafting response");
   this->clients[pollFd.fd].writeString = response.respond(this->clients[pollFd.fd]);
 
   if (clients[pollFd.fd].writeString.empty() == true) {
@@ -161,7 +162,6 @@ void SocketManager::pollout(pollfd &pollFd) {
     return;
   }
 
-  DEBUG("Crafting response");
   // std::cout << clients[pollFd.fd].writeString << std::endl;
   ssize_t bytesSend = send(pollFd.fd, clients[pollFd.fd].writeString.c_str(),
        clients[pollFd.fd].writeString.size(), 0);
