@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:09:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/07/23 18:04:23 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/07/24 17:39:43 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ class HttpResponse {
 		std::string	errorHandling(int code, clientState &req);
 
 		std::string statusCode(int code);
+		std::string generateHtml(int code, const std::string& codeMessage);
 		std::string respond(clientState &req);
 
 		std::string respond_Get(clientState &req);
@@ -57,8 +58,6 @@ class HttpResponse {
 		// supporting funcs
 		bool is_valid_str(const std::string &str);
 		bool is_valid_char(char c);
-
-
 };
 
 #endif
