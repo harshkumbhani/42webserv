@@ -14,11 +14,17 @@ SocketManager::SocketManager(std::vector<ServerParser> parser)
 // Desctructor
 
 SocketManager::~SocketManager() {
-  std::vector<int>::iterator it;
+  // std::vector<int>::iterator it;
+  //
+  // for (it = serverSocketsFds.begin(); it != serverSocketsFds.end(); it++) {
+  //   INFO("Closing server socket with fd: " << *it);
+  //   close(*it);
+  // }
 
-  for (it = serverSocketsFds.begin(); it != serverSocketsFds.end(); it++) {
-    INFO("Closing server socket with fd: " << *it);
-    close(*it);
+  std::vector<struct pollfd>::iterator itp;
+  for (itp = pollFds.begin(); itp != pollFds.end(); itp++) {
+    INFO("Closing all open socket fds: " << itp->fd);
+    close(itp->fd);
   }
 }
 
@@ -146,7 +152,7 @@ void SocketManager::pollin(int pollFd) {
     this->clients[pollFd].readString = "";
     this->clients[pollFd].readString = std::string(buffer);
     HttpRequest::requestBlock(this->clients[pollFd]);
-	DEBUG("Request recieved on socket *" << pollFd << "*");
+    DEBUG("Request recieved on socket *" << pollFd << "*");
   }
 }
 
@@ -154,7 +160,8 @@ void SocketManager::pollout(pollfd &pollFd) {
   HttpResponse response;
 
   DEBUG("Crafting response");
-  this->clients[pollFd.fd].writeString = response.respond(this->clients[pollFd.fd]);
+  this->clients[pollFd.fd].writeString =
+      response.respond(this->clients[pollFd.fd]);
 
   if (clients[pollFd.fd].writeString.empty() == true) {
     WARNING("Response buffer Empty on socket: " << pollFd.fd);
@@ -164,18 +171,38 @@ void SocketManager::pollout(pollfd &pollFd) {
 
   // std::cout << clients[pollFd.fd].writeString << std::endl;
   ssize_t bytesSend = send(pollFd.fd, clients[pollFd.fd].writeString.c_str(),
-       clients[pollFd.fd].writeString.size(), 0);
+                           clients[pollFd.fd].writeString.size(), 0);
 
   if (bytesSend > 0) {
     clients[pollFd.fd].writeString.erase(0, bytesSend);
-    if (clients[pollFd.fd].writeString.empty() == true){
+    if (clients[pollFd.fd].writeString.empty() == true) {
       pollFd.events = POLLIN;
       SUCCESS("Response sent successfully on socket: " << pollFd.fd);
+      clients[pollFd.fd].readString.clear();
+      clients[pollFd.fd].writeString.clear();
+      clients[pollFd.fd].flagHeaderRead = false;
+      closeClientConnection(pollFd.fd);
     }
   } else if (bytesSend == 0) {
     WARNING("Empty response sent on socket: " << pollFd.fd);
   } else {
     ERROR("Failed to send a response on socket: " << pollFd.fd);
+  }
+}
+
+void SocketManager::closeClientConnection(int pollFd) {
+  INFO("Closing client connection on fd: " << pollFd);
+  close(pollFd);
+  clients.erase(pollFd);
+  clientSocketsFds.erase(
+      std::find(clientSocketsFds.begin(), clientSocketsFds.end(), pollFd));
+
+  std::vector<struct pollfd>::iterator it;
+  for(it = pollFds.begin(); it != pollFds.end(); it++) {
+    if (it->fd == pollFd) {
+      pollFds.erase(it);
+      break;
+    }
   }
 }
 

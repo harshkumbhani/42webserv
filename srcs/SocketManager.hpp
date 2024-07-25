@@ -3,6 +3,7 @@
 
 #include "HttpResponse.hpp"
 #include "Parser.hpp"
+#include <algorithm>
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -41,6 +42,7 @@ public:
   void pollout(pollfd &pollFd);
   void acceptConnection(int pollFd);
   void checkAndCloseStaleConnections();
+  void closeClientConnection(int pollFd);
 };
 
 std::ostream &operator<<(std::ostream &output, const clientState &clientState);
