@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:08:24 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/07/25 13:17:58 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/07/25 13:39:46 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -380,9 +380,9 @@ std::string HttpResponse::response_Post(clientState &req) {
 	}
 
 	std::string route = "./www" + (url->second == "/" ? "/index.html" : url->second);
-	std::string extension = url->second.substr(url->second.find_last_of('.') + 1);
-	// std::string contentType = g_mimeTypes[url->second.substr(url->second.find_last_of('.') + 1))];
-
+	// std::string extension = url->second.substr(url->second.find_last_of('.') + 1);
+	size_t pos = route.find_last_of('.');
+	std::string contentType = g_mimeTypes[route.substr(pos + 1)];
 
 	if (!is_valid_str(route)) {
 		return errorHandling(400, req);
@@ -408,7 +408,8 @@ std::string HttpResponse::response_Post(clientState &req) {
 		ss << buffer.size();
 		std::string fileSize;
 		ss >> fileSize;
-		_Header = "Content-Type: " + extension + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
+		// _Header = "Content-Type: " + extension + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
+		_Header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
 		_Body = buffer;
 	} else {
 		std::string buffer((std::istreambuf_iterator<char>(route_file)), std::istreambuf_iterator<char>());
@@ -419,7 +420,8 @@ std::string HttpResponse::response_Post(clientState &req) {
 		ss << buffer.size();
 		std::string fileSize;
 		ss >> fileSize;
-		_Header = "Content-Type: " + extension + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
+		// _Header = "Content-Type: " + extension + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
+		_Header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
 		_Body = buffer;
 	}
 
@@ -564,10 +566,10 @@ std::string HttpResponse::response_Delete(clientState &req) {
 
 	std::string route = "./www/store/general/" + url->second;
 	std::ifstream route_file(route.c_str());
-	std::string extension = url->second;
-	size_t pos = extension.find_last_of('.');
+	// std::string extension = url->second;
+	size_t pos = route.find_last_of('.');
 	// std::string contentType = extension.substr(pos + 1);
-	std::string contentType = g_mimeTypes[extension.substr(pos + 1)];
+	std::string contentType = g_mimeTypes[route.substr(pos + 1)];
 
 	if (!is_valid_str(route)) {
 		_StatusLine = generateStatusLine(req.requestLine.find("httpversion")->second, 400, "Bad Request");

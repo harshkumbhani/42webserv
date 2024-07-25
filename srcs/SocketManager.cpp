@@ -46,8 +46,7 @@ void SocketManager::createServerSockets() {
     it->sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
     if (it->sockfd == -1) {
-      throw std::runtime_error("Failed to create server socket: " +
-                               std::string(strerror(errno)));
+      throw std::runtime_error("Failed to create server socket: " + std::string(strerror(errno)));
     }
 
     const int enable = 1;
