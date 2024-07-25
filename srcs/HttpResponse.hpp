@@ -26,6 +26,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <vector>
+#include <sys/stat.h>
 #include "Utils.hpp"
 
 enum status { OK = 200, NOT_FOUND = 404, BAD_REQUEST = 400 };

@@ -218,6 +218,7 @@ std::string HttpResponse::respond_Get(clientState &req) {
 		std::cout << "===============================================" << std::endl;
 		std::string route = "./www" + (url->second == "/" ? "/index.html" : url->second);
 		std::cout << "URL->SECOND: " << url->second << std::endl;
+		std::cout << "File path: " << route << std::endl;
 		std::ifstream route_file(route.c_str());
 		// std::string extension = route.substr(1);
 		size_t pos = route.find_last_of('.');
@@ -230,11 +231,16 @@ std::string HttpResponse::respond_Get(clientState &req) {
 		if (route_file.fail()) {
 			return errorHandling(404, req);
 		} else {
+			struct stat statFile;
+			if(stat(route.c_str(), &statFile) != 0) {
+				WARNING("Unable to get file properties");
+				exit(42);
+			}
 			std::string buffer((std::istreambuf_iterator<char>(route_file)), std::istreambuf_iterator<char>());
 			_StatusLine = req.requestLine["httpversion"] + " 200 OK\r\n";
 
 			std::stringstream ss;
-			ss << buffer.size();
+			ss << statFile.st_size;
 			std::string fileSize;
 			ss >> fileSize;
 
@@ -249,6 +255,14 @@ std::string HttpResponse::respond_Get(clientState &req) {
 	} else {
 		throw std::runtime_error("Url Missing");
 	}
+	// if (req.requestLine["url"] == "/assets/bg2.mp4")
+	// 	std::cout << "===================================" << "\n"
+	// 		<< "                  Video Start             " << "\n"
+	// 		<< "=====================================" << "\n\r\n\r"
+	// 		<< _Body << "\n\r\n\r"
+	// 		<< "=====================================" << "\n"
+	// 		<< "               END                 " << "\n"
+	// 		<< "=====================================" << "\n";
 	_Response = _StatusLine + _Header + _Body;
 	// std::cout << "RESPONSE:\n" + _Response << std::endl;
 	return _Response;
