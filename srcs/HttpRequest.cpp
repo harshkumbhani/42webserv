@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 18:55:01 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/07/23 14:42:06 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/07/25 12:48:54 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ void HttpRequest::requestBlock(clientState &clientData) {
   HttpRequest httpReq;
 
   // DEBUG("Request Class: request reciveed");
-//   std::cout << clientData.readString << std::endl;
+  std::cout << clientData.readString << std::endl;
   if (clientData.flagHeaderRead == false) {
     std::string::size_type headerEndPos =
         clientData.readString.find("\r\n\r\n");

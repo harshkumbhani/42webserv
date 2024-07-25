@@ -147,6 +147,7 @@ void SocketManager::pollin(int pollFd) {
     this->clients[pollFd].readString = "";
     this->clients[pollFd].readString = std::string(buffer);
     HttpRequest::requestBlock(this->clients[pollFd]);
+	DEBUG("Request recieved on socket *" << pollFd << "*");
   }
 }
 
@@ -186,7 +187,7 @@ void SocketManager::checkAndCloseStaleConnections() {
   for (it = pollFds.begin(); it != pollFds.end();) {
     if (isClientFd(it->fd) == true) {
       std::time(&currentTime);
-      if (std::difftime(currentTime, clients[it->fd].startTime) > 5) {
+      if (std::difftime(currentTime, clients[it->fd].startTime) > 15) {
         INFO("Closing Client Connection on fd: " << it->fd);
         if (close(it->fd) == -1)
           throw std::runtime_error("Failed to close client connection!");

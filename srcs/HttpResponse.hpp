@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:09:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/07/24 17:39:43 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/07/25 12:20:07 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <vector>
+#include "Utils.hpp"
 
 enum status { OK = 200, NOT_FOUND = 404, BAD_REQUEST = 400 };
 

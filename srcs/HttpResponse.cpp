@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:08:24 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/07/24 19:20:41 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/07/25 13:17:58 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -212,12 +212,21 @@ std::string HttpResponse::errorHandling(int code, clientState &req) {
 
 std::string HttpResponse::respond_Get(clientState &req) {
 	std::map<std::string, std::string>::const_iterator url = req.requestLine.find("url");
+	// if (url == "/")
+	// 	serveDefaultPage(req);
 	if (url != req.requestLine.end()) {
+		std::cout << "===============================================" << std::endl;
 		std::string route = "./www" + (url->second == "/" ? "/index.html" : url->second);
+		std::cout << "URL->SECOND: " << url->second << std::endl;
 		std::ifstream route_file(route.c_str());
+		// std::string extension = route.substr(1);
+		size_t pos = route.find_last_of('.');
+		std::string contentType = g_mimeTypes[route.substr(pos + 1)];
 		// std::string extension = url->second;
 		// size_t pos = extension.find_last_of('.');
 		// std::string contentType = g_mimeTypes[extension.substr(pos + 1)];
+		std::cout << "Content Type: " << contentType << std::endl;
+		std::cout << "===============================================" << std::endl;
 		if (route_file.fail()) {
 			return errorHandling(404, req);
 		} else {
@@ -229,8 +238,9 @@ std::string HttpResponse::respond_Get(clientState &req) {
 			std::string fileSize;
 			ss >> fileSize;
 
-			size_t pos = route.find_last_of('.');
-			_Header = "Content-Type: " + route.substr(pos + 1) + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
+			// size_t pos = route.find_last_of('.');
+			// _Header = "Content-Type: " + route.substr(pos + 1) + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
+			_Header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
 			_Body = buffer;
 			route_file.close();
 		}
@@ -240,7 +250,7 @@ std::string HttpResponse::respond_Get(clientState &req) {
 		throw std::runtime_error("Url Missing");
 	}
 	_Response = _StatusLine + _Header + _Body;
-	std::cout << "RESPONSE:\n" + _Response << std::endl;
+	// std::cout << "RESPONSE:\n" + _Response << std::endl;
 	return _Response;
 }
 //==================================================================================================
@@ -416,7 +426,7 @@ std::string HttpResponse::response_Post(clientState &req) {
 	_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + metaData(req);
 	_Response = _StatusLine + _Header + _Body;
 
-	DEBUG(_Response);
+	// DEBUG(_Response);
 	return _Response;
 }
 
@@ -556,8 +566,8 @@ std::string HttpResponse::response_Delete(clientState &req) {
 	std::ifstream route_file(route.c_str());
 	std::string extension = url->second;
 	size_t pos = extension.find_last_of('.');
-	std::string contentType = extension.substr(pos + 1);
-	// std::string contentType = g_mimeTypes[extension.substr(pos + 1)];
+	// std::string contentType = extension.substr(pos + 1);
+	std::string contentType = g_mimeTypes[extension.substr(pos + 1)];
 
 	if (!is_valid_str(route)) {
 		_StatusLine = generateStatusLine(req.requestLine.find("httpversion")->second, 400, "Bad Request");
@@ -592,7 +602,7 @@ std::string HttpResponse::response_Delete(clientState &req) {
 	_Header += generateDateHeader() + "Server: Webserv/harsh/oreste/v1.0\r\n\r\n";
 	_Response = _StatusLine + _Header + _Body;
 
-	DEBUG(_Response);
+	// DEBUG(_Response);
 	return _Response;
 }
 
