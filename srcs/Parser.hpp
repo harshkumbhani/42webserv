@@ -12,33 +12,10 @@
 
 #pragma once
 
-#include <cstring>
-#include <ostream>
-#include <stack>
-
 #include "Lexer.hpp"
+#include "Utils.hpp"
 
-struct Location {
-  std::vector<std::string> methods;
-  std::string redirect;
-  std::string root;
-  std::string index;
-  std::string path;
-};
-
-struct ServerParser {
-  int keepalive_timeout;
-  int send_timeout;
-  int listen;
-  int sockfd;
-  std::string server_name;
-  std::string root;
-  std::string autoindex;
-  std::string index;
-  std::string directory_listing;
-  size_t client_body_size;
-  std::vector<Location> location;
-};
+const std::string mimeTypeFilePath = "./config/mime.typ";
 
 class Parser {
 private:

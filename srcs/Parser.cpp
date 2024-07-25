@@ -14,6 +14,7 @@
 
 Parser::Parser(std::vector<lexer_node> lexer) : lexer(lexer) {
   parseConfigurations(this->lexer);
+  parseMimeTypes(mimeTypeFilePath);
 }
 
 Parser::~Parser() {}

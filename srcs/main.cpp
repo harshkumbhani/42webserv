@@ -2,8 +2,8 @@
 #include "Lexer.hpp"
 #include "Parser.hpp"
 #include "SocketManager.hpp"
+#include "Utils.hpp"
 #include <exception>
-#include <iostream>
 
 int main(int argc, char *argv[]) {
   INFO("Web server initialising");
@@ -24,5 +24,6 @@ int main(int argc, char *argv[]) {
     ERROR(e.what());
     return 1;
   }
+
   return 0;
 }
