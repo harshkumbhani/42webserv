@@ -104,6 +104,7 @@ h2 {
     display: inline-block;
     font-size: 16px;
     margin: 4px 2px;
+	transition: opacity 0.6s ease;
 }
 
 button:hover {
