@@ -4,7 +4,7 @@ std::map<std::string, std::string> g_mimeTypes;
 
 bool parseMimeTypes(const std::string &filename) {
 
-  std::ifstream file(filename);
+  std::ifstream file(filename.c_str());
   if (!file.is_open()) {
     ERROR("Unable to open " + filename);
     return false;
