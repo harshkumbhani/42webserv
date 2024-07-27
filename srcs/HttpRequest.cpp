@@ -23,7 +23,8 @@ void HttpRequest::requestBlock(clientState &clientData) {
   HttpRequest httpReq;
 
   // DEBUG("Request Class: request reciveed");
-  std::cout << clientData.readString << std::endl;
+  if (clientData.header["url"] == "/assets/bg2.mp4")
+    std::cout << clientData.readString << std::endl;
   if (clientData.flagHeaderRead == false) {
     std::string::size_type headerEndPos =
         clientData.readString.find("\r\n\r\n");
@@ -55,7 +56,7 @@ void HttpRequest::parseRequestLine(clientState &clientData, std::string &line) {
 
     std::string url;
     ss >> url;
-	std::cout << "URL: " << url << std::endl;
+    std::cout << "URL: " << url << std::endl;
     clientData.requestLine.insert(std::make_pair("url", url));
 
     std::string httpversion;

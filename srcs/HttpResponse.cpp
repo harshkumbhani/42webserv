@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:08:24 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/07/27 10:21:13 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/07/27 10:28:42 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,6 +114,9 @@ std::string HttpResponse::respond_Get(clientState &req) {
 	if (url != req.requestLine.end()) {
 		std::string route = "./www" + (url->second == "/" ? "/index.html" : url->second);
 		std::cout << "URL->SECOND: " << url->second << std::endl;
+		std::cout << "File path: " << route << std::endl;
+		std::ifstream route_file(route.c_str());
+		// std::string extension = route.substr(1);
 		size_t pos = route.find_last_of('.');
 		std::string contentType = g_mimeTypes[route.substr(pos + 1)];
 		std::cout << "Content Type: " << contentType << std::endl;
@@ -121,11 +124,16 @@ std::string HttpResponse::respond_Get(clientState &req) {
 		if (route_file.fail()) {
 			return errorHandling(404, req);
 		} else {
+			struct stat statFile;
+			if(stat(route.c_str(), &statFile) != 0) {
+				WARNING("Unable to get file properties");
+				exit(42);
+			}
 			std::string buffer((std::istreambuf_iterator<char>(route_file)), std::istreambuf_iterator<char>());
 			_StatusLine = req.requestLine["httpversion"] + " 200 OK\r\n";
 
 			std::stringstream ss;
-			ss << buffer.size();
+			ss << statFile.st_size;
 			std::string fileSize;
 			ss >> fileSize;
 
@@ -138,6 +146,14 @@ std::string HttpResponse::respond_Get(clientState &req) {
 	} else {
 		throw std::runtime_error("Url Missing");
 	}
+	// if (req.requestLine["url"] == "/assets/bg2.mp4")
+	// 	std::cout << "===================================" << "\n"
+	// 		<< "                  Video Start             " << "\n"
+	// 		<< "=====================================" << "\n\r\n\r"
+	// 		<< _Body << "\n\r\n\r"
+	// 		<< "=====================================" << "\n"
+	// 		<< "               END                 " << "\n"
+	// 		<< "=====================================" << "\n";
 	DEBUG("THE RESPONSE HEADER\n" + _Header);
 	_Response = _StatusLine + _Header + _Body;
 	return _Response;
