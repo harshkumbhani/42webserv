@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:08:24 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/07/25 13:39:46 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/07/27 10:21:13 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,115 +57,14 @@ std::string HttpResponse::statusCode(int code) {
 	return generateHtml(code, codeMessage);
 }
 
-// std::string HttpResponse::statusCode(int code) {
-// 	std::string code_str;
-// 	std::stringstream ss(code);
-// 	ss >> code_str;
-// 	std::string part1 =
-// 		"<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\">\
-// 		<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" +
-// 		code_str + "</title></head><body><h1>";
-// 	std::string part2 = "</h1></body></html>";
-// 	if (code == 400)
-// 		return (part1 + " Bad Request " + part2);
-// 	else if (code == 404)
-// 		return (part1 + " Not Found " + part2);
-// 	else if (code == 500)
-// 		return (part1 + " Internal Server Error " + part2);
-// 	return ("NULL");
-// }
-
-// std::string	HttpResponse::metaData(clientState &req) {
-// 	std::string headerMetaData = "";
-// 	for (std::map<std::string, std::string>::const_iterator hd = req.header.begin(); hd != req.header.end(); hd++) {
-// 		if (hd->first == "Content-Length" || hd->first == "Content-Type" || hd->first == "Connection" || hd->first == "Date" || hd->first == "Server")
-// 			req.header.erase(hd->first);
-// 		else
-// 			headerMetaData = headerMetaData + hd->first + hd->second + "\r\n";
-// 	}
-// 	headerMetaData += "\r\n";
-// 	return (headerMetaData);
-// }
-
-// std::string HttpResponse::webserverStamp(void) {
-// 	time_t now = time(0);
-// 	char buf[100];
-// 	strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", gmtime(&now));
-// 	return (std::string(buf));
-// }
-
-// std::string	HttpResponse::errorHandling(int code, clientState &req) {
-// 	std::stringstream err;
-// 	err << code;
-// 	std::string errorCode;
-// 	err >> errorCode;
-// 	std::string sms;
-// 	if (code == 400)
-// 		sms = "Bad Request";
-// 	else if (code == 404)
-// 		sms = "Not Found";
-// 	else if (code == 500)
-// 		sms = "Internal Server Error";
-// 	_StatusLine = req.requestLine.find("httpversion")->second + " " + errorCode + sms + "\r\n";
-// 	std::string status_page = statusCode(code);
-// 	std::stringstream ss;
-// 	ss << status_page.size();
-// 	std::string pageSize;
-// 	ss >> pageSize;
-// 	_Header = "Content-Type: text/html\r\nContent-Length: " + pageSize + "\r\nConnection: close\r\n";
-// 	_Body = status_page;
-// 	std::string headerMetaData = metaData(req);
-// 	_Header = _Header + "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
-// 	_Response = _StatusLine + _Header + _Body;
-// 	return (_Response);
-// }
-
-// std::string HttpResponse::respond_Get(clientState &req) {
-// 	std::map<std::string, std::string>::const_iterator url = req.requestLine.find("url");
-// 	if (url != req.requestLine.end()) {
-// 		std::string route = "./www";
-// 		if (url->second == "/")
-// 			route += "/index.html";
-// 		else
-// 			route += url->second;
-// 		std::ifstream route_file(route.c_str());
-// 		std::string extension = route;
-// 		size_t pos = extension.find_last_of('.');
-// 		// std::string mime = parser.mimes[extension.substr(pos + 1)];
-// 		if (route_file.fail() == true) {
-// 			return (errorHandling(404, req));
-// 		} else {
-// 			std::string buffer;
-// 			buffer.assign(std::istreambuf_iterator<char>(route_file), std::istreambuf_iterator<char>());
-// 			_StatusLine = req.requestLine.find("httpversion")->second + " " + "200" + " OK\r\n";
-
-// 			std::stringstream ss;
-// 			ss << buffer.size();
-// 			std::string fileSize;
-// 			ss >> fileSize;
-
-// 			_Header = "Content-Type: " + extension.substr(pos + 1) + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
-// 			_Body = buffer;
-// 			route_file.close();
-// 		}
-// 		std::string headerMetaData = metaData(req);
-// 		_Header = _Header + "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
-// 	} else {
-// 		throw std::runtime_error("Url Missing");
-// 	}
-// 	_Response = _StatusLine + _Header + _Body;
-// 	DEBUG("RESPONSE:\n" + _Response);
-// 	return (_Response);
-// }
-
-//==================================================================================================
 std::string HttpResponse::metaData(clientState &req) {
 	std::string headerMetaData = "";
 	std::map<std::string, std::string>::iterator hd = req.header.begin();
 	while (hd != req.header.end()) {
-		if (hd->first == "Content-Length" || hd->first == "Content-Type" || hd->first == "Connection" || hd->first == "Date" || hd->first == "Server")
-			hd = req.header.erase(hd);
-		else {
+		if (hd->first == "Content-Length" || hd->first == "Content-Type" || hd->first == "Connection" || hd->first == "Date" || hd->first == "Server"){
+			req.header.erase(hd++);
+			// hd = req.header.erase(hd);
+		} else {
 			headerMetaData += hd->first + ": " + hd->second + "\r\n";
 			++hd;
 		}
@@ -212,21 +111,13 @@ std::string HttpResponse::errorHandling(int code, clientState &req) {
 
 std::string HttpResponse::respond_Get(clientState &req) {
 	std::map<std::string, std::string>::const_iterator url = req.requestLine.find("url");
-	// if (url == "/")
-	// 	serveDefaultPage(req);
 	if (url != req.requestLine.end()) {
-		std::cout << "===============================================" << std::endl;
 		std::string route = "./www" + (url->second == "/" ? "/index.html" : url->second);
 		std::cout << "URL->SECOND: " << url->second << std::endl;
-		std::ifstream route_file(route.c_str());
-		// std::string extension = route.substr(1);
 		size_t pos = route.find_last_of('.');
 		std::string contentType = g_mimeTypes[route.substr(pos + 1)];
-		// std::string extension = url->second;
-		// size_t pos = extension.find_last_of('.');
-		// std::string contentType = g_mimeTypes[extension.substr(pos + 1)];
 		std::cout << "Content Type: " << contentType << std::endl;
-		std::cout << "===============================================" << std::endl;
+		std::ifstream route_file(route.c_str());
 		if (route_file.fail()) {
 			return errorHandling(404, req);
 		} else {
@@ -238,8 +129,6 @@ std::string HttpResponse::respond_Get(clientState &req) {
 			std::string fileSize;
 			ss >> fileSize;
 
-			// size_t pos = route.find_last_of('.');
-			// _Header = "Content-Type: " + route.substr(pos + 1) + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
 			_Header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
 			_Body = buffer;
 			route_file.close();
@@ -249,8 +138,8 @@ std::string HttpResponse::respond_Get(clientState &req) {
 	} else {
 		throw std::runtime_error("Url Missing");
 	}
+	DEBUG("THE RESPONSE HEADER\n" + _Header);
 	_Response = _StatusLine + _Header + _Body;
-	// std::cout << "RESPONSE:\n" + _Response << std::endl;
 	return _Response;
 }
 //==================================================================================================
@@ -362,7 +251,7 @@ std::string HttpResponse::respond_Get(clientState &req) {
 // }
 //==================================================================================================
 bool HttpResponse::is_valid_char(char c) {
-	return isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~';
+	return isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~' || c == '/';
 }
 
 bool HttpResponse::is_valid_str(const std::string &str) {
@@ -380,6 +269,7 @@ std::string HttpResponse::response_Post(clientState &req) {
 	}
 
 	std::string route = "./www" + (url->second == "/" ? "/index.html" : url->second);
+
 	// std::string extension = url->second.substr(url->second.find_last_of('.') + 1);
 	size_t pos = route.find_last_of('.');
 	std::string contentType = g_mimeTypes[route.substr(pos + 1)];
