@@ -11,7 +11,7 @@ SocketManager::SocketManager(std::vector<ServerParser> parser)
   pollingAndConnections();
 }
 
-// Desctructor
+// Destructor
 
 SocketManager::~SocketManager() {
   // std::vector<int>::iterator it;
@@ -95,14 +95,12 @@ void SocketManager::createServerSockets() {
     pollFds.push_back(pollfd);
     serverSocketsFds.push_back(it->sockfd);
     ports.push_back(it->listen);
-    // DEBUG("Server Socket fd: " << it->sockfd);
-    // DEBUG("URI: " << it->server_name << ":" << it->listen);
   }
 }
 
 // Polling and Connections
 
-void SocketManager::acceptConnection(int pollFd) {
+void SocketManager::acceptConnection(int &pollFd) {
   struct sockaddr_in clientAddress;
   socklen_t clientAddressLen = sizeof(clientAddress);
   int clientSocket =
@@ -159,8 +157,7 @@ void SocketManager::pollin(int pollFd) {
 
 void SocketManager::pollout(pollfd &pollFd) {
   HttpResponse response;
-  ssize_t totalBytesSend = 0;
-  // DEBUG("Crafting response");
+
   this->clients[pollFd.fd].writeString =
       response.respond(this->clients[pollFd.fd]);
 
@@ -170,15 +167,17 @@ void SocketManager::pollout(pollfd &pollFd) {
     return;
   }
 
+  DEBUG("back to send again");
   // std::cout << clients[pollFd.fd].writeString << std::endl;
   ssize_t bytesSend = send(pollFd.fd, clients[pollFd.fd].writeString.c_str(),
-                           clients[pollFd.fd].writeString.size(), MSG_NOSIGNAL);
-
-  if (clients[pollFd.fd].header["url"] == "/assets/bg2.mp4") {
+                           clients[pollFd.fd].writeString.size(), 0);
+  if (clients[pollFd.fd].requestLine["url"] == "/assets/bg4.mp4") {
     DEBUG("Bytes send for video: " << bytesSend);
+    DEBUG("Write string size(): " << clients[pollFd.fd].writeString.size());
   }
   if (bytesSend > 0) {
     clients[pollFd.fd].writeString.erase(0, bytesSend);
+    DEBUG("Write string size() after first send: " << clients[pollFd.fd].writeString.size());
     if (clients[pollFd.fd].writeString.empty() == true) {
       pollFd.events = POLLIN;
       SUCCESS("Response sent successfully on socket: " << pollFd.fd);
@@ -195,74 +194,53 @@ void SocketManager::pollout(pollfd &pollFd) {
     closeClientConnection(pollFd.fd);
   }
 
-  // while (totalBytesSend < clients[pollFd.fd].writeString.size()) {
-  //   DEBUG("Total bytes send: " << totalBytesSend);
-  //       ssize_t bytesSent = send(pollFd.fd, this->clients[pollFd.fd].writeString.c_str(),
-  //                                this->clients[pollFd.fd].writeString.size(), MSG_NOSIGNAL);
-  //
-  //       if (bytesSent > 0) {
-  //           totalBytesSend += bytesSent;
-  //           this->clients[pollFd.fd].writeString.erase(0, bytesSent);
-  //           if (this->clients[pollFd.fd].writeString.empty()) {
-  //               pollFd.events = POLLIN;
-  //               SUCCESS("Response sent successfully on socket: " << pollFd.fd);
-  //               this->clients[pollFd.fd].readString.clear();
-  //               this->clients[pollFd.fd].writeString.clear();
-  //               this->clients[pollFd.fd].flagHeaderRead = false;
-  //               closeClientConnection(pollFd.fd);
-  //           }
-  //       } else if (bytesSent == 0) {
-  //           WARNING("Empty response sent on socket: " << pollFd.fd);
-  //           break;
-  //       } else {
-  //           if (errno == EPIPE) {
-  //               ERROR("Broken pipe (EPIPE) error on socket: " << pollFd.fd);
-  //           } else {
-  //               ERROR("Failed to send a response on socket: " << pollFd.fd);
-  //               ERROR("Error from send function: " + std::string(strerror(errno)));
-  //           }
-  //           closeClientConnection(pollFd.fd);
-  //           break;
-  //       }
-  // }
-
   // PArtially working part
   // while (!this->clients[pollFd.fd].writeString.empty()) {
-  //       ssize_t bytesSent = send(pollFd.fd, this->clients[pollFd.fd].writeString.c_str(),
-  //                                this->clients[pollFd.fd].writeString.size(), MSG_NOSIGNAL);
+  //   ssize_t bytesSent =
+  //       send(pollFd.fd, this->clients[pollFd.fd].writeString.c_str(),
+  //            this->clients[pollFd.fd].writeString.size(), 0);
   //
-  //       if (bytesSent > 0) {
-  //           this->clients[pollFd.fd].writeString.erase(0, bytesSent);
-  //           if (this->clients[pollFd.fd].writeString.empty()) {
-  //               pollFd.events = POLLIN;
-  //               SUCCESS("Response sent successfully on socket: " << pollFd.fd);
-  //               this->clients[pollFd.fd].readString.clear();
-  //               this->clients[pollFd.fd].writeString.clear();
-  //               this->clients[pollFd.fd].flagHeaderRead = false;
-  //               closeClientConnection(pollFd.fd);
-  //           }
-  //       } else if (bytesSent == 0) {
-  //           WARNING("Empty response sent on socket: " << pollFd.fd);
-  //           break;
-  //       } else {
-  //           if (errno == EPIPE) {
-  //               ERROR("Broken pipe (EPIPE) error on socket: " << pollFd.fd);
-  //           } else {
-  //               ERROR("Failed to send a response on socket: " << pollFd.fd);
-  //               ERROR("Error from send function: " + std::string(strerror(errno)));
-  //           }
-  //           closeClientConnection(pollFd.fd);
-  //           break;
-  //       }
+  //   if (clients[pollFd.fd].requestLine["url"] == "/assets/bg3.mp4")
+  //     std::cout << "bytes send for video: " << bytesSent << std::endl;
+  //   if (bytesSent > 0) {
+  //     this->clients[pollFd.fd].writeString.erase(0, bytesSent);
+  //     if (this->clients[pollFd.fd].writeString.empty()) {
+  //       pollFd.events = POLLIN;
+  //       SUCCESS("Response sent successfully on socket: " << pollFd.fd);
+  //       this->clients[pollFd.fd].readString.clear();
+  //       this->clients[pollFd.fd].writeString.clear();
+  //       this->clients[pollFd.fd].flagHeaderRead = false;
+  //       closeClientConnection(pollFd.fd);
+  //     }
+  //   } else if (bytesSent == 0) {
+  //     WARNING("Empty response sent on socket: " << pollFd.fd);
+  //     break;
+  //   } else {
+  //     if (errno == EPIPE) {
+  //       ERROR("Broken pipe (EPIPE) error on socket: " << pollFd.fd);
+  //     } else {
+  //       ERROR("Failed to send a response on socket: " << pollFd.fd);
+  //       ERROR("Error from send function: " + std::string(strerror(errno)));
+  //     }
+  //     closeClientConnection(pollFd.fd);
+  //     break;
   //   }
+  // }
 }
 
-void SocketManager::closeClientConnection(int pollFd) {
+void SocketManager::closeClientConnection(int &pollFd) {
   INFO("Closing client connection on fd: " << pollFd);
   close(pollFd);
-  clients.erase(pollFd);
-  clientSocketsFds.erase(
-      std::find(clientSocketsFds.begin(), clientSocketsFds.end(), pollFd));
+
+  std::vector<int>::iterator itServerFd =
+      std::find(serverSocketsFds.begin(), serverSocketsFds.end(), pollFd);
+  if (itServerFd != serverSocketsFds.end())
+    serverSocketsFds.erase(itServerFd);
+
+  std::vector<int>::iterator itClientFd =
+      std::find(clientSocketsFds.begin(), clientSocketsFds.end(), pollFd);
+  if (itClientFd != clientSocketsFds.end())
+    clientSocketsFds.erase(itClientFd);
 
   std::vector<struct pollfd>::iterator it;
   for (it = pollFds.begin(); it != pollFds.end(); it++) {
@@ -271,6 +249,7 @@ void SocketManager::closeClientConnection(int pollFd) {
       break;
     }
   }
+  clients.erase(pollFd);
 }
 
 void SocketManager::checkAndCloseStaleConnections() {
@@ -285,8 +264,10 @@ void SocketManager::checkAndCloseStaleConnections() {
         if (close(it->fd) == -1)
           throw std::runtime_error("Failed to close client connection!");
         clients.erase(it->fd);
-        clientSocketsFds.erase(std::find(clientSocketsFds.begin(),
-                                         clientSocketsFds.end(), it->fd));
+        std::vector<int>::iterator itClientFd =
+            std::find(clientSocketsFds.begin(), clientSocketsFds.end(), it->fd);
+        if (itClientFd != clientSocketsFds.end())
+          clientSocketsFds.erase(itClientFd);
         it = pollFds.erase(it);
         continue;
       }
@@ -313,9 +294,11 @@ void SocketManager::pollingAndConnections() {
         pollin(pollFds[i].fd);
         if (this->clients[pollFds[i].fd].flagHeaderRead == true)
           pollFds[i].events = POLLOUT;
+        break;
       }
       if (pollFds[i].revents & POLLOUT) {
         pollout(pollFds[i]);
+        break;
       }
     }
   }

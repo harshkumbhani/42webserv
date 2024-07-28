@@ -223,6 +223,8 @@ std::string HttpResponse::respond_Get(clientState &req) {
 		// std::string extension = route.substr(1);
 		size_t pos = route.find_last_of('.');
 		std::string contentType = g_mimeTypes[route.substr(pos + 1)];
+		if(contentType == "video/mp4")
+			contentType = "text/html";
 		// std::string extension = url->second;
 		// size_t pos = extension.find_last_of('.');
 		// std::string contentType = g_mimeTypes[extension.substr(pos + 1)];
