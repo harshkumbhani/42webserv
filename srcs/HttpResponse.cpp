@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:08:24 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/07/27 10:28:42 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/07/28 11:56:27 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,9 +61,10 @@ std::string HttpResponse::metaData(clientState &req) {
 	std::string headerMetaData = "";
 	std::map<std::string, std::string>::iterator hd = req.header.begin();
 	while (hd != req.header.end()) {
-		if (hd->first == "Content-Length" || hd->first == "Content-Type" || hd->first == "Connection" || hd->first == "Date" || hd->first == "Server"){
+		if (hd->first == "Content-Length" || hd->first == "Content-Type" || \
+			hd->first == "Connection" || hd->first == "Date" \
+			|| hd->first == "Server" || hd->first == "Range"){
 			req.header.erase(hd++);
-			// hd = req.header.erase(hd);
 		} else {
 			headerMetaData += hd->first + ": " + hd->second + "\r\n";
 			++hd;
@@ -109,17 +110,78 @@ std::string HttpResponse::errorHandling(int code, clientState &req) {
 	return _Response;
 }
 
+std::string HttpResponse::handleRequestWithRange(clientState &req, const std::string &route) {
+	std::ifstream file(route.c_str(), std::ios::binary);
+	if (!file)
+		return errorHandling(404, req);
+	struct stat statFile;
+	if (stat(route.c_str(), &statFile) != 0)
+		return errorHandling(500, req);
+	size_t fileSize = statFile.st_size;
+	std::string rangeHeader = req.header["Range"];
+	size_t rangeStart = 0;
+	size_t rangeEnd = fileSize - 1;
+	size_t pos = rangeHeader.find("bytes=");
+	if (pos != std::string::npos) {
+		pos += 6;
+		size_t dashPos = rangeHeader.find('-', pos);
+		if (dashPos != std::string::npos) {
+			std::string startStr = rangeHeader.substr(pos, dashPos - pos);
+			std::string endStr = rangeHeader.substr(dashPos + 1);
+			if (!startStr.empty())
+				rangeStart = std::strtoul(startStr.c_str(), NULL, 10);
+			if (!endStr.empty())
+				rangeEnd = std::strtoul(endStr.c_str(), NULL, 10);
+		}
+	}
+
+	std::stringstream ss;
+	ss << fileSize;
+	std::string strfileSize;
+	ss >> strfileSize;
+	if (rangeStart >= fileSize || rangeStart > rangeEnd) {
+		std::string headerMetaData = metaData(req);
+		std::ostringstream response;
+		response << "HTTP/1.1 416 Range Not Satisfiable\r\n";
+		response << "Content-Range: bytes */" << strfileSize << "\r\n";
+		response << "Content-Type: application/octet-stream\r\n";
+		response << "Connection: close\r\n" << "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" << headerMetaData;
+		response << "\r\n";
+		return response.str();
+		// return "HTTP/1.1 416 Range Not Satisfiable\r\nContent-Range: bytes */" + strfileSize + "\r\n\r\n";
+	}
+
+	if (rangeEnd >= fileSize)
+		rangeEnd = fileSize - 1;
+
+	file.seekg(rangeStart);
+	std::vector<char> buffer(rangeEnd - rangeStart + 1);
+	file.read(&buffer[0], buffer.size());
+
+	std::string headerMetaData = metaData(req);
+	std::ostringstream response;
+	response << "HTTP/1.1 206 Partial Content\r\n";
+	response << "Content-Range: bytes " << rangeStart << "-" << rangeEnd << "/" << fileSize << "\r\n";
+	response << "Content-Length: " << buffer.size() << "\r\n";
+	response << "Content-Type: application/octet-stream\r\n";
+	response << "Connection: keep-alive\r\n" << "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" << headerMetaData;
+	response << "\r\n";
+	response.write(&buffer[0], buffer.size());
+	return response.str();
+}
+
+
 std::string HttpResponse::respond_Get(clientState &req) {
 	std::map<std::string, std::string>::const_iterator url = req.requestLine.find("url");
 	if (url != req.requestLine.end()) {
 		std::string route = "./www" + (url->second == "/" ? "/index.html" : url->second);
 		std::cout << "URL->SECOND: " << url->second << std::endl;
 		std::cout << "File path: " << route << std::endl;
-		std::ifstream route_file(route.c_str());
-		// std::string extension = route.substr(1);
 		size_t pos = route.find_last_of('.');
 		std::string contentType = g_mimeTypes[route.substr(pos + 1)];
 		std::cout << "Content Type: " << contentType << std::endl;
+		if (req.header.find("Range") != req.header.end())
+			return handleRequestWithRange(req, route);
 		std::ifstream route_file(route.c_str());
 		if (route_file.fail()) {
 			return errorHandling(404, req);
