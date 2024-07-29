@@ -14,13 +14,6 @@ SocketManager::SocketManager(std::vector<ServerParser> parser)
 // Destructor
 
 SocketManager::~SocketManager() {
-  // std::vector<int>::iterator it;
-  //
-  // for (it = serverSocketsFds.begin(); it != serverSocketsFds.end(); it++) {
-  //   INFO("Closing server socket with fd: " << *it);
-  //   close(*it);
-  // }
-
   std::vector<struct pollfd>::iterator itp;
   for (itp = pollFds.begin(); itp != pollFds.end(); itp++) {
     INFO("Closing all open socket fds: " << itp->fd);
@@ -122,8 +115,6 @@ void SocketManager::acceptConnection(int &pollFd) {
   std::time(&clients[clientSocket].startTime);
   // DEBUG("accept connection time: " << clients[clientSocket].startTime);
   // TODO: Create a function to return the server block
-
-  // DEBUG("Number of clients: " << clients.size());
   SUCCESS("Accepted new client connection: " << clientSocket);
 }
 
@@ -141,17 +132,17 @@ bool SocketManager::isClientFd(int pollFd) {
   return false;
 }
 
-void SocketManager::pollin(int pollFd) {
-  if (isServerFd(pollFd) == true) {
-    acceptConnection(pollFd);
+void SocketManager::pollin(pollfd &pollFd) {
+  if (isServerFd(pollFd.fd) == true) {
+    acceptConnection(pollFd.fd);
   } else {
     char buffer[4096 * 4];
-    ssize_t bytesRead = recv(pollFd, buffer, sizeof(buffer), 0);
-    this->clients[pollFd].bytesRead += bytesRead;
-    this->clients[pollFd].readString = "";
-    this->clients[pollFd].readString = std::string(buffer);
-    HttpRequest::requestBlock(this->clients[pollFd]);
-    INFO("Request recieved on socket *" << pollFd << "*");
+    ssize_t bytesRead = recv(pollFd.fd, buffer, sizeof(buffer), 0);
+    this->clients[pollFd.fd].bytesRead += bytesRead;
+    this->clients[pollFd.fd].readString = "";
+    this->clients[pollFd.fd].readString = std::string(buffer);
+    HttpRequest::requestBlock(this->clients[pollFd.fd]);
+    INFO("Request recieved on socket *" << pollFd.fd << "*");
   }
 }
 
@@ -167,8 +158,6 @@ void SocketManager::pollout(pollfd &pollFd) {
     return;
   }
 
-  DEBUG("back to send again");
-  // std::cout << clients[pollFd.fd].writeString << std::endl;
   ssize_t bytesSend = send(pollFd.fd, clients[pollFd.fd].writeString.c_str(),
                            clients[pollFd.fd].writeString.size(), 0);
   if (clients[pollFd.fd].requestLine["url"] == "/assets/bg4.mp4") {
@@ -193,43 +182,11 @@ void SocketManager::pollout(pollfd &pollFd) {
     ERROR("Error from send function: " + std::string(strerror(errno)));
     closeClientConnection(pollFd.fd);
   }
-
-  // PArtially working part
-  // while (!this->clients[pollFd.fd].writeString.empty()) {
-  //   ssize_t bytesSent =
-  //       send(pollFd.fd, this->clients[pollFd.fd].writeString.c_str(),
-  //            this->clients[pollFd.fd].writeString.size(), 0);
-  //
-  //   if (clients[pollFd.fd].requestLine["url"] == "/assets/bg3.mp4")
-  //     std::cout << "bytes send for video: " << bytesSent << std::endl;
-  //   if (bytesSent > 0) {
-  //     this->clients[pollFd.fd].writeString.erase(0, bytesSent);
-  //     if (this->clients[pollFd.fd].writeString.empty()) {
-  //       pollFd.events = POLLIN;
-  //       SUCCESS("Response sent successfully on socket: " << pollFd.fd);
-  //       this->clients[pollFd.fd].readString.clear();
-  //       this->clients[pollFd.fd].writeString.clear();
-  //       this->clients[pollFd.fd].flagHeaderRead = false;
-  //       closeClientConnection(pollFd.fd);
-  //     }
-  //   } else if (bytesSent == 0) {
-  //     WARNING("Empty response sent on socket: " << pollFd.fd);
-  //     break;
-  //   } else {
-  //     if (errno == EPIPE) {
-  //       ERROR("Broken pipe (EPIPE) error on socket: " << pollFd.fd);
-  //     } else {
-  //       ERROR("Failed to send a response on socket: " << pollFd.fd);
-  //       ERROR("Error from send function: " + std::string(strerror(errno)));
-  //     }
-  //     closeClientConnection(pollFd.fd);
-  //     break;
-  //   }
-  // }
 }
 
 void SocketManager::closeClientConnection(int &pollFd) {
   INFO("Closing client connection on fd: " << pollFd);
+
   close(pollFd);
 
   std::vector<int>::iterator itServerFd =
@@ -281,7 +238,7 @@ void SocketManager::pollingAndConnections() {
     return;
   signal(SIGINT, stopServerLoop);
   while (gServerSignal) {
-    int pollEvent = poll(&pollFds[0], pollFds.size(), servers[0].send_timeout);
+    int pollEvent = poll(&pollFds[0], pollFds.size(), 0);
     checkAndCloseStaleConnections();
     if (pollEvent == 0)
       continue;
@@ -291,14 +248,14 @@ void SocketManager::pollingAndConnections() {
 
     for (size_t i = 0; i < pollFds.size(); i++) {
       if (pollFds[i].revents & POLLIN) {
-        pollin(pollFds[i].fd);
+        pollin(pollFds[i]);
         if (this->clients[pollFds[i].fd].flagHeaderRead == true)
           pollFds[i].events = POLLOUT;
-        break;
+        // break;
       }
       if (pollFds[i].revents & POLLOUT) {
         pollout(pollFds[i]);
-        break;
+        // break;
       }
     }
   }

@@ -39,7 +39,7 @@ public:
   bool isServerFd(int pollFd);
   bool isClientFd(int pollFd);
 
-  void pollin(int pollFd);
+  void pollin(pollfd &pollFd);
   void pollout(pollfd &pollFd);
   void acceptConnection(int &pollFd);
   void checkAndCloseStaleConnections();
