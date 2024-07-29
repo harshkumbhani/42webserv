@@ -1,47 +1,108 @@
+<!-- <!DOCTYPE html> -->
+<!-- <html lang="en"> -->
+<!-- 	<head> -->
+<!-- 		<meta charset="UTF-8"> -->
+<!-- 		<meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+<!-- 		<title>Webserv</title> -->
+<!-- 		<link rel="stylesheet" href="styles.css">  -->
+<!-- 	</head> -->
+<!-- </html> -->
+<!---->
+<!-- <body> -->
+<!-- 	<video autoplay muted loop id="background-video" poster="./assets/home.jpg"> -->
+<!-- 		<source src="./assets/bg2.mp4" type="video/mp4"> -->
+<!-- 		Your browser does not support the video tag. -->
+<!-- 	</video> -->
+<!-- 	<audio autoplay loop> -->
+<!-- 		<source src="./assets/music.mp3" type="audio/mp3"> -->
+<!-- 	  Your browser does not support the audio tag. -->
+<!-- 	</audio> -->
+<!-- 	<audio id="background-video" src="./assets/music.mp3" autoplay loop></audio> -->
+<!-- 	<img src="./assets/logo.jpg" alt="project logo" id="logo"> -->
+<!-- 	<div class="project-credit">Project by: Harsh and Oreste </div> -->
+<!-- 	<div class="button-container"> -->
+<!-- 		<button class="button-style">GET</button> -->
+<!-- 		<button class="button-style" onclick="openModal()">POST</button> -->
+<!-- 		<button class="button-style">DELETE</button> -->
+<!-- 		<button class="button-style">CGI</button> -->
+<!-- 		<button class="button-style">REDIRECTION</button> -->
+<!-- 	</div> -->
+<!---->
+<!-- 	<!-- Modal --> -->
+<!-- 	<div id="fileUploadModal" class="modal"> -->
+<!-- 		<div class="modal-content"> -->
+<!-- 			<span class="close" onclick="closeModal()">&times;</span> -->
+<!-- 			<h2>Upload your file</h2> -->
+<!-- 			<form action="./upload/" method="post" enctype="multipart/form-data"> -->
+<!-- 				<input type="file" name="file" id="file-input"> -->
+<!-- 				<button type="submit" class="button-style">Upload File</button> -->
+<!-- 			</form> -->
+<!-- 		</div> -->
+<!-- 	</div> -->
+<!-- 	<script src="./js/scripts.js"></script> -->
+<!---->
+<!-- 	<div class="github"> -->
+<!-- 		<a href="https://github.com/tuoreste"> -->
+<!-- 			<img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo"> -->
+<!-- 		</a> -->
+<!-- 		<a href="https://github.com/harshkumbhani"> -->
+<!-- 			<img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo"> -->
+<!-- 		</a> -->
+<!-- 	</div> -->
+<!-- </body> -->
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<title>Webserv</title>
-		<link rel="stylesheet" href="styles.css"> 
-	</head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webserv</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Hide the iframe */
+        #youtube-audio {
+            width: 0;
+            height: 0;
+            border: 0;
+        }
+    </style>
+</head>
+<body>
+    <video autoplay muted loop id="background-video" poster="./assets/home.jpg">
+        <source src="./assets/bg2.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/fiore9Z5iUg?si=3OzfPi4zlqGtxFAZ&autoplay=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    <img src="./assets/logo.jpg" alt="project logo" id="logo">
+    <div class="project-credit">Project by: Harsh and Oreste</div>
+    <div class="button-container">
+        <button class="button-style">GET</button>
+        <button class="button-style" onclick="openModal()">POST</button>
+        <button class="button-style">DELETE</button>
+        <button class="button-style">CGI</button>
+        <button class="button-style">REDIRECTION</button>
+    </div>
+
+    <!-- Modal -->
+    <div id="fileUploadModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Upload your file</h2>
+            <form action="./upload/" method="post" enctype="multipart/form-data">
+                <input type="file" name="file" id="file-input">
+                <button type="submit" class="button-style">Upload File</button>
+            </form>
+        </div>
+    </div>
+    <script src="./js/scripts.js"></script>
+
+    <div class="github">
+        <a href="https://github.com/tuoreste">
+            <img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo">
+        </a>
+        <a href="https://github.com/harshkumbhani">
+            <img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo">
+        </a>
+    </div>
+</body>
 </html>
 
-<body>
-	<video autoplay muted loop id="background-video" poster="./assets/home.jpg">
-		<source src="./assets/bg2.mp4" type="video/mp4">
-		Your browser does not support the video tag.
-	</video>
-	<img src="./assets/logo.jpg" alt="project logo" id="logo">
-	<div class="project-credit">Project by: Harsh and Oreste </div>
-	<div class="button-container">
-		<button class="button-style">GET</button>
-		<button class="button-style" onclick="openModal()">POST</button>
-		<button class="button-style">DELETE</button>
-		<button class="button-style">CGI</button>
-		<button class="button-style">REDIRECTION</button>
-	</div>
-
-	<!-- Modal -->
-	<div id="fileUploadModal" class="modal">
-		<div class="modal-content">
-			<span class="close" onclick="closeModal()">&times;</span>
-			<h2>Upload your file</h2>
-			<form action="./upload/" method="post" enctype="multipart/form-data">
-				<input type="file" name="file" id="file-input">
-				<button type="submit" class="button-style">Upload File</button>
-			</form>
-		</div>
-	</div>
-	<script src="./js/scripts.js"></script>
-
-	<div class="github">
-		<a href="https://github.com/tuoreste">
-			<img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo">
-		</a>
-		<a href="https://github.com/harshkumbhani">
-			<img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo">
-		</a>
-	</div>
-</body>
