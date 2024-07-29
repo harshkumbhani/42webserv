@@ -113,7 +113,6 @@ void SocketManager::acceptConnection(int &pollFd) {
   clients[clientSocket] = client;
 
   std::time(&clients[clientSocket].startTime);
-  // DEBUG("accept connection time: " << clients[clientSocket].startTime);
   // TODO: Create a function to return the server block
   SUCCESS("Accepted new client connection: " << clientSocket);
 }
@@ -142,15 +141,20 @@ void SocketManager::pollin(pollfd &pollFd) {
     this->clients[pollFd.fd].readString = "";
     this->clients[pollFd.fd].readString = std::string(buffer);
     HttpRequest::requestBlock(this->clients[pollFd.fd]);
-    INFO("Request recieved on socket *" << pollFd.fd << "*");
+    INFO("Request: " << clients[pollFd.fd].requestLine["method"] + " *"
+                     << pollFd.fd << "*");
   }
+  if (this->clients[pollFd.fd].flagHeaderRead == true)
+    pollFd.events = POLLOUT;
 }
 
 void SocketManager::pollout(pollfd &pollFd) {
   HttpResponse response;
 
-  this->clients[pollFd.fd].writeString =
-      response.respond(this->clients[pollFd.fd]);
+  if (clients[pollFd.fd].writeString.empty() == true) {
+    this->clients[pollFd.fd].writeString =
+        response.respond(this->clients[pollFd.fd]);
+  }
 
   if (clients[pollFd.fd].writeString.empty() == true) {
     WARNING("Response buffer Empty on socket: " << pollFd.fd);
@@ -160,13 +164,8 @@ void SocketManager::pollout(pollfd &pollFd) {
 
   ssize_t bytesSend = send(pollFd.fd, clients[pollFd.fd].writeString.c_str(),
                            clients[pollFd.fd].writeString.size(), 0);
-  if (clients[pollFd.fd].requestLine["url"] == "/assets/bg4.mp4") {
-    DEBUG("Bytes send for video: " << bytesSend);
-    DEBUG("Write string size(): " << clients[pollFd.fd].writeString.size());
-  }
   if (bytesSend > 0) {
     clients[pollFd.fd].writeString.erase(0, bytesSend);
-    DEBUG("Write string size() after first send: " << clients[pollFd.fd].writeString.size());
     if (clients[pollFd.fd].writeString.empty() == true) {
       pollFd.events = POLLIN;
       SUCCESS("Response sent successfully on socket: " << pollFd.fd);
@@ -178,8 +177,8 @@ void SocketManager::pollout(pollfd &pollFd) {
   } else if (bytesSend == 0) {
     WARNING("Empty response sent on socket: " << pollFd.fd);
   } else {
-    ERROR("Failed to send a response on socket: " << pollFd.fd);
-    ERROR("Error from send function: " + std::string(strerror(errno)));
+    ERROR("Failed to send a response on socket: "
+          << pollFd.fd << "\n" + std::string(strerror(errno)));
     closeClientConnection(pollFd.fd);
   }
 }
@@ -216,7 +215,7 @@ void SocketManager::checkAndCloseStaleConnections() {
   for (it = pollFds.begin(); it != pollFds.end();) {
     if (isClientFd(it->fd) == true) {
       std::time(&currentTime);
-      if (std::difftime(currentTime, clients[it->fd].startTime) > 100) {
+      if (std::difftime(currentTime, clients[it->fd].startTime) > servers[0].keepalive_timeout) {
         INFO("Closing Client Connection on fd: " << it->fd);
         if (close(it->fd) == -1)
           throw std::runtime_error("Failed to close client connection!");
@@ -237,8 +236,9 @@ void SocketManager::pollingAndConnections() {
   if (servers.size() < 1)
     return;
   signal(SIGINT, stopServerLoop);
+  std::cout << "Sendtimeout: " << servers[0].send_timeout << std::endl;
   while (gServerSignal) {
-    int pollEvent = poll(&pollFds[0], pollFds.size(), 0);
+    int pollEvent = poll(&pollFds[0], pollFds.size(), servers[0].send_timeout);
     checkAndCloseStaleConnections();
     if (pollEvent == 0)
       continue;
@@ -249,13 +249,9 @@ void SocketManager::pollingAndConnections() {
     for (size_t i = 0; i < pollFds.size(); i++) {
       if (pollFds[i].revents & POLLIN) {
         pollin(pollFds[i]);
-        if (this->clients[pollFds[i].fd].flagHeaderRead == true)
-          pollFds[i].events = POLLOUT;
-        // break;
       }
       if (pollFds[i].revents & POLLOUT) {
         pollout(pollFds[i]);
-        // break;
       }
     }
   }
@@ -269,7 +265,7 @@ std::ostream &operator<<(std::ostream &output, const clientState &clientState) {
          << "\nbytes read: " << clientState.bytesRead
          << "\ncontent Length: " << clientState.contentLength
          << "\nstart time: " << clientState.startTime
-         << "\nbody: " << clientState.body << std::endl;
+         << "\nbody: " << clientState.bodyString << std::endl;
 
   return output;
 }

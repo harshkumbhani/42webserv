@@ -57,107 +57,6 @@ std::string HttpResponse::statusCode(int code) {
 	return generateHtml(code, codeMessage);
 }
 
-// std::string HttpResponse::statusCode(int code) {
-// 	std::string code_str;
-// 	std::stringstream ss(code);
-// 	ss >> code_str;
-// 	std::string part1 =
-// 		"<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\">\
-// 		<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" +
-// 		code_str + "</title></head><body><h1>";
-// 	std::string part2 = "</h1></body></html>";
-// 	if (code == 400)
-// 		return (part1 + " Bad Request " + part2);
-// 	else if (code == 404)
-// 		return (part1 + " Not Found " + part2);
-// 	else if (code == 500)
-// 		return (part1 + " Internal Server Error " + part2);
-// 	return ("NULL");
-// }
-
-// std::string	HttpResponse::metaData(clientState &req) {
-// 	std::string headerMetaData = "";
-// 	for (std::map<std::string, std::string>::const_iterator hd = req.header.begin(); hd != req.header.end(); hd++) {
-// 		if (hd->first == "Content-Length" || hd->first == "Content-Type" || hd->first == "Connection" || hd->first == "Date" || hd->first == "Server")
-// 			req.header.erase(hd->first);
-// 		else
-// 			headerMetaData = headerMetaData + hd->first + hd->second + "\r\n";
-// 	}
-// 	headerMetaData += "\r\n";
-// 	return (headerMetaData);
-// }
-
-// std::string HttpResponse::webserverStamp(void) {
-// 	time_t now = time(0);
-// 	char buf[100];
-// 	strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", gmtime(&now));
-// 	return (std::string(buf));
-// }
-
-// std::string	HttpResponse::errorHandling(int code, clientState &req) {
-// 	std::stringstream err;
-// 	err << code;
-// 	std::string errorCode;
-// 	err >> errorCode;
-// 	std::string sms;
-// 	if (code == 400)
-// 		sms = "Bad Request";
-// 	else if (code == 404)
-// 		sms = "Not Found";
-// 	else if (code == 500)
-// 		sms = "Internal Server Error";
-// 	_StatusLine = req.requestLine.find("httpversion")->second + " " + errorCode + sms + "\r\n";
-// 	std::string status_page = statusCode(code);
-// 	std::stringstream ss;
-// 	ss << status_page.size();
-// 	std::string pageSize;
-// 	ss >> pageSize;
-// 	_Header = "Content-Type: text/html\r\nContent-Length: " + pageSize + "\r\nConnection: close\r\n";
-// 	_Body = status_page;
-// 	std::string headerMetaData = metaData(req);
-// 	_Header = _Header + "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
-// 	_Response = _StatusLine + _Header + _Body;
-// 	return (_Response);
-// }
-
-// std::string HttpResponse::respond_Get(clientState &req) {
-// 	std::map<std::string, std::string>::const_iterator url = req.requestLine.find("url");
-// 	if (url != req.requestLine.end()) {
-// 		std::string route = "./www";
-// 		if (url->second == "/")
-// 			route += "/index.html";
-// 		else
-// 			route += url->second;
-// 		std::ifstream route_file(route.c_str());
-// 		std::string extension = route;
-// 		size_t pos = extension.find_last_of('.');
-// 		// std::string mime = parser.mimes[extension.substr(pos + 1)];
-// 		if (route_file.fail() == true) {
-// 			return (errorHandling(404, req));
-// 		} else {
-// 			std::string buffer;
-// 			buffer.assign(std::istreambuf_iterator<char>(route_file), std::istreambuf_iterator<char>());
-// 			_StatusLine = req.requestLine.find("httpversion")->second + " " + "200" + " OK\r\n";
-
-// 			std::stringstream ss;
-// 			ss << buffer.size();
-// 			std::string fileSize;
-// 			ss >> fileSize;
-
-// 			_Header = "Content-Type: " + extension.substr(pos + 1) + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
-// 			_Body = buffer;
-// 			route_file.close();
-// 		}
-// 		std::string headerMetaData = metaData(req);
-// 		_Header = _Header + "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
-// 	} else {
-// 		throw std::runtime_error("Url Missing");
-// 	}
-// 	_Response = _StatusLine + _Header + _Body;
-// 	DEBUG("RESPONSE:\n" + _Response);
-// 	return (_Response);
-// }
-
 //==================================================================================================
 std::string HttpResponse::metaData(clientState &req) {
 	std::string headerMetaData = "";
@@ -215,21 +114,11 @@ std::string HttpResponse::respond_Get(clientState &req) {
 	// if (url == "/")
 	// 	serveDefaultPage(req);
 	if (url != req.requestLine.end()) {
-		std::cout << "===============================================" << std::endl;
 		std::string route = "./www" + (url->second == "/" ? "/index.html" : url->second);
-		std::cout << "URL->SECOND: " << url->second << std::endl;
-		std::cout << "File path: " << route << std::endl;
 		std::ifstream route_file(route.c_str());
-		// std::string extension = route.substr(1);
 		size_t pos = route.find_last_of('.');
 		std::string contentType = g_mimeTypes[route.substr(pos + 1)];
-		if(contentType == "video/mp4")
-			contentType = "text/html";
-		// std::string extension = url->second;
-		// size_t pos = extension.find_last_of('.');
-		// std::string contentType = g_mimeTypes[extension.substr(pos + 1)];
 		std::cout << "Content Type: " << contentType << std::endl;
-		std::cout << "===============================================" << std::endl;
 		if (route_file.fail()) {
 			return errorHandling(404, req);
 		} else {
@@ -248,7 +137,7 @@ std::string HttpResponse::respond_Get(clientState &req) {
 
 			// size_t pos = route.find_last_of('.');
 			// _Header = "Content-Type: " + route.substr(pos + 1) + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
-			_Header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
+			_Header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n" + "Cache-Control: public, max-age=2592000\r\n";
 			_Body = buffer;
 			route_file.close();
 		}
@@ -407,7 +296,7 @@ std::string HttpResponse::response_Post(clientState &req) {
 	std::ifstream route_file(route.c_str());
 	if (route_file.fail()) {
 		std::ofstream outfile(route.c_str());
-		outfile << req.body;
+		outfile << req.bodyString;
 		outfile.close();
 
 		std::ifstream test_created_file(route.c_str());
