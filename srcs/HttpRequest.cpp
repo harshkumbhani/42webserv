@@ -23,8 +23,7 @@ void HttpRequest::requestBlock(clientState &clientData) {
   HttpRequest httpReq;
 
   // DEBUG("Request Class: request reciveed");
-  if (clientData.header["url"] == "/assets/bg2.mp4")
-    std::cout << clientData.readString << std::endl;
+  DEBUG("Request: " << clientData.readString);
   if (clientData.flagHeaderRead == false) {
     std::string::size_type headerEndPos =
         clientData.readString.find("\r\n\r\n");
@@ -63,6 +62,8 @@ void HttpRequest::parseRequestLine(clientState &clientData, std::string &line) {
     ss >> httpversion;
     clientData.requestLine.insert(std::make_pair("httpversion", httpversion));
   }
+  if (clientData.requestLine["url"] == "/assets/bg4.mp4")
+    std::cout << clientData.readString << std::endl;
 }
 
 // Host: www.example.com\r\n
@@ -102,7 +103,7 @@ void HttpRequest::parseRequestBody(clientState &clientData,
     clientData.contentLength = 0;
   if (clientData.contentLength > 0) {
     if (request.size() > 0)
-      clientData.body += request;
+      clientData.bodyString += request;
     std::string::size_type pos = request.find("\r\n\r\n");
     if (pos != std::string::npos)
       clientData.flagBodyRead = true;

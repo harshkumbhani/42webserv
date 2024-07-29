@@ -39,11 +39,11 @@ public:
   bool isServerFd(int pollFd);
   bool isClientFd(int pollFd);
 
-  void pollin(int pollFd);
+  void pollin(pollfd &pollFd);
   void pollout(pollfd &pollFd);
-  void acceptConnection(int pollFd);
+  void acceptConnection(int &pollFd);
   void checkAndCloseStaleConnections();
-  void closeClientConnection(int pollFd);
+  void closeClientConnection(int &pollFd);
 };
 
 std::ostream &operator<<(std::ostream &output, const clientState &clientState);

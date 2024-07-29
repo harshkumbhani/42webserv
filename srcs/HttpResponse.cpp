@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:08:24 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/07/28 11:56:27 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/07/29 18:22:26 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -359,7 +359,7 @@ std::string HttpResponse::response_Post(clientState &req) {
 	std::ifstream route_file(route.c_str());
 	if (route_file.fail()) {
 		std::ofstream outfile(route.c_str());
-		outfile << req.body;
+		outfile << req.bodyString;
 		outfile.close();
 
 		std::ifstream test_created_file(route.c_str());

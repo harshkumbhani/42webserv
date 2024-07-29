@@ -78,7 +78,8 @@ struct clientState {
   ssize_t bytesRead;
   ssize_t contentLength;
   time_t startTime;
-  std::string body;
+  std::string bodyString;
+  std::vector<char> body;
   std::string readString;
   std::string writeString;
   std::map<std::string, std::string> requestLine;
