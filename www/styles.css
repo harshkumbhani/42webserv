@@ -33,6 +33,10 @@ h2 {
 	z-index: -1;
 }
 
+#notification {
+	display: none;
+}
+
 #logo {
 	position: absolute;
 	top: 0;

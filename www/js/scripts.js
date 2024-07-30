@@ -15,3 +15,11 @@ window.onclick = function(event) {
 		modal.style.display = "none";
 	}
 }
+
+document.addEventListener('click', function() {
+    var audio = document.getElementById('notification');
+    audio.muted = false;
+    audio.play().catch(function(error) {
+        console.error('Audio playback failed:', error);
+    });
+}, { once: true });
