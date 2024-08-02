@@ -136,6 +136,7 @@ void SocketManager::pollin(pollfd &pollFd) {
     acceptConnection(pollFd.fd);
   } else {
     char buffer[4096 * 4];
+    std::memset(&buffer[0], 0, sizeof(buffer));
     ssize_t bytesRead = recv(pollFd.fd, buffer, sizeof(buffer), 0);
     this->clients[pollFd.fd].bytesRead += bytesRead;
     this->clients[pollFd.fd].readString = "";
@@ -143,18 +144,17 @@ void SocketManager::pollin(pollfd &pollFd) {
     HttpRequest::requestBlock(this->clients[pollFd.fd]);
     INFO("Request: " << clients[pollFd.fd].requestLine["method"] + " *"
                      << pollFd.fd << "*");
+		if (this->clients[pollFd.fd].flagHeaderRead == true) {
+			pollFd.events = POLLOUT;
+		}
   }
-  if (this->clients[pollFd.fd].flagHeaderRead == true)
-    pollFd.events = POLLOUT;
 }
 
 void SocketManager::pollout(pollfd &pollFd) {
-  HttpResponse response;
 
-  if (clients[pollFd.fd].writeString.empty() == true) {
-    this->clients[pollFd.fd].writeString =
+  		HttpResponse response;
+			this->clients[pollFd.fd].writeString =
         response.respond(this->clients[pollFd.fd]);
-  }
 
   if (clients[pollFd.fd].writeString.empty() == true) {
     WARNING("Response buffer Empty on socket: " << pollFd.fd);
@@ -172,7 +172,6 @@ void SocketManager::pollout(pollfd &pollFd) {
       clients[pollFd.fd].readString.clear();
       clients[pollFd.fd].writeString.clear();
       clients[pollFd.fd].flagHeaderRead = false;
-      closeClientConnection(pollFd.fd);
     }
   } else if (bytesSend == 0) {
     WARNING("Empty response sent on socket: " << pollFd.fd);
@@ -186,7 +185,8 @@ void SocketManager::pollout(pollfd &pollFd) {
 void SocketManager::closeClientConnection(int &pollFd) {
   INFO("Closing client connection on fd: " << pollFd);
 
-  close(pollFd);
+  if (close(pollFd) == -1)
+    throw std::runtime_error("Failed to close client connection!");
 
   std::vector<int>::iterator itServerFd =
       std::find(serverSocketsFds.begin(), serverSocketsFds.end(), pollFd);
@@ -208,27 +208,15 @@ void SocketManager::closeClientConnection(int &pollFd) {
   clients.erase(pollFd);
 }
 
-void SocketManager::checkAndCloseStaleConnections() {
+void SocketManager::checkAndCloseStaleConnections(struct pollfd &pollfd) {
   time_t currentTime = 0;
-  pollFdsIterator it;
 
-  for (it = pollFds.begin(); it != pollFds.end();) {
-    if (isClientFd(it->fd) == true) {
+    if (isClientFd(pollfd.fd) == true) {
       std::time(&currentTime);
-      if (std::difftime(currentTime, clients[it->fd].startTime) > servers[0].keepalive_timeout) {
-        INFO("Closing Client Connection on fd: " << it->fd);
-        if (close(it->fd) == -1)
-          throw std::runtime_error("Failed to close client connection!");
-        clients.erase(it->fd);
-        std::vector<int>::iterator itClientFd =
-            std::find(clientSocketsFds.begin(), clientSocketsFds.end(), it->fd);
-        if (itClientFd != clientSocketsFds.end())
-          clientSocketsFds.erase(itClientFd);
-        it = pollFds.erase(it);
-        continue;
-      }
-    }
-    ++it;
+      if (std::difftime(currentTime, clients[pollfd.fd].startTime) > 100) {
+        INFO("Closing Client Connection on fd: " << pollfd.fd);
+        closeClientConnection(pollfd.fd);
+		}
   }
 }
 
@@ -236,10 +224,8 @@ void SocketManager::pollingAndConnections() {
   if (servers.size() < 1)
     return;
   signal(SIGINT, stopServerLoop);
-  std::cout << "Sendtimeout: " << servers[0].send_timeout << std::endl;
   while (gServerSignal) {
-    int pollEvent = poll(&pollFds[0], pollFds.size(), servers[0].send_timeout);
-    checkAndCloseStaleConnections();
+    int pollEvent = poll(&pollFds[0], pollFds.size(), 1000);
     if (pollEvent == 0)
       continue;
     if (pollEvent < 0 && gServerSignal == 1)
@@ -248,11 +234,13 @@ void SocketManager::pollingAndConnections() {
 
     for (size_t i = 0; i < pollFds.size(); i++) {
       if (pollFds[i].revents & POLLIN) {
+			INFO("POLLIN!")
         pollin(pollFds[i]);
       }
       if (pollFds[i].revents & POLLOUT) {
         pollout(pollFds[i]);
       }
+    	//checkAndCloseStaleConnections(pollFds[i]);
     }
   }
 }
