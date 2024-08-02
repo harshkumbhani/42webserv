@@ -42,7 +42,7 @@ public:
   void pollin(pollfd &pollFd);
   void pollout(pollfd &pollFd);
   void acceptConnection(int &pollFd);
-  void checkAndCloseStaleConnections();
+  void checkAndCloseStaleConnections(struct pollfd &pollfd);
   void closeClientConnection(int &pollFd);
 };
 
