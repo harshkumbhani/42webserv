@@ -233,8 +233,7 @@ void SocketManager::pollingAndConnections() {
     return;
   signal(SIGINT, stopServerLoop);
   while (gServerSignal) {
-    int pollEvent = poll(&pollFds[0], pollFds.size(), 0);
-    if (pollEvent < 0 && gServerSignal == 1)
+    if (poll(&pollFds[0], pollFds.size(), 0) == -1 && gServerSignal == 1)
       throw std::runtime_error("Error from poll function: " +
                                std::string(strerror(errno)));
 
@@ -243,10 +242,10 @@ void SocketManager::pollingAndConnections() {
         INFO("POLLIN! on " << pollFds[i].fd);
         pollin(pollFds[i]);
       }
-      if (pollFds[i].revents & POLLOUT) {
-        pollout(pollFds[i]);
-      }
 			if (isClientFd(pollFds[i].fd) == true) {
+      	if (pollFds[i].revents & POLLOUT) {
+        	pollout(pollFds[i]);
+      	}
 				checkAndCloseStaleConnections(pollFds[i]);
 			}
 		}
