@@ -72,19 +72,24 @@ struct ServerParser {
 enum methods { GET = 1, POST = 2, DELETE = 3 };
 
 struct clientState {
-  bool flagHeaderRead;
-  bool flagBodyRead;
-  methods method;
-  ssize_t bytesRead;
-  ssize_t contentLength;
-  time_t startTime;
-  std::string bodyString;
-  std::vector<char> body;
-  std::string readString;
-  std::string writeString;
-  std::map<std::string, std::string> requestLine;
-  std::map<std::string, std::string> header;
-  ServerParser serverData;
+	bool flagHeaderRead;
+	bool flagBodyRead;
+	bool contentLenPresent;
+	bool isKeepAlive;
+	methods method;
+	ssize_t bytesRead;
+	ssize_t contentLength;
+	time_t startTime;
+	std::string bodyString;
+	std::vector<char> body;
+	std::string readString;
+	std::string writeString;
+	std::map<std::string, std::string> requestLine;
+	std::map<std::string, std::string> header;
+	ServerParser serverData;
+	//POST content-type
+	std::string	contentType;
+	std::string	boundary;
 };
 
 #endif

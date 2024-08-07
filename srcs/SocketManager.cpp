@@ -141,20 +141,25 @@ void SocketManager::pollin(pollfd &pollFd) {
     this->clients[pollFd.fd].bytesRead += bytesRead;
     this->clients[pollFd.fd].readString = "";
     this->clients[pollFd.fd].readString = std::string(buffer);
+    std::cout << "Request string: \n\n" << std::string(buffer) << "\n\n---End--\n\n";
+    if (std::string(buffer).empty() == true) {
+			closeClientConnection(pollFd.fd);
+      return;
+		}
     HttpRequest::requestBlock(this->clients[pollFd.fd]);
     INFO("Request: " << clients[pollFd.fd].requestLine["method"] + " *"
                      << pollFd.fd << "*");
-		if (this->clients[pollFd.fd].flagHeaderRead == true) {
-			pollFd.events = POLLOUT;
-		}
+    if (this->clients[pollFd.fd].flagHeaderRead == true) {
+      pollFd.events = POLLOUT;
+    }
   }
 }
 
 void SocketManager::pollout(pollfd &pollFd) {
 
-  		HttpResponse response;
-			this->clients[pollFd.fd].writeString =
-        response.respond(this->clients[pollFd.fd]);
+  HttpResponse response;
+  this->clients[pollFd.fd].writeString =
+      response.respond(this->clients[pollFd.fd]);
 
   if (clients[pollFd.fd].writeString.empty() == true) {
     WARNING("Response buffer Empty on socket: " << pollFd.fd);
@@ -172,6 +177,7 @@ void SocketManager::pollout(pollfd &pollFd) {
       clients[pollFd.fd].readString.clear();
       clients[pollFd.fd].writeString.clear();
       clients[pollFd.fd].flagHeaderRead = false;
+      // closeClientConnection(pollFd.fd);
     }
   } else if (bytesSend == 0) {
     WARNING("Empty response sent on socket: " << pollFd.fd);
@@ -211,13 +217,15 @@ void SocketManager::closeClientConnection(int &pollFd) {
 void SocketManager::checkAndCloseStaleConnections(struct pollfd &pollfd) {
   time_t currentTime = 0;
 
-    if (isClientFd(pollfd.fd) == true) {
-      std::time(&currentTime);
-      if (std::difftime(currentTime, clients[pollfd.fd].startTime) > 100) {
-        INFO("Closing Client Connection on fd: " << pollfd.fd);
-        closeClientConnection(pollfd.fd);
-		}
-  }
+	std::cout << "\nEntering checking for the close of the connection" << std::endl;
+		DEBUG("\nTime elapsed check for client: " << pollfd.fd << "\n");
+    std::time(&currentTime);
+		std::cout << "currentTime: " << currentTime << std::endl;
+		std::cout << "start time: " << clients[pollfd.fd].startTime << std::endl;
+		std::cout << "\n\n Time difference is: " << std::difftime(currentTime, clients[pollfd.fd].startTime) << std::endl;
+    if (std::difftime(currentTime, clients[pollfd.fd].startTime) > 10) {
+      closeClientConnection(pollfd.fd);
+    }
 }
 
 void SocketManager::pollingAndConnections() {
@@ -225,23 +233,23 @@ void SocketManager::pollingAndConnections() {
     return;
   signal(SIGINT, stopServerLoop);
   while (gServerSignal) {
-    int pollEvent = poll(&pollFds[0], pollFds.size(), 1000);
-    if (pollEvent == 0)
-      continue;
+    int pollEvent = poll(&pollFds[0], pollFds.size(), 0);
     if (pollEvent < 0 && gServerSignal == 1)
       throw std::runtime_error("Error from poll function: " +
                                std::string(strerror(errno)));
 
     for (size_t i = 0; i < pollFds.size(); i++) {
       if (pollFds[i].revents & POLLIN) {
-			INFO("POLLIN!")
+        INFO("POLLIN! on " << pollFds[i].fd);
         pollin(pollFds[i]);
       }
       if (pollFds[i].revents & POLLOUT) {
         pollout(pollFds[i]);
       }
-    	//checkAndCloseStaleConnections(pollFds[i]);
-    }
+			if (isClientFd(pollFds[i].fd) == true) {
+				checkAndCloseStaleConnections(pollFds[i]);
+			}
+		}
   }
 }
 

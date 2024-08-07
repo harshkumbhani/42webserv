@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:08:24 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/07/25 13:17:58 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/07/31 13:17:37 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,13 +30,13 @@ std::string HttpResponse::generateHtml(int code, const std::string& codeMessage)
 		<< "<meta charset=\"UTF-8\">"
 		<< "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
 		<< "<title>Webserv - " << code_str << "</title>"
-		<< "<link rel=\"stylesheet\" href=\"\\styles.css\">"
-		<< "<link rel=\"icon\" type=\"image/x-icon\" href=\"favicon.ico\">"
+		//<< "<link rel=\"stylesheet\" href=\"\\styles.css\">"
+		//<< "<link rel=\"icon\" type=\"image/x-icon\" href=\"favicon.ico\">"
 		<< "</head>"
 		<< "<body class=\"background\">"
 		<< "<div class=\"error\">" << code_str << " - " << codeMessage << "</div>"
 		<< "<hr>"
-		<< "<div class=\"info\"></div>"  // Add specific message if needed
+		//<< "<div class=\"info\"></div>"  // Add specific message if needed
 		<< "<button onclick=\"window.history.back()\" class=\"back-button\">Back</button>"
 		<< "</body>"
 		<< "</html>";
@@ -63,7 +63,7 @@ std::string HttpResponse::metaData(clientState &req) {
 	std::map<std::string, std::string>::iterator hd = req.header.begin();
 	while (hd != req.header.end()) {
 		if (hd->first == "Content-Length" || hd->first == "Content-Type" || hd->first == "Connection" || hd->first == "Date" || hd->first == "Server")
-			hd = req.header.erase(hd);
+			req.header.erase(hd++);
 		else {
 			headerMetaData += hd->first + ": " + hd->second + "\r\n";
 			++hd;
