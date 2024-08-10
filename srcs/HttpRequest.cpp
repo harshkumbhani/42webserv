@@ -195,19 +195,11 @@ void HttpRequest::requestBlock(clientState &clientData) {
 			if (headerEndPos != std::string::npos && headerEndPos > reqMethodPos + 2) {
 				reqHeader = clientData.readString.substr(reqMethodPos + 2, headerEndPos - (reqMethodPos + 2));
 				readBody = clientData.readString.substr(headerEndPos + 4);
-				//DEBUG("\n1\n\n" + requestLine + "\n\n");
-				//DEBUG("\n2\n\n" + reqHeader + "\n\n");
-				//DEBUG("\n3\n\n" + readBody + "\n\n");
-				//DEBUG("\n\n Content length of the body: " << readBody.size() << "\n\n");
 				parseRequestHeader(clientData, reqHeader, readBody);
 			}
 		}
 	}
-	// DEBUG("\nREQLINE:\n\n\n" + requestLine);
-	// DEBUG("\nHEADER:\n\n\n" + reqHeader);
-	// DEBUG("\nBODY:\n\n\n" + readBody);
 	std::cout << "-----------------End of Request-----------------------\n";
-	//DEBUG("\n" + clientData.readString);
 	std::cout << "------------------------------------------------------\n";
 }
 
@@ -222,12 +214,10 @@ void HttpRequest::parseRequestLine(clientState &clientData, std::string line) {
 			clientData.method = POST;
 		std::string url;
 		ss >> url;
-		// std::cout << "URL: " << url << std::endl;
 		clientData.requestLine.insert(std::make_pair("url", url));
 		std::string httpversion;
 		ss >> httpversion;
 		clientData.requestLine.insert(std::make_pair("httpversion", httpversion));
-		// DEBUG(httpversion + " \nHALOHALOGHALO");
 	}
 	// if (clientData.requestLine["url"] == "/assets/bg4.mp4")
 	// 	std::cout << clientData.readString << std::endl;

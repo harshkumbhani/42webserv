@@ -141,11 +141,12 @@ void SocketManager::pollin(pollfd &pollFd) {
     this->clients[pollFd.fd].bytesRead += bytesRead;
     this->clients[pollFd.fd].readString = "";
     this->clients[pollFd.fd].readString = std::string(buffer);
-    std::cout << "Request string: \n\n" << std::string(buffer) << "\n\n---End--\n\n";
+    std::cout << "Request string: \n\n"
+              << std::string(buffer) << "\n\n---End--\n\n";
     if (std::string(buffer).empty() == true) {
-			closeClientConnection(pollFd.fd);
+      closeClientConnection(pollFd.fd);
       return;
-		}
+    }
     HttpRequest::requestBlock(this->clients[pollFd.fd]);
     INFO("Request: " << clients[pollFd.fd].requestLine["method"] + " *"
                      << pollFd.fd << "*");
@@ -217,15 +218,10 @@ void SocketManager::closeClientConnection(int &pollFd) {
 void SocketManager::checkAndCloseStaleConnections(struct pollfd &pollfd) {
   time_t currentTime = 0;
 
-	std::cout << "\nEntering checking for the close of the connection" << std::endl;
-		DEBUG("\nTime elapsed check for client: " << pollfd.fd << "\n");
-    std::time(&currentTime);
-		std::cout << "currentTime: " << currentTime << std::endl;
-		std::cout << "start time: " << clients[pollfd.fd].startTime << std::endl;
-		std::cout << "\n\n Time difference is: " << std::difftime(currentTime, clients[pollfd.fd].startTime) << std::endl;
-    if (std::difftime(currentTime, clients[pollfd.fd].startTime) > 10) {
-      closeClientConnection(pollfd.fd);
-    }
+  std::time(&currentTime);
+  if (std::difftime(currentTime, clients[pollfd.fd].startTime) > 10) {
+    closeClientConnection(pollfd.fd);
+  }
 }
 
 void SocketManager::pollingAndConnections() {
@@ -242,13 +238,13 @@ void SocketManager::pollingAndConnections() {
         INFO("POLLIN! on " << pollFds[i].fd);
         pollin(pollFds[i]);
       }
-			if (isClientFd(pollFds[i].fd) == true) {
-      	if (pollFds[i].revents & POLLOUT) {
-        	pollout(pollFds[i]);
-      	}
-				checkAndCloseStaleConnections(pollFds[i]);
-			}
-		}
+      if (isClientFd(pollFds[i].fd) == true) {
+        if (pollFds[i].revents & POLLOUT) {
+          pollout(pollFds[i]);
+        }
+        checkAndCloseStaleConnections(pollFds[i]);
+      }
+    }
   }
 }
 
