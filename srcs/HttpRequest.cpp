@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 18:55:01 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/07 20:25:35 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/08/11 15:02:34 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,23 +17,36 @@ HttpRequest::HttpRequest() {}
 HttpRequest::~HttpRequest() {}
 
 void HttpRequest::requestBlock(clientState &clientData) {
-	std::string requestLine;
-	std::string reqHeader;
-	std::string readBody;
-	if (clientData.flagHeaderRead == false) {
+	// DEBUG("\n............\n" + clientData.readString);
+	if (!clientData.flagHeaderRead) {
 		std::string::size_type reqMethodPos = clientData.readString.find("\r\n");
 		if (reqMethodPos != std::string::npos) {
-			requestLine = clientData.readString.substr(0, reqMethodPos);
+			std::string requestLine = clientData.readString.substr(0, reqMethodPos);
 			parseRequestLine(clientData, requestLine);
-			
+
 			std::string::size_type headerEndPos = clientData.readString.find("\r\n\r\n");
 			if (headerEndPos != std::string::npos && headerEndPos > reqMethodPos + 2) {
-				reqHeader = clientData.readString.substr(reqMethodPos + 2, headerEndPos - (reqMethodPos + 2));
-				readBody = clientData.readString.substr(headerEndPos + 4);
-				parseRequestHeader(clientData, reqHeader, readBody);
+				std::string reqHeader = clientData.readString.substr(reqMethodPos + 2, headerEndPos - (reqMethodPos + 2));
+				parseRequestHeader(clientData, reqHeader);
+				clientData.flagHeaderRead = true;
+
+				clientData.bodyString.append(clientData.readString.substr(headerEndPos + 4));
+				if (clientData.method == POST) {
+					std::map<std::string, std::string>::iterator contentLengthIt = clientData.header.find("Content-Length");
+					if (contentLengthIt != clientData.header.end())
+						clientData.contentLength = static_cast<ssize_t>(std::atol(contentLengthIt->second.c_str()));
+				}
 			}
 		}
+	} else
+		clientData.bodyString.append(clientData.readString);
+	DEBUG("\n====================================\n" + clientData.bodyString);
+	if (clientData.method == POST && clientData.bodyString.size() >= static_cast<size_t>(clientData.contentLength)) {
+		// DEBUG("\n==============================================\n" + clientData.bodyString);
+		parseRequestBody(clientData);
+		clientData.bodyString.clear();
 	}
+	clientData.readString.clear();
 }
 
 void HttpRequest::parseRequestLine(clientState &clientData, std::string line) {
@@ -53,7 +66,7 @@ void HttpRequest::parseRequestLine(clientState &clientData, std::string line) {
 	}
 }
 
-void HttpRequest::parseRequestHeader(clientState &clientData, std::string &reqheader, std::string &readBody) {
+void HttpRequest::parseRequestHeader(clientState &clientData, std::string &reqheader) {
 	std::istringstream ss(reqheader);
 	std::string line;
 	if (clientData.flagPartiallyRead == false) {
@@ -71,46 +84,27 @@ void HttpRequest::parseRequestHeader(clientState &clientData, std::string &reqhe
 				clientData.header.insert(std::make_pair(key, value));
 			}
 		}
-		clientData.flagHeaderRead = true;
 		if (clientData.header["Connection"] == "keep-alive")
 			clientData.isKeepAlive = true;
 	}
-	if (clientData.method == POST) {
-		std::map<std::string, std::string>::iterator contentLengthIt = clientData.header.find("Content-Length");
-		if (contentLengthIt != clientData.header.end())
-			clientData.contentLength = static_cast<ssize_t>(std::atol(contentLengthIt->second.c_str()));
-		//else {
-		// 	WARNING("Content-Length header is missing");
-		// 	return ;
-		// }
-
-		// std::map<std::string, std::string>::iterator contentTypeIt = clientData.header.find("Content-Type");
-		// if (contentTypeIt != clientData.header.end()) {
-		// 	clientData.contentType = contentTypeIt->second;
-		// 	if (clientData.contentType.empty() || clientData.contentType.find("multipart/form-data") == std::string::npos) {
-		// 		WARNING("Content Type is Empty or not multipart/form-data");
-		// 	}
-		// } else {
-		// 	WARNING("Content-Type header is missing");
-		// 	return;
-		// }
-		parseRequestBody(clientData, readBody);
-	}
 }
 
-void write_to_file(const std::string& path, const std::string& content) {
+void HttpRequest::write_to_file(const std::string& path, const std::string& content) {
 	std::ofstream outFile(path.c_str(), std::ios::binary);
 	if (!outFile) {
-		std::cerr << "Error: Unable to open file for writing: " << path << std::endl;
+		WARNING("Error: Unable to open file for writing: " + path);
+		// std::cerr << "Error: Unable to open file for writing: " << path << std::endl;
 		return;
 	}
 	outFile.write(content.c_str(), content.size());
 	outFile.close();
-	if (!outFile)
-		std::cerr << "Error: Failed to write file: " << path << std::endl;
+	if (!outFile) {
+		WARNING("Error: Failed to write file: " + path);
+		// std::cerr << "Error: Failed to write file: " << path << std::endl;
+	}
 }
 
-void parse_headers(std::istringstream& contentStream, std::string& fileName, std::string& fileContent) {
+void HttpRequest::parse_headers(std::istringstream& contentStream, std::string& fileName, std::string& fileContent) {
 	std::string line;
 	bool headerParsed = false;
 
@@ -134,11 +128,25 @@ void parse_headers(std::istringstream& contentStream, std::string& fileName, std
 	fileContent.assign((std::istreambuf_iterator<char>(contentStream)), std::istreambuf_iterator<char>());
 }
 
-void HttpRequest::parseRequestBody(clientState &clientData, std::string &readBody) {
-	clientData.bodyString.append(readBody);
-	// if (clientData.contentLength > static_cast<ssize_t>(clientData.bodyString.size()))
-	// 	return;
+std::string HttpRequest::findBoundary(const std::map<std::string, std::string>& headers) {
+	std::map<std::string, std::string>::const_iterator contentTypeIt = headers.find("Content-Type");
+	if (contentTypeIt == headers.end())
+		return "";
+	const std::string& contentType = contentTypeIt->second;
+	std::string::size_type boundaryPos = contentType.find("boundary=");
+	if (boundaryPos == std::string::npos)
+		return "";
+	boundaryPos += 9;
+	std::string::size_type boundaryEnd = contentType.find(";", boundaryPos);
+	std::string boundary = contentType.substr(boundaryPos, boundaryEnd - boundaryPos);
+	if (!boundary.empty() && boundary.front() == '"' && boundary.back() == '"')
+		boundary = boundary.substr(1, boundary.size() - 2);
+	return boundary;
+}
+
+void HttpRequest::parseRequestBody(clientState &clientData) {
 	std::string boundary = "--" + clientData.boundary;
+	// DEBUG("\n===============================\n" + clientData.boundary + "\n==================================================\n");
 	while (true) {
 		std::size_t boundaryStart = clientData.bodyString.find(boundary);
 		if (boundaryStart == std::string::npos)
@@ -157,8 +165,7 @@ void HttpRequest::parseRequestBody(clientState &clientData, std::string &readBod
 
 		parse_headers(contentStream, fileName, fileContent);
 		if (fileName.empty()) {
-			std::cerr << "Error: No filename found in the headers." << std::endl;
-			return;
+			fileName = "unknown";
 		}
 		std::string filePath = "./www/upload/Files/" + fileName;
 		write_to_file(filePath, fileContent);

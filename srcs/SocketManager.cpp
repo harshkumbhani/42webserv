@@ -131,61 +131,92 @@ bool SocketManager::isClientFd(int pollFd) {
   return false;
 }
 
+// void SocketManager::pollin(pollfd &pollFd) {
+// 	if (isServerFd(pollFd.fd) == true) {
+// 		acceptConnection(pollFd.fd);
+// 	} else {
+// 		char buffer[4096 * 4];
+// 		std::memset(&buffer[0], 0, sizeof(buffer));
+// 		ssize_t bytesRead = recv(pollFd.fd, buffer, sizeof(buffer), 0);
+// 		this->clients[pollFd.fd].bytesRead += bytesRead;
+// 		this->clients[pollFd.fd].readString = "";
+// 		this->clients[pollFd.fd].readString = std::string(buffer);
+// 		// std::cout << "Request string: \n\n" << std::string(buffer) << "\n\n---End--\n\n";
+// 		DEBUG(std::string(buffer));
+// 		DEBUG(this->clients[pollFd.fd].bytesRead);
+// 		if (std::string(buffer).empty() == true) {
+// 			closeClientConnection(pollFd.fd);
+// 			return;
+// 		}
+// 		HttpRequest::requestBlock(this->clients[pollFd.fd]);
+// 		INFO("Request: " << clients[pollFd.fd].requestLine["method"] + " *" << pollFd.fd << "*");
+// 		if (this->clients[pollFd.fd].flagHeaderRead == true) {
+// 			pollFd.events = POLLOUT;
+// 		}
+// 	}
+// }
+
 void SocketManager::pollin(pollfd &pollFd) {
-  if (isServerFd(pollFd.fd) == true) {
-    acceptConnection(pollFd.fd);
-  } else {
-    char buffer[4096 * 4];
-    std::memset(&buffer[0], 0, sizeof(buffer));
-    ssize_t bytesRead = recv(pollFd.fd, buffer, sizeof(buffer), 0);
-    this->clients[pollFd.fd].bytesRead += bytesRead;
-    this->clients[pollFd.fd].readString = "";
-    this->clients[pollFd.fd].readString = std::string(buffer);
-    // std::cout << "Request string: \n\n" << std::string(buffer) << "\n\n---End--\n\n";
-    if (std::string(buffer).empty() == true) {
-			closeClientConnection(pollFd.fd);
-      return;
+	if (isServerFd(pollFd.fd)) {
+		acceptConnection(pollFd.fd);
+	} else {
+		char buffer[4096 * 4];
+		std::memset(&buffer[0], 0, sizeof(buffer));
+		
+		ssize_t bytesRead = 0;
+		while ((bytesRead = recv(pollFd.fd, buffer, sizeof(buffer), 0)) > 0) {
+			this->clients[pollFd.fd].bytesRead += bytesRead;
+			this->clients[pollFd.fd].readString.append(buffer, bytesRead);
+			if (bytesRead < static_cast<ssize_t>(sizeof(buffer)))
+				break;
+			std::memset(&buffer[0], 0, sizeof(buffer));
 		}
-    HttpRequest::requestBlock(this->clients[pollFd.fd]);
-    INFO("Request: " << clients[pollFd.fd].requestLine["method"] + " *"
-                     << pollFd.fd << "*");
-    if (this->clients[pollFd.fd].flagHeaderRead == true) {
-      pollFd.events = POLLOUT;
-    }
-  }
+		if (bytesRead == -1) {
+			std::cerr << "recv() failed with error: " << strerror(errno) << std::endl;
+			closeClientConnection(pollFd.fd);
+			return;
+		} else if (bytesRead == 0) {
+			closeClientConnection(pollFd.fd);
+			return;
+		}
+		HttpRequest::requestBlock(this->clients[pollFd.fd]);
+		INFO("Request: " << clients[pollFd.fd].requestLine["method"] + " *" << pollFd.fd << "*");
+		if (this->clients[pollFd.fd].flagHeaderRead)
+			pollFd.events = POLLOUT;
+	}
 }
 
 void SocketManager::pollout(pollfd &pollFd) {
 
-  HttpResponse response;
-  this->clients[pollFd.fd].writeString =
-      response.respond(this->clients[pollFd.fd]);
+	HttpResponse response;
+	this->clients[pollFd.fd].writeString =
+		response.respond(this->clients[pollFd.fd]);
 
-  if (clients[pollFd.fd].writeString.empty() == true) {
-    WARNING("Response buffer Empty on socket: " << pollFd.fd);
-    pollFd.events = POLLIN;
-    return;
-  }
+	if (clients[pollFd.fd].writeString.empty() == true) {
+		WARNING("Response buffer Empty on socket: " << pollFd.fd);
+		pollFd.events = POLLIN;
+		return;
+	}
 
-  ssize_t bytesSend = send(pollFd.fd, clients[pollFd.fd].writeString.c_str(),
-                           clients[pollFd.fd].writeString.size(), 0);
-  if (bytesSend > 0) {
-    clients[pollFd.fd].writeString.erase(0, bytesSend);
-    if (clients[pollFd.fd].writeString.empty() == true) {
-      pollFd.events = POLLIN;
-      SUCCESS("Response sent successfully on socket: " << pollFd.fd);
-      clients[pollFd.fd].readString.clear();
-      clients[pollFd.fd].writeString.clear();
-      clients[pollFd.fd].flagHeaderRead = false;
-      // closeClientConnection(pollFd.fd);
-    }
-  } else if (bytesSend == 0) {
-    WARNING("Empty response sent on socket: " << pollFd.fd);
-  } else {
-    ERROR("Failed to send a response on socket: "
-          << pollFd.fd << "\n" + std::string(strerror(errno)));
-    closeClientConnection(pollFd.fd);
-  }
+	ssize_t bytesSend = send(pollFd.fd, clients[pollFd.fd].writeString.c_str(),
+							clients[pollFd.fd].writeString.size(), 0);
+	if (bytesSend > 0) {
+		clients[pollFd.fd].writeString.erase(0, bytesSend);
+		if (clients[pollFd.fd].writeString.empty() == true) {
+		pollFd.events = POLLIN;
+		SUCCESS("Response sent successfully on socket: " << pollFd.fd);
+		clients[pollFd.fd].readString.clear();
+		clients[pollFd.fd].writeString.clear();
+		clients[pollFd.fd].flagHeaderRead = false;
+		// closeClientConnection(pollFd.fd);
+		}
+	} else if (bytesSend == 0) {
+		WARNING("Empty response sent on socket: " << pollFd.fd);
+	} else {
+		ERROR("Failed to send a response on socket: "
+			<< pollFd.fd << "\n" + std::string(strerror(errno)));
+		closeClientConnection(pollFd.fd);
+	}
 }
 
 void SocketManager::closeClientConnection(int &pollFd) {
