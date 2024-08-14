@@ -6,7 +6,7 @@
 /*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 18:55:04 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/07 10:09:14 by hkumbhan         ###   ########.fr       */
+/*   Updated: 2024/08/14 09:57:33 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,13 +56,13 @@ class HttpRequest {
 		std::map<std::string, std::string> header;
 		std::string body;
 
-		static void requestBlock(clientState &clientData);
-
-		static void parseRequestLine(clientState &clientData, std::string request);
-		static void parseRequestHeader(clientState &clientData, std::string &reqheader, std::string &readBody);
-		//static void parseRequestBody(clientState &clientData);
-		static std::string		getBoundary(clientState &clientData, std::string const &contentType);
-		static	void	parseMultipartFormData(clientState &clientData, std::string &readBody);
+		static void	requestBlock(clientState &clientData);
+		static void	parseRequestLine(clientState &clientData, std::string &request);
+		static void	parseRequestHeader(clientState &clientData, std::string &reqheader);
+		// static void			parseRequestBody(clientState &clientData);
+		// static std::string	findBoundary(const std::map<std::string, std::string>& headers);
+		// static void			parse_headers(std::istringstream& contentStream, std::string& fileName, std::string& fileContent);
+		// static void			write_to_file(const std::string& path, const std::string& content);
 };
 
 #endif

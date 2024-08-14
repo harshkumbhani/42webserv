@@ -44,6 +44,7 @@ public:
   void acceptConnection(int &pollFd);
   void checkAndCloseStaleConnections(struct pollfd &pollfd);
   void closeClientConnection(int &pollFd);
+  void checkAndCloseStaleConnections(struct pollfd &pollfd);
 };
 
 std::ostream &operator<<(std::ostream &output, const clientState &clientState);

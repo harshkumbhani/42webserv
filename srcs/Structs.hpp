@@ -1,5 +1,5 @@
 #ifndef STRUCTS_HPP
-#define STRUCTS_HPP
+# define STRUCTS_HPP
 
 #include <algorithm>
 #include <cstdlib>
@@ -74,7 +74,7 @@ enum methods { GET = 1, POST = 2, DELETE = 3 };
 struct clientState {
 	bool flagHeaderRead;
 	bool flagBodyRead;
-	bool contentLenPresent;
+	bool flagPartiallyRead;
 	bool isKeepAlive;
 	methods method;
 	ssize_t bytesRead;
@@ -90,6 +90,7 @@ struct clientState {
 	//POST content-type
 	std::string	contentType;
 	std::string	boundary;
+	std::string	fileName;
 };
 
 #endif
