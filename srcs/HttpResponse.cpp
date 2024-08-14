@@ -6,7 +6,7 @@
 /*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:08:24 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/14 09:57:53 by hkumbhan         ###   ########.fr       */
+/*   Updated: 2024/08/14 14:41:50 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -133,6 +133,9 @@ std::string HttpResponse::respond_Get(clientState &req) {
 
 			_Header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
 			_Body = buffer;
+			std::cout << "\n------------------------BODY-------------------------\n";
+			std::cout << buffer.size() << std::endl;
+			std::cout << "\n------------------------BODY END-------------------------\n";
 			route_file.close();
 		}
 		std::string headerMetaData = metaData(req);
@@ -690,10 +693,10 @@ std::string HttpResponse::respond(clientState &req) {
 	// Ensure the "method" key exists in the requestLine map
 	std::map<std::string, std::string>::const_iterator metho = req.requestLine.find("method");
 
-	if (metho != req.requestLine.end()) {
-		DEBUG("HTTP Method PRESENT: " + metho->second);
-	}else
-		DEBUG("Method not found in requestLine!");
+	//if (metho != req.requestLine.end()) {
+	//	DEBUG("HTTP Method PRESENT: " + metho->second);
+	//}else
+	//	DEBUG("Method not found in requestLine!");
 
 	if (metho != req.requestLine.end()) {
 		if (metho->second == "GET") {

@@ -96,7 +96,7 @@ struct clientState {
 	methods method;
 	ssize_t bytesRead;
 	ssize_t contentLength;
-	time_t startTime;
+	time_t lastEventTime;
 	std::string bodyString;
 	std::vector<char> body;
 	std::string readString;
@@ -117,7 +117,6 @@ struct clientState {
     method = DEFAULT; // Or some default method
     bytesRead = 0;
     contentLength = 0;
-    startTime = 0;
     bodyString.clear();
     body.clear();
     readString.clear();
