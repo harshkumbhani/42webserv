@@ -14,11 +14,11 @@ SocketManager::SocketManager(std::vector<ServerParser> parser)
 // Destructor
 
 SocketManager::~SocketManager() {
-  std::vector<struct pollfd>::iterator itp;
-  for (itp = pollFds.begin(); itp != pollFds.end(); itp++) {
-    INFO("Closing all open socket fds: " << itp->fd);
-    close(itp->fd);
-  }
+	std::vector<struct pollfd>::iterator itp;
+	for (itp = pollFds.begin(); itp != pollFds.end(); itp++) {
+		INFO("Closing all open socket fds: " << itp->fd);
+		close(itp->fd);
+	}
 }
 
 // Getters
@@ -37,98 +37,81 @@ void stopServerLoop(int) {
 // Create Sockets Fds and Poll fds
 
 void SocketManager::createServerSockets() {
-  INFO("Booting servers ... ");
-  std::vector<int> ports;
-  std::vector<ServerParser>::iterator it;
+	INFO("Booting servers ... ");
+	std::vector<int> ports;
+	std::vector<ServerParser>::iterator it;
 
-  for (it = servers.begin(); it != servers.end(); it++) {
-    it->sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	for (it = servers.begin(); it != servers.end(); it++) {
+		it->sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
-    if (it->sockfd == -1) {
-      throw std::runtime_error("Failed to create server socket: " +
-                               std::string(strerror(errno)));
-    }
+		if (it->sockfd == -1)
+			throw std::runtime_error("Failed to create server socket: " + std::string(strerror(errno)));
+		const int enable = 1;
+		if (setsockopt(it->sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+			throw std::runtime_error("setsockopt(SO_REUSEADDR) failed");
 
-    const int enable = 1;
-    if (setsockopt(it->sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) <
-        0) {
-      throw std::runtime_error("setsockopt(SO_REUSEADDR) failed");
-    }
+		if (fcntl(it->sockfd, F_SETFL, O_NONBLOCK) < 0)
+			throw std::runtime_error("Failed to make server socket non blocking: " + std::string(strerror(errno)));
 
-    if (fcntl(it->sockfd, F_SETFL, O_NONBLOCK) < 0) {
-      throw std::runtime_error("Failed to make server socket non blocking: " +
-                               std::string(strerror(errno)));
-    }
+		sockaddr_in serverAddress;
+		memset(&serverAddress, 0, sizeof(serverAddress));
+		serverAddress.sin_family = AF_INET;
+		serverAddress.sin_port = htons(it->listen);
+		serverAddress.sin_addr.s_addr = INADDR_ANY;
 
-    sockaddr_in serverAddress;
-    memset(&serverAddress, 0, sizeof(serverAddress));
-    serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons(it->listen);
-    serverAddress.sin_addr.s_addr = INADDR_ANY;
+		if (std::find(ports.begin(), ports.end(), it->listen) == ports.end()) {
+			if (bind(it->sockfd, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
+				throw std::runtime_error("Failed to bind socket to address: " + std::string(strerror(errno)));
 
-    if (std::find(ports.begin(), ports.end(), it->listen) == ports.end()) {
-      if (bind(it->sockfd, (struct sockaddr *)&serverAddress,
-               sizeof(serverAddress)) < 0) {
-        throw std::runtime_error("Failed to bind socket to address: " +
-                                 std::string(strerror(errno)));
-      }
-    }
+			if (listen(it->sockfd, SOMAXCONN) < 0)
+				throw std::runtime_error("Failed to listen on socket: " + std::string(strerror(errno)));
 
-    if (listen(it->sockfd, SOMAXCONN) < 0) {
-      throw std::runtime_error("Failed to listen on socket: " +
-                               std::string(strerror(errno)));
-    }
+			struct pollfd pollfd;
 
-    struct pollfd pollfd;
+			pollfd.fd = it->sockfd;
+			pollfd.events = POLLIN;
+			pollfd.revents = 0;
 
-    pollfd.fd = it->sockfd;
-    pollfd.events = POLLIN;
-    pollfd.revents = 0;
-
-    pollFds.push_back(pollfd);
-    serverSocketsFds.push_back(it->sockfd);
-    ports.push_back(it->listen);
-  }
+			pollFds.push_back(pollfd);
+			serverSocketsFds.push_back(it->sockfd);
+			ports.push_back(it->listen);
+		}
+	}
 }
 
 // Polling and Connections
 
 void SocketManager::acceptConnection(int &pollFd) {
-  struct sockaddr_in clientAddress;
-  socklen_t clientAddressLen = sizeof(clientAddress);
-  int clientSocket =
-      accept(pollFd, (struct sockaddr *)&clientAddress, &clientAddressLen);
-  if (clientSocket < 0) {
-    throw std::runtime_error("Failed to accept client connection: " +
-                             std::string(strerror(errno)));
-  }
-  if (fcntl(clientSocket, F_SETFL, O_NONBLOCK) < 0) {
-    throw std::runtime_error("Failed to make client socket non blocking: " +
-                             std::string(strerror(errno)));
-  }
-  struct pollfd clientPollFd = {clientSocket, POLLIN, 0};
-  pollFds.push_back(clientPollFd);
-  clientSocketsFds.push_back(clientSocket);
-  clientState client = (struct clientState){};
-  clients[clientSocket] = client;
+	struct sockaddr_in clientAddress;
+	socklen_t clientAddressLen = sizeof(clientAddress);
+	int clientSocket = accept(pollFd, (struct sockaddr *)&clientAddress, &clientAddressLen);
+	if (clientSocket < 0)
+		throw std::runtime_error("Failed to accept client connection: " + std::string(strerror(errno)));
+	if (fcntl(clientSocket, F_SETFL, O_NONBLOCK) < 0)
+		throw std::runtime_error("Failed to make client socket non blocking: " + std::string(strerror(errno)));
+	struct pollfd clientPollFd = {clientSocket, POLLIN, 0};
+	pollFds.push_back(clientPollFd);
+	clientSocketsFds.push_back(clientSocket);
+	clientState client = (struct clientState){};
+	clients[clientSocket] = client;
 
-  std::time(&clients[clientSocket].startTime);
-  // TODO: Create a function to return the server block
-  SUCCESS("Accepted new client connection: " << clientSocket);
+	std::time(&clients[clientSocket].startTime);
+	// TODO: Create a function to return the server block
+	SUCCESS("Accepted new client connection: " << clientSocket);
 }
 
 bool SocketManager::isServerFd(int pollFd) {
-  if (std::find(serverSocketsFds.begin(), serverSocketsFds.end(), pollFd) !=
-      serverSocketsFds.end())
-    return true;
-  return false;
+	if (std::find(serverSocketsFds.begin(), serverSocketsFds.end(), pollFd) !=
+		serverSocketsFds.end())
+		return true;
+	return false;
 }
 
 bool SocketManager::isClientFd(int pollFd) {
-  if (std::find(clientSocketsFds.begin(), clientSocketsFds.end(), pollFd) !=
-      clientSocketsFds.end())
-    return true;
-  return false;
+	if (std::find(clientSocketsFds.begin(), clientSocketsFds.end(), pollFd) !=
+		clientSocketsFds.end())
+		return true;
+	return false;
 }
 
 // void SocketManager::pollin(pollfd &pollFd) {
@@ -142,8 +125,8 @@ bool SocketManager::isClientFd(int pollFd) {
 // 		this->clients[pollFd.fd].readString = "";
 // 		this->clients[pollFd.fd].readString = std::string(buffer);
 // 		// std::cout << "Request string: \n\n" << std::string(buffer) << "\n\n---End--\n\n";
-// 		DEBUG(std::string(buffer));
-// 		DEBUG(this->clients[pollFd.fd].bytesRead);
+// 		// DEBUG(std::string(buffer));
+// 		// DEBUG(this->clients[pollFd.fd].bytesRead);
 // 		if (std::string(buffer).empty() == true) {
 // 			closeClientConnection(pollFd.fd);
 // 			return;
@@ -187,7 +170,6 @@ void SocketManager::pollin(pollfd &pollFd) {
 }
 
 void SocketManager::pollout(pollfd &pollFd) {
-
 	HttpResponse response;
 	this->clients[pollFd.fd].writeString =
 		response.respond(this->clients[pollFd.fd]);
@@ -220,77 +202,75 @@ void SocketManager::pollout(pollfd &pollFd) {
 }
 
 void SocketManager::closeClientConnection(int &pollFd) {
-  INFO("Closing client connection on fd: " << pollFd);
+	INFO("Closing client connection on fd: " << pollFd);
 
-  if (close(pollFd) == -1)
-    throw std::runtime_error("Failed to close client connection!");
+	if (close(pollFd) == -1)
+		throw std::runtime_error("Failed to close client connection!");
 
-  std::vector<int>::iterator itServerFd =
-      std::find(serverSocketsFds.begin(), serverSocketsFds.end(), pollFd);
-  if (itServerFd != serverSocketsFds.end())
-    serverSocketsFds.erase(itServerFd);
+	std::vector<int>::iterator itServerFd =
+		std::find(serverSocketsFds.begin(), serverSocketsFds.end(), pollFd);
+	if (itServerFd != serverSocketsFds.end())
+		serverSocketsFds.erase(itServerFd);
 
-  std::vector<int>::iterator itClientFd =
-      std::find(clientSocketsFds.begin(), clientSocketsFds.end(), pollFd);
-  if (itClientFd != clientSocketsFds.end())
-    clientSocketsFds.erase(itClientFd);
+	std::vector<int>::iterator itClientFd =
+		std::find(clientSocketsFds.begin(), clientSocketsFds.end(), pollFd);
+	if (itClientFd != clientSocketsFds.end())
+		clientSocketsFds.erase(itClientFd);
 
-  std::vector<struct pollfd>::iterator it;
-  for (it = pollFds.begin(); it != pollFds.end(); it++) {
-    if (it->fd == pollFd) {
-      pollFds.erase(it);
-      break;
-    }
-  }
-  clients.erase(pollFd);
+	std::vector<struct pollfd>::iterator it;
+	for (it = pollFds.begin(); it != pollFds.end(); it++) {
+		if (it->fd == pollFd) {
+		pollFds.erase(it);
+		break;
+		}
+	}
+	clients.erase(pollFd);
 }
 
 void SocketManager::checkAndCloseStaleConnections(struct pollfd &pollfd) {
-  time_t currentTime = 0;
-
-  if (isClientFd(pollfd.fd) == true) {
-    std::time(&currentTime);
-    if (std::difftime(currentTime, clients[pollfd.fd].startTime) > 10) {
-      INFO("Closing Client Connection on fd: " << pollfd.fd);
-      closeClientConnection(pollfd.fd);
-    }
-  }
+	time_t currentTime = 0;
+	if (isClientFd(pollfd.fd) == true) {
+		std::time(&currentTime);
+		if (std::difftime(currentTime, clients[pollfd.fd].startTime) > 10) {
+		INFO("Closing Client Connection on fd: " << pollfd.fd);
+		closeClientConnection(pollfd.fd);
+		}
+	}
 }
 
 void SocketManager::pollingAndConnections() {
-  if (servers.size() < 1)
-    return;
-  signal(SIGINT, stopServerLoop);
-  while (gServerSignal) {
-    int pollEvent = poll(&pollFds[0], pollFds.size(), 0);
-    if (pollEvent == 0)
-      continue;
-    if (pollEvent < 0 && gServerSignal == 1)
-      throw std::runtime_error("Error from poll function: " +
-                               std::string(strerror(errno)));
+	if (servers.size() < 1)
+		return;
+	signal(SIGINT, stopServerLoop);
+	while (gServerSignal) {
+		int pollEvent = poll(&pollFds[0], pollFds.size(), 0);
+		if (pollEvent == 0)
+		continue;
+		if (pollEvent < 0 && gServerSignal == 1)
+		throw std::runtime_error("Error from poll function: " + std::string(strerror(errno)));
 
-    for (size_t i = 0; i < pollFds.size(); i++) {
-      if (pollFds[i].revents & POLLIN) {
-        INFO("POLLIN! on " << pollFds[i].fd);
-        pollin(pollFds[i]);
-      }
-      if (pollFds[i].revents & POLLOUT) {
-        pollout(pollFds[i]);
-      }
-      checkAndCloseStaleConnections(pollFds[i]);
-    }
-  }
+		for (size_t i = 0; i < pollFds.size(); i++) {
+			if (pollFds[i].revents & POLLIN) {
+				INFO("POLLIN! on " << pollFds[i].fd);
+				pollin(pollFds[i]);
+			}
+			if (pollFds[i].revents & POLLOUT) {
+				pollout(pollFds[i]);
+			}
+			checkAndCloseStaleConnections(pollFds[i]);
+		}
+	}
 }
 
 // Operator overloads
 
 std::ostream &operator<<(std::ostream &output, const clientState &clientState) {
-  output << "\nHeader Read Flag: " << clientState.flagBodyRead
-         << "\nBody Read Flag: " << clientState.flagBodyRead
-         << "\nbytes read: " << clientState.bytesRead
-         << "\ncontent Length: " << clientState.contentLength
-         << "\nstart time: " << clientState.startTime
-         << "\nbody: " << clientState.bodyString << std::endl;
+	output << "\nHeader Read Flag: " << clientState.flagBodyRead
+			<< "\nBody Read Flag: " << clientState.flagBodyRead
+			<< "\nbytes read: " << clientState.bytesRead
+			<< "\ncontent Length: " << clientState.contentLength
+			<< "\nstart time: " << clientState.startTime
+			<< "\nbody: " << clientState.bodyString << std::endl;
 
-  return output;
+	return output;
 }
