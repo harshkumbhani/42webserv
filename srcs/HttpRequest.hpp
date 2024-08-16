@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
+/*   By: harsh <harsh@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 18:55:04 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/14 09:57:33 by hkumbhan         ###   ########.fr       */
+/*   Updated: 2024/08/16 11:20:22 by harsh            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,9 +52,9 @@ class HttpRequest {
 		HttpRequest();
 		~HttpRequest();
 
-		std::map<std::string, std::string> reqLine;
-		std::map<std::string, std::string> header;
-		std::string body;
+		// std::map<std::string, std::string> reqLine;
+		// std::map<std::string, std::string> header;
+		// std::string body;
 
 		static void	requestBlock(clientState &clientData);
 		static void	parseRequestLine(clientState &clientData, std::string &request);

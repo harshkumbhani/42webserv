@@ -86,7 +86,7 @@ struct ServerParser {
 };
 
 
-enum methods { GET = 1, POST = 2, DELETE = 3, DEFAULT = -1};
+enum methods { GET = 1, POST = 2, DELETE = 3, CGI = 4, DEFAULT = -1};
 
 struct clientState {
 	bool flagHeaderRead;

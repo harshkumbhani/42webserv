@@ -4,6 +4,7 @@
 #include "HttpResponse.hpp"
 #include "Parser.hpp"
 #include <algorithm>
+#include <regex>
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -43,6 +44,7 @@ public:
   void pollout(pollfd &pollFd);
   void acceptConnection(int &pollFd);
 	void closeClientConnection(int &pollFd);
+  void assignServerBlock(int &pollFd);
   void checkAndCloseStaleConnections(struct pollfd &pollfd);
 };
 

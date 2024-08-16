@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
+/*   By: harsh <harsh@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 18:55:01 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/14 15:48:24 by hkumbhan         ###   ########.fr       */
+/*   Updated: 2024/08/16 11:48:45 by harsh            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,8 @@ void HttpRequest::requestBlock(clientState &clientData) {
 	} else {
 		clientData.flagBodyRead = true;
 	}
-	DEBUG("\n==============================================\n" + clientData.bodyString + "\n==============================================\n");
+	// DEBUG("\n==============================================\n" + clientData.bodyString + "\n==============================================\n");
+	
 	clientData.readString.clear();
 }
 
@@ -74,9 +75,17 @@ void HttpRequest::parseRequestLine(clientState &clientData, std::string &line) {
 	while (!ss.eof()) {
 		std::string method;
 		ss >> method;
-		clientData.requestLine.insert(std::make_pair("method", method));
 		if (method == "POST")
 			clientData.method = POST;
+		else if (method == "GET")
+			clientData.method = GET;
+		else if (method == "DELETE")
+			clientData.method = DELETE;
+		else if (method == "CGI")
+			clientData.method = CGI;
+		else
+			clientData.method = DEFAULT;
+		clientData.requestLine.insert(std::make_pair("method", method));
 		std::string url;
 		ss >> url;
 		clientData.requestLine.insert(std::make_pair("url", url));
@@ -105,10 +114,9 @@ void HttpRequest::parseRequestHeader(clientState &clientData, std::string &reqhe
 			}
 		}
 		if (clientData.header.find("Connection") != clientData.header.end() && clientData.header["Connection"] == "keep-alive") {
-			std::cout << "Connection: " << (clientData.header["Connection"] == "keep-alive" ? "true" : "false") << std::endl;
-			std::cout << "\nisKeepAliveFlag: " << (clientData.isKeepAlive == true ? "true" : "false") << std::endl;
 			clientData.isKeepAlive = true;
-			std::cout << "\nisKeepAliveFlag: " << (clientData.isKeepAlive == true ? "true" : "false") << std::endl;
 		}
 	}
 }
+
+// Host: localhost:8080
