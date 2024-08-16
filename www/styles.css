@@ -86,9 +86,9 @@ h2 {
 .button-style {
 	padding: 10px 20px;
 	margin: 5px;
-	background-color: hsl(212, 72%, 33%);
+	background-color: hsl(0, 0%, 3%);
 	color: white;
-	font-size: 20px;
+	font-size: 25px;
 	border-radius: 10px;
 	cursor: pointer;
 }
@@ -111,7 +111,8 @@ h2 {
 }
 
 button:hover {
-	background-color: #022050;
+	background-color: #ffffff;
+	color: black;
 }
 
 /* Add these styles to your existing styles.css */
