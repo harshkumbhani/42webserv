@@ -17,23 +17,18 @@ HttpRequest::HttpRequest() {}
 HttpRequest::~HttpRequest() {}
 
 void HttpRequest::requestBlock(clientState &clientData) {
-	// DEBUG("111111111111111111111111\n");
-	if (!clientData.flagHeaderRead) {
+	if (clientData.flagHeaderRead == false) {
 		std::string::size_type reqMethodPos = clientData.readString.find("\r\n");
 		if (reqMethodPos != std::string::npos) {
 			std::string requestLine = clientData.readString.substr(0, reqMethodPos);
-			// DEBUG(requestLine);
+
 			parseRequestLine(clientData, requestLine);
-			// DEBUG("\n==============================================\n" + requestLine + "\n==============================================\n");
-			
-			// DEBUG("222222222222222222222222\n");
 			std::string::size_type headerEndPos = clientData.readString.find("\r\n\r\n");
+
 			if (headerEndPos != std::string::npos && headerEndPos > reqMethodPos + 2) {
 				std::string reqHeader = clientData.readString.substr(reqMethodPos + 2, headerEndPos - (reqMethodPos + 2));
 				parseRequestHeader(clientData, reqHeader);
-				// DEBUG("\n==============================================\n" + reqHeader + "\n==============================================\n");
 				clientData.flagHeaderRead = true;
-
 				clientData.bodyString.append(clientData.readString.substr(headerEndPos + 4));
 				clientData.readString.clear();
 			}
@@ -41,37 +36,19 @@ void HttpRequest::requestBlock(clientState &clientData) {
 	} else {
 		clientData.bodyString.append(clientData.readString);
 	}
+
 	std::map<std::string, std::string>::iterator contentLengthIt = clientData.header.find("Content-Length");
 	if (contentLengthIt != clientData.header.end()) {
 		clientData.contentLength = static_cast<ssize_t>(std::atol(contentLengthIt->second.c_str()));
-		// DEBUG(static_cast<ssize_t>(clientData.bodyString.size()));
-		// DEBUG(static_cast<ssize_t>(clientData.contentLength));
-		if (static_cast<ssize_t>(clientData.bodyString.size()) < static_cast<ssize_t>(clientData.contentLength))
-			clientData.flagBodyRead = false;
-	} else {
-		clientData.flagBodyRead = true;
+
+		if (static_cast<ssize_t>(clientData.bodyString.size()) == static_cast<ssize_t>(clientData.contentLength))
+			clientData.flagBodyRead = true;
 	}
-	// DEBUG("\n==============================================\n" + clientData.bodyString + "\n==============================================\n");
-	
 	clientData.readString.clear();
 }
 
-// void HttpRequest::parseRequestLine(clientState &clientData, std::string &line) {
-// 	std::istringstream stream(line);
-// 	std::string method, url, httpVersion;
-
-// 	if (stream >> method >> url >> httpVersion) {
-// 		clientData.requestLine["method"] = method;
-// 		clientData.requestLine["url"] = url;
-// 		clientData.requestLine["httpversion"] = httpVersion;
-// 	} else {
-// 		std::cerr << "Failed to parse request line: " << line << std::endl;
-// 	}
-// }
-
 void HttpRequest::parseRequestLine(clientState &clientData, std::string &line) {
 	std::istringstream ss(line);
-	// DEBUG("444444444444444444444444\n");
 	while (!ss.eof()) {
 		std::string method;
 		ss >> method;
@@ -85,6 +62,7 @@ void HttpRequest::parseRequestLine(clientState &clientData, std::string &line) {
 			clientData.method = CGI;
 		else
 			clientData.method = DEFAULT;
+	
 		clientData.requestLine.insert(std::make_pair("method", method));
 		std::string url;
 		ss >> url;

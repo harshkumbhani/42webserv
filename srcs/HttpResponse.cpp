@@ -110,7 +110,7 @@ std::string HttpResponse::errorHandlingGet(int code, clientState &req) {
 std::string HttpResponse::respond_Get(clientState &req) {
 	std::map<std::string, std::string>::const_iterator url = req.requestLine.find("url");
 	if (url != req.requestLine.end()) {
-		std::string route = "./www" + (url->second == "/" ? "/index.html" : url->second);
+		std::string route = "./www" + (url->second == "/" ? "/text.html" : url->second);
 		size_t pos = route.find_last_of('.');
 		std::string contentType = g_mimeTypes[route.substr(pos + 1)];
 		// std::cout << "Content Type: " << contentType << std::endl;
@@ -330,6 +330,7 @@ std::string HttpResponse::errorHandlingPost(int statusCode, clientState &req) {
 }
 
 void HttpResponse::write_to_file(const std::string& path, const std::string& content) {
+	std::cout << "\n\n Path : " << path << "\n\n";
 	std::ofstream outFile(path.c_str(), std::ios::binary);
 	if (!outFile)
 		WARNING("Error: Unable to open file for writing: " + path);
@@ -381,7 +382,8 @@ std::string HttpResponse::findBoundary(const std::map<std::string, std::string>&
 
 void HttpResponse::parseRequestBody(clientState &clientData) {
 	std::string boundary = "--" + clientData.boundary;
-	while (true) {
+	std::cout << "\n\nboundary: " << boundary << "\n\n";
+	// while (true) {
 		std::size_t boundaryStart = clientData.bodyString.find(boundary);
 		if (boundaryStart == std::string::npos)
 			return;
@@ -393,6 +395,7 @@ void HttpResponse::parseRequestBody(clientState &clientData) {
 		if (nextBoundaryStart == std::string::npos)
 			return;
 		std::string bodyPart = clientData.bodyString.substr(boundaryEnd, nextBoundaryStart - boundaryEnd);
+		DEBUG("body size: " << bodyPart.size());
 		std::istringstream contentStream(bodyPart);
 		std::string fileName;
 		std::string fileContent;
@@ -400,14 +403,15 @@ void HttpResponse::parseRequestBody(clientState &clientData) {
 		parse_headers(contentStream, fileName, fileContent);
 		// if (fileName.empty())
 		// 	fileName = "unknown";
+		DEBUG("FILE SIZE: " << fileContent.size() << "\n");
 		std::string filePath = "./www/upload/Files/" + fileName;
 		write_to_file(filePath, fileContent);
 		clientData.fileName = fileName;
 		clientData.bodyString.erase(0, nextBoundaryStart);
 		clientData.flagBodyRead = true;
 		std::cout << "File saved to: " << filePath << std::endl;
-		std::cout << "File content:\n" << fileContent << std::endl;
-	}
+		// std::cout << "File content:\n" << fileContent << std::endl;
+	// }
 	return;
 }
 
@@ -425,20 +429,22 @@ std::string HttpResponse::response_Post(clientState &clientData) {
 
 	DEBUG(clientData.bodyString.size());
 	DEBUG(static_cast<size_t>(clientData.contentLength));
+	clientData.boundary = findBoundary(clientData.header);
 	// if (clientData.bodyString.size() >= static_cast<size_t>(clientData.contentLength)) {
 		// DEBUG(clientData.bodyString);
 	parseRequestBody(clientData);
 	clientData.bodyString.clear();
+	DEBUG("route: " << route);
 	// }
 
-	std::ifstream route_file(route.c_str());
-	if (route_file.fail()) {
-		return errorHandlingPost(404, clientData);
-	} else {
-		std::string buffer((std::istreambuf_iterator<char>(route_file)), std::istreambuf_iterator<char>());
-		route_file.close();
-		return successHandling(200, clientData, buffer);
-	}
+	// std::ifstream route_file(route.c_str());
+	// if (route_file.fail()) {
+	// 	return errorHandlingPost(404, clientData);
+	// } else {
+	// 	std::string buffer((std::istreambuf_iterator<char>(route_file)), std::istreambuf_iterator<char>());
+	// 	route_file.close();
+		return successHandling(201, clientData, "201 Created");
+	// }
 }
 
 

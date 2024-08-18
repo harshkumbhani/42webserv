@@ -117,7 +117,7 @@ struct clientState {
     isKeepAlive = false;
     closeConnection = false;
     method = DEFAULT; // Or some default method
-    bytesRead = 0;
+    bytesRead = -1;
     contentLength = 0;
     bodyString.clear();
     body.clear();
