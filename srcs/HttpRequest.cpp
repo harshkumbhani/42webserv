@@ -6,7 +6,7 @@
 /*   By: harsh <harsh@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 18:55:01 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/16 11:48:45 by harsh            ###   ########.fr       */
+/*   Updated: 2024/08/18 15:37:05 by harsh            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,14 +24,14 @@ void HttpRequest::requestBlock(clientState &clientData) {
 			std::string requestLine = clientData.readString.substr(0, reqMethodPos);
 			// DEBUG(requestLine);
 			parseRequestLine(clientData, requestLine);
-			DEBUG("\n==============================================\n" + requestLine + "\n==============================================\n");
+			// DEBUG("\n==============================================\n" + requestLine + "\n==============================================\n");
 			
 			// DEBUG("222222222222222222222222\n");
 			std::string::size_type headerEndPos = clientData.readString.find("\r\n\r\n");
 			if (headerEndPos != std::string::npos && headerEndPos > reqMethodPos + 2) {
 				std::string reqHeader = clientData.readString.substr(reqMethodPos + 2, headerEndPos - (reqMethodPos + 2));
 				parseRequestHeader(clientData, reqHeader);
-				DEBUG("\n==============================================\n" + reqHeader + "\n==============================================\n");
+				// DEBUG("\n==============================================\n" + reqHeader + "\n==============================================\n");
 				clientData.flagHeaderRead = true;
 
 				clientData.bodyString.append(clientData.readString.substr(headerEndPos + 4));
@@ -44,8 +44,8 @@ void HttpRequest::requestBlock(clientState &clientData) {
 	std::map<std::string, std::string>::iterator contentLengthIt = clientData.header.find("Content-Length");
 	if (contentLengthIt != clientData.header.end()) {
 		clientData.contentLength = static_cast<ssize_t>(std::atol(contentLengthIt->second.c_str()));
-		DEBUG(static_cast<ssize_t>(clientData.bodyString.size()));
-		DEBUG(static_cast<ssize_t>(clientData.contentLength));
+		// DEBUG(static_cast<ssize_t>(clientData.bodyString.size()));
+		// DEBUG(static_cast<ssize_t>(clientData.contentLength));
 		if (static_cast<ssize_t>(clientData.bodyString.size()) < static_cast<ssize_t>(clientData.contentLength))
 			clientData.flagBodyRead = false;
 	} else {

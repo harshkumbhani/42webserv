@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
+/*   By: harsh <harsh@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:08:24 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/14 14:41:50 by hkumbhan         ###   ########.fr       */
+/*   Updated: 2024/08/18 15:36:39 by harsh            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,7 +113,7 @@ std::string HttpResponse::respond_Get(clientState &req) {
 		std::string route = "./www" + (url->second == "/" ? "/index.html" : url->second);
 		size_t pos = route.find_last_of('.');
 		std::string contentType = g_mimeTypes[route.substr(pos + 1)];
-		std::cout << "Content Type: " << contentType << std::endl;
+		// std::cout << "Content Type: " << contentType << std::endl;
 		std::ifstream route_file(route.c_str());
 		if (route_file.fail())
 			return errorHandlingGet(404, req);
@@ -133,9 +133,9 @@ std::string HttpResponse::respond_Get(clientState &req) {
 
 			_Header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
 			_Body = buffer;
-			std::cout << "\n------------------------BODY-------------------------\n";
-			std::cout << buffer.size() << std::endl;
-			std::cout << "\n------------------------BODY END-------------------------\n";
+			// std::cout << "\n------------------------BODY-------------------------\n";
+			// std::cout << buffer.size() << std::endl;
+			// std::cout << "\n------------------------BODY END-------------------------\n";
 			route_file.close();
 		}
 		std::string headerMetaData = metaData(req);

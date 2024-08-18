@@ -102,9 +102,9 @@ void SocketManager::acceptConnection(int &pollFd) {
   clientState client = (struct clientState){};
   clients[clientSocket] = client;
 
-  std::time(&clients[clientSocket].lastEventTime);
-  // TODO: Create a function to return the server block
-  SUCCESS("Accepted new client connection: " << clientSocket);
+  clients[clientSocket].clear();
+	std::time(&clients[clientSocket].lastEventTime);
+	SUCCESS("Accepted new client connection: " << clientSocket);
 }
 
 bool SocketManager::isServerFd(int pollFd) {
@@ -125,7 +125,7 @@ void SocketManager::assignServerBlock(int &pollFd) {
   auto hostIt = clients[pollFd].header.find("Host");
 
   if (hostIt == clients[pollFd].header.end())
-    return;
+    return ;
 
   std::regex pattern(R"(([^:]+):(\d+))");
   std::smatch matches;
@@ -160,34 +160,42 @@ void SocketManager::pollin(pollfd &pollFd) {
     }
     HttpRequest::requestBlock(clients[pollFd.fd]);
     assignServerBlock(pollFd.fd);
-    HttpResponse response;
 
+    HttpResponse response;
     switch (clients[pollFd.fd].method) {
-    case POST:
-      if (clients[pollFd.fd].flagHeaderRead == true &&
-          clients[pollFd.fd].flagBodyRead == true) {
-        clients[pollFd.fd].writeString = response.respond(clients[pollFd.fd]);
-        pollFd.events = POLLOUT;
-      }
-      break;
-    default:
-      if (clients[pollFd.fd].flagHeaderRead == true) {
-        clients[pollFd.fd].writeString = response.respond(clients[pollFd.fd]);
-        pollFd.events = POLLOUT;
-      }
-      break;
+      case DEFAULT:
+        break ;
+      case POST:
+        if (clients[pollFd.fd].flagHeaderRead == true && 
+            clients[pollFd.fd].flagBodyRead == true) {
+          clients[pollFd.fd].writeString = response.respond(clients[pollFd.fd]);
+          pollFd.events = POLLOUT;
+        }
+        break;
+      default:
+        if (clients[pollFd.fd].flagHeaderRead == true) {
+          clients[pollFd.fd].writeString = response.respond(clients[pollFd.fd]);
+          pollFd.events = POLLOUT;
+        }
+        break;
     }
   }
 }
 
 void SocketManager::pollout(pollfd &pollFd) {
 
-  if (clients[pollFd.fd].writeString.empty() == true) {
-    WARNING("Response buffer Empty on socket: " << pollFd.fd);
-    pollFd.events = POLLIN;
-    return;
-  }
+  // HttpResponse response;
+  // if (clients[pollFd.fd].writeString.empty() == true) {
+  //   clients[pollFd.fd].writeString = response.respond(clients[pollFd.fd]);
 
+    if (clients[pollFd.fd].writeString.empty() == true) {
+      WARNING("Response buffer Empty on socket: " << pollFd.fd);
+      pollFd.events = POLLIN;
+      clients[pollFd.fd].clear();
+      return;
+    }
+    // DEBUG("\nRequest from : " << pollFd.fd << " to respond\n");
+  // }
   ssize_t bytesSend = send(pollFd.fd, clients[pollFd.fd].writeString.c_str(),
                            clients[pollFd.fd].writeString.size(), 0);
 
@@ -196,10 +204,11 @@ void SocketManager::pollout(pollfd &pollFd) {
     clients[pollFd.fd].writeString.erase(0, bytesSend);
     if (clients[pollFd.fd].writeString.empty() == true) {
       SUCCESS("Response sent successfully on socket: " << pollFd.fd);
-      if (clients[pollFd.fd].isKeepAlive == false)
-
-        pollFd.events = POLLIN;
-      clients[pollFd.fd].clear();
+      if (clients[pollFd.fd].isKeepAlive == false) {
+        clients[pollFd.fd].closeConnection = true;
+      }
+      pollFd.events = POLLIN;
+			clients[pollFd.fd].clear();
     }
   } else if (bytesSend == 0) {
     WARNING("Empty response sent on socket: " << pollFd.fd);
@@ -239,7 +248,7 @@ void SocketManager::checkAndCloseStaleConnections(struct pollfd &pollfd) {
   time_t currentTime = 0;
 
   std::time(&currentTime);
-  if (std::difftime(currentTime, clients[pollfd.fd].lastEventTime) > 10) {
+  if ((clients[pollfd.fd].closeConnection == true) || std::difftime(currentTime, clients[pollfd.fd].lastEventTime) > 10) {
     closeClientConnection(pollfd.fd);
   }
 }
