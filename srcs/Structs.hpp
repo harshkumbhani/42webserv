@@ -52,6 +52,14 @@ struct Location {
   std::string root;
   std::string index;
   std::string path;
+
+	void clear() {
+		methods.clear();
+		redirect.clear();
+		root.clear();
+		index.clear();
+		path.clear();
+	}
 };
 
 struct ServerParser {
@@ -66,10 +74,19 @@ struct ServerParser {
   std::string directory_listing;
   size_t client_body_size;
   std::vector<Location> location;
+
+	void clear() {
+		location.clear();
+		server_name.clear();
+		root.clear();
+		autoindex.clear();
+		index.clear();
+		directory_listing.clear();
+	}
 };
 
 
-enum methods { GET = 1, POST = 2, DELETE = 3 };
+enum methods { GET = 1, POST = 2, DELETE = 3, CGI = 4, DEFAULT = -1};
 
 struct clientState {
 	bool flagHeaderRead;
@@ -79,7 +96,7 @@ struct clientState {
 	methods method;
 	ssize_t bytesRead;
 	ssize_t contentLength;
-	time_t startTime;
+	time_t lastEventTime;
 	std::string bodyString;
 	std::vector<char> body;
 	std::string readString;
@@ -91,6 +108,26 @@ struct clientState {
 	std::string	contentType;
 	std::string	boundary;
 	std::string	fileName;
+
+	void clear() {
+		flagHeaderRead = false;
+		flagBodyRead = false;
+		flagPartiallyRead = false;
+		isKeepAlive = false;
+		method = DEFAULT; // Or some default method
+		bytesRead = 0;
+		contentLength = 0;
+		bodyString.clear();
+		body.clear();
+		readString.clear();
+		writeString.clear();
+		requestLine.clear();
+		header.clear();
+		serverData.clear(); // Assuming ServerParser has a clear method
+		contentType.clear();
+		boundary.clear();
+		fileName.clear();
+	}
 };
 
 #endif

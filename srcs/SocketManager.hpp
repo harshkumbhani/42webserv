@@ -2,8 +2,10 @@
 #define SOCKET_MANAGER_HPP
 
 #include "HttpResponse.hpp"
+#include "Structs.hpp"
 #include "Parser.hpp"
 #include <algorithm>
+#include <regex>
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -14,37 +16,37 @@
 #include <unistd.h>
 
 class SocketManager {
-private:
-  std::vector<int> serverSocketsFds;
-  std::vector<int> clientSocketsFds;
-  std::vector<ServerParser> servers;
-  std::vector<struct pollfd> pollFds;
-  std::map<int, clientState> clients;
+	private:
+	std::vector<int> serverSocketsFds;
+	std::vector<int> clientSocketsFds;
+	std::vector<ServerParser> servers;
+	std::vector<struct pollfd> pollFds;
+	std::map<int, clientState> clients;
 
-public:
-  // typedefs
-  typedef std::vector<struct pollfd>::iterator pollFdsIterator;
+	public:
+	// typedefs
+	typedef std::vector<struct pollfd>::iterator pollFdsIterator;
 
-  SocketManager(std::vector<ServerParser> parser);
-  ~SocketManager();
+	SocketManager(std::vector<ServerParser> parser);
+	~SocketManager();
 
-  // Getters
-  std::vector<ServerParser> getServers() const;
+	// Getters
+	std::vector<ServerParser> getServers() const;
 
-  // other methods for socket manipulation
-  void createServerSockets();
-  void pollingAndConnections();
+	// other methods for socket manipulation
+	void createServerSockets();
+	void pollingAndConnections();
 
-  // Bool return methods for checking if its client or server fd
-  bool isServerFd(int pollFd);
-  bool isClientFd(int pollFd);
+	// Bool return methods for checking if its client or server fd
+	bool isServerFd(int pollFd);
+	bool isClientFd(int pollFd);
 
-  void pollin(pollfd &pollFd);
-  void pollout(pollfd &pollFd);
-  void acceptConnection(int &pollFd);
-  void checkAndCloseStaleConnections();
-  void closeClientConnection(int &pollFd);
-  void checkAndCloseStaleConnections(struct pollfd &pollfd);
+	void pollin(pollfd &pollFd);
+	void pollout(pollfd &pollFd);
+	void acceptConnection(int &pollFd);
+		void closeClientConnection(int &pollFd);
+	void assignServerBlock(int &pollFd);
+	void checkAndCloseStaleConnections(struct pollfd &pollfd);
 };
 
 std::ostream &operator<<(std::ostream &output, const clientState &clientState);
