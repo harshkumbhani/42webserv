@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:08:24 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/18 10:49:12 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/08/18 12:19:47 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,13 +30,13 @@ std::string HttpResponse::generateHtml(int code, const std::string& codeMessage)
 		<< "<meta charset=\"UTF-8\">"
 		<< "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
 		<< "<title>Webserv - " << code_str << "</title>"
-		<< "<link rel=\"stylesheet\" href=\"\\styles.css\">"
-		<< "<link rel=\"icon\" type=\"image/x-icon\" href=\"favicon.ico\">"
+		//<< "<link rel=\"stylesheet\" href=\"\\styles.css\">"
+		//<< "<link rel=\"icon\" type=\"image/x-icon\" href=\"favicon.ico\">"
 		<< "</head>"
 		<< "<body class=\"background\">"
 		<< "<div class=\"error\">" << code_str << " - " << codeMessage << "</div>"
 		<< "<hr>"
-		<< "<div class=\"info\"></div>"  // Add specific message if needed
+		//<< "<div class=\"info\"></div>"  // Add specific message if needed
 		<< "<button onclick=\"window.history.back()\" class=\"back-button\">Back</button>"
 		<< "</body>"
 		<< "</html>";
@@ -132,6 +132,9 @@ std::string HttpResponse::respond_Get(clientState &req) {
 
 			_Header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
 			_Body = buffer;
+			std::cout << "\n------------------------BODY-------------------------\n";
+			std::cout << buffer.size() << std::endl;
+			std::cout << "\n------------------------BODY END-------------------------\n";
 			route_file.close();
 		}
 		std::string headerMetaData = metaData(req);
@@ -403,14 +406,26 @@ std::string HttpResponse::response_Delete(clientState &req) {
 }
 
 std::string HttpResponse::respond(clientState &req) {
-	if (req.method == GET) {
-		return respond_Get(req);
-	} else if (req.method == POST) {
-		return response_Post(req);
-	} else if (req.method == DELETE) {
-		return response_Delete(req);
+	// Ensure the "method" key exists in the requestLine map
+	std::map<std::string, std::string>::const_iterator metho = req.requestLine.find("method");
+
+	//if (metho != req.requestLine.end()) {
+	//	DEBUG("HTTP Method PRESENT: " + metho->second);
+	//}else
+	//	DEBUG("Method not found in requestLine!");
+
+	if (metho != req.requestLine.end()) {
+		if (metho->second == "GET") {
+			return respond_Get(req);
+		} else if (metho->second == "POST") {
+			return response_Post(req);
+		} else if (metho->second == "DELETE") {
+			return response_Delete(req);
+		} else {
+			return errorHandlingPost(405, req);
+		}
 	} else {
-		return errorHandlingPost(405, req);
+		return errorHandlingPost(400, req);
 	}
 }
 

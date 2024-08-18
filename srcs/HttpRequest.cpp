@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 18:55:01 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/18 12:06:32 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/08/18 12:18:47 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,8 @@ void HttpRequest::requestBlock(clientState &clientData) {
 	} else {
 		clientData.flagBodyRead = true;
 	}
+	// DEBUG("\n==============================================\n" + clientData.bodyString + "\n==============================================\n");
+	
 	clientData.readString.clear();
 }
 
@@ -57,13 +59,17 @@ void HttpRequest::parseRequestLine(clientState &clientData, std::string &line) {
 	while (!ss.eof()) {
 		std::string method;
 		ss >> method;
-		clientData.requestLine.insert(std::make_pair("method", method));
-		if (method == "GET")
-			clientData.method = GET;
 		if (method == "POST")
 			clientData.method = POST;
-		if (method == "DELETE")
+		else if (method == "GET")
+			clientData.method = GET;
+		else if (method == "DELETE")
 			clientData.method = DELETE;
+		else if (method == "CGI")
+			clientData.method = CGI;
+		else
+			clientData.method = DEFAULT;
+		clientData.requestLine.insert(std::make_pair("method", method));
 		std::string url;
 		ss >> url;
 		clientData.requestLine.insert(std::make_pair("url", url));
@@ -94,7 +100,10 @@ void HttpRequest::parseRequestHeader(clientState &clientData, std::string &reqhe
 				clientData.header.insert(std::make_pair(key, value));
 			}
 		}
-		if (clientData.header["Connection"] == "keep-alive")
+		if (clientData.header.find("Connection") != clientData.header.end() && clientData.header["Connection"] == "keep-alive") {
 			clientData.isKeepAlive = true;
+		}
 	}
 }
+
+// Host: localhost:8080

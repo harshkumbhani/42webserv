@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Parser.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: harsh <harsh@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/25 19:00:17 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/05/30 17:25:06 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/08/16 11:58:33 by harsh            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,3 +68,5 @@ public:
 std::ostream &operator<<(std::ostream &output,
                          const std::vector<ServerParser> &nodes);
 std::ostream &operator<<(std::ostream &output, const Location &location);
+
+std::ostream &operator<<(std::ostream &output, const ServerParser &nodes);

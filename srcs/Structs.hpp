@@ -110,24 +110,24 @@ struct clientState {
 	std::string	fileName;
 
 	void clear() {
-		flagHeaderRead = false;
-		flagBodyRead = false;
-		flagPartiallyRead = false;
-		isKeepAlive = false;
-		method = DEFAULT; // Or some default method
-		bytesRead = 0;
-		contentLength = 0;
-		bodyString.clear();
-		body.clear();
-		readString.clear();
-		writeString.clear();
-		requestLine.clear();
-		header.clear();
-		serverData.clear(); // Assuming ServerParser has a clear method
-		contentType.clear();
-		boundary.clear();
-		fileName.clear();
-	}
+    flagHeaderRead = false;
+    flagBodyRead = false;
+    flagPartiallyRead = false;
+    isKeepAlive = false;
+    method = DEFAULT; // Or some default method
+    bytesRead = 0;
+    contentLength = 0;
+    bodyString.clear();
+    body.clear();
+    readString.clear();
+    writeString.clear();
+    requestLine.clear();
+    header.clear();
+    serverData.clear(); // Assuming ServerParser has a clear method
+    contentType.clear();
+    boundary.clear();
+    fileName.clear();
+  }
 };
 
 #endif

@@ -41,12 +41,12 @@ class SocketManager {
 	bool isServerFd(int pollFd);
 	bool isClientFd(int pollFd);
 
-	void pollin(pollfd &pollFd);
-	void pollout(pollfd &pollFd);
-	void acceptConnection(int &pollFd);
-		void closeClientConnection(int &pollFd);
-	void assignServerBlock(int &pollFd);
-	void checkAndCloseStaleConnections(struct pollfd &pollfd);
+  void pollin(pollfd &pollFd);
+  void pollout(pollfd &pollFd);
+  void acceptConnection(int &pollFd);
+	void closeClientConnection(int &pollFd);
+  void assignServerBlock(int &pollFd);
+  void checkAndCloseStaleConnections(struct pollfd &pollfd);
 };
 
 std::ostream &operator<<(std::ostream &output, const clientState &clientState);
