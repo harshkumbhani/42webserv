@@ -102,8 +102,8 @@ void SocketManager::acceptConnection(int &pollFd) {
   clientState client = (struct clientState){};
   clients[clientSocket] = client;
 
+  clients[clientSocket].clear();
   std::time(&clients[clientSocket].lastEventTime);
-  // TODO: Create a function to return the server block
   SUCCESS("Accepted new client connection: " << clientSocket);
 }
 
@@ -179,17 +179,25 @@ void SocketManager::pollin(pollfd &pollFd) {
     char buffer[4096 * 4];
     std::memset(&buffer[0], 0, sizeof(buffer));
     ssize_t bytesRead = recv(pollFd.fd, buffer, sizeof(buffer), 0);
-    clients[pollFd.fd].bytesRead += bytesRead;
-    clients[pollFd.fd].readString = "";
-    clients[pollFd.fd].readString = std::string(buffer);
-    if (std::string(buffer).empty() == true) {
-      return;
+    clients[pollFd.fd].bytesRead = bytesRead;
+    if (bytesRead == 0) {
+      return ;
+    } else if (bytesRead == -1) {
+      // ERROR("Error from recv fuction: " << pollFd.fd << "\n" + std::string(strerror(errno)));
+      clients[pollFd.fd].closeConnection = true;
+      return ;
     }
+
+    clients[pollFd.fd].readString = std::string(buffer, bytesRead);
+
     HttpRequest::requestBlock(clients[pollFd.fd]);
     assignServerBlock(pollFd.fd);
-    HttpResponse response;
+    std::time(&clients[pollFd.fd].lastEventTime);
 
+    HttpResponse response;
     switch (clients[pollFd.fd].method) {
+    case DEFAULT:
+      break;
     case POST:
       if (clients[pollFd.fd].flagHeaderRead == true &&
           clients[pollFd.fd].flagBodyRead == true) {
@@ -212,28 +220,33 @@ void SocketManager::pollout(pollfd &pollFd) {
 
   if (clients[pollFd.fd].writeString.empty() == true) {
     WARNING("Response buffer Empty on socket: " << pollFd.fd);
+    clients[pollFd.fd].clear();
     pollFd.events = POLLIN;
     return;
   }
 
-  ssize_t bytesSend = send(pollFd.fd, clients[pollFd.fd].writeString.c_str(),
-                           clients[pollFd.fd].writeString.size(), 0);
+  if (clients[pollFd.fd].bytesRead > 0) {
+    ssize_t bytesSend = send(pollFd.fd, clients[pollFd.fd].writeString.c_str(),
+                            clients[pollFd.fd].writeString.size(), 0);
 
-  if (bytesSend > 0) {
-    std::time(&clients[pollFd.fd].lastEventTime);
-    clients[pollFd.fd].writeString.erase(0, bytesSend);
-    if (clients[pollFd.fd].writeString.empty() == true) {
-      SUCCESS("Response sent successfully on socket: " << pollFd.fd);
-      if (clients[pollFd.fd].isKeepAlive == false)
-
+    if (bytesSend > 0) {
+      std::time(&clients[pollFd.fd].lastEventTime);
+      clients[pollFd.fd].writeString.erase(0, bytesSend);
+      if (clients[pollFd.fd].writeString.empty() == true) {
+        SUCCESS("Response sent successfully on socket: " << pollFd.fd);
+        if (clients[pollFd.fd].isKeepAlive == false) {
+          clients[pollFd.fd].closeConnection = true;
+        }
         pollFd.events = POLLIN;
-      clients[pollFd.fd].clear();
+        clients[pollFd.fd].clear();
+      }
+    } else if (bytesSend == 0) {
+      WARNING("Empty response sent on socket: " << pollFd.fd);
+    } else {
+      ERROR("Failed to send a response on socket: "
+            << pollFd.fd << "\n" + std::string(strerror(errno)));
+      clients[pollFd.fd].closeConnection = true;
     }
-  } else if (bytesSend == 0) {
-    WARNING("Empty response sent on socket: " << pollFd.fd);
-  } else {
-    ERROR("Failed to send a response on socket: "
-          << pollFd.fd << "\n" + std::string(strerror(errno)));
   }
 }
 
@@ -260,14 +273,18 @@ void SocketManager::closeClientConnection(int &pollFd) {
       break;
     }
   }
-  clients.erase(pollFd);
+  auto itmap = clients.find(pollFd);
+  if (itmap != clients.end()) {
+    clients.erase(pollFd);
+  }
 }
 
 void SocketManager::checkAndCloseStaleConnections(struct pollfd &pollfd) {
   time_t currentTime = 0;
 
   std::time(&currentTime);
-  if (std::difftime(currentTime, clients[pollfd.fd].lastEventTime) > 10) {
+  if ((clients[pollfd.fd].closeConnection == true) ||
+      std::difftime(currentTime, clients[pollfd.fd].lastEventTime) > 10) {
     closeClientConnection(pollfd.fd);
   }
 }
@@ -275,6 +292,7 @@ void SocketManager::checkAndCloseStaleConnections(struct pollfd &pollfd) {
 void SocketManager::pollingAndConnections() {
   if (servers.size() < 1)
     return;
+  signal(SIGPIPE, SIG_IGN);
   signal(SIGINT, stopServerLoop);
   while (gServerSignal) {
     if (poll(&pollFds[0], pollFds.size(), 0) == -1 && gServerSignal == 1)
@@ -284,6 +302,10 @@ void SocketManager::pollingAndConnections() {
     for (size_t i = 0; i < pollFds.size(); i++) {
       if (pollFds[i].revents & POLLIN) {
         pollin(pollFds[i]);
+      }
+      if (pollFds[i].revents & (POLLHUP | POLLERR | POLLNVAL)) {
+        checkAndCloseStaleConnections(pollFds[i]);
+        continue;
       }
       if (isClientFd(pollFds[i].fd) == true) {
         if (pollFds[i].revents & POLLOUT) {

@@ -5,11 +5,11 @@
 #include "Structs.hpp"
 #include "Parser.hpp"
 #include <algorithm>
-#include <regex>
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <poll.h>
+#include <regex>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -44,7 +44,7 @@ class SocketManager {
   void pollin(pollfd &pollFd);
   void pollout(pollfd &pollFd);
   void acceptConnection(int &pollFd);
-	void closeClientConnection(int &pollFd);
+  void closeClientConnection(int &pollFd);
   void assignServerBlock(int &pollFd);
   void checkAndCloseStaleConnections(struct pollfd &pollfd);
 };

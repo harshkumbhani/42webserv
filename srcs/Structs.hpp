@@ -93,6 +93,7 @@ struct clientState {
 	bool flagBodyRead;
 	bool flagPartiallyRead;
 	bool isKeepAlive;
+  bool closeConnection;
 	methods method;
 	ssize_t bytesRead;
 	ssize_t contentLength;
@@ -114,8 +115,9 @@ struct clientState {
     flagBodyRead = false;
     flagPartiallyRead = false;
     isKeepAlive = false;
+    closeConnection = false;
     method = DEFAULT; // Or some default method
-    bytesRead = 0;
+    bytesRead = -1;
     contentLength = 0;
     bodyString.clear();
     body.clear();

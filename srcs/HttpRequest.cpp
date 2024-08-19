@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 18:55:01 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/18 12:18:47 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/08/19 12:02:18 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,40 +17,33 @@ HttpRequest::HttpRequest() {}
 HttpRequest::~HttpRequest() {}
 
 void HttpRequest::requestBlock(clientState &clientData) {
-	DEBUG("\n" + clientData.readString);
-	if (!clientData.flagHeaderRead) {
+	if (clientData.flagHeaderRead == false) {
 		std::string::size_type reqMethodPos = clientData.readString.find("\r\n");
 		if (reqMethodPos != std::string::npos) {
 			std::string requestLine = clientData.readString.substr(0, reqMethodPos);
-			parseRequestLine(clientData, requestLine);
 
-			std::cout << "1111{" << clientData.readString << "}1111" << std::endl;
+			parseRequestLine(clientData, requestLine);
 			std::string::size_type headerEndPos = clientData.readString.find("\r\n\r\n");
-			// std::cout << "{" << clientData.readString.substr(reqMethodPos + 2, headerEndPos - (reqMethodPos + 2)) << "}" << std::endl;
-			
-			if (headerEndPos != std::string::npos) {
-				std::cout << "2222{" << clientData.readString.substr(reqMethodPos + 2, headerEndPos - (reqMethodPos + 2)) << "}2222" << std::endl;
+
+			if (headerEndPos != std::string::npos && headerEndPos > reqMethodPos + 2) {
 				std::string reqHeader = clientData.readString.substr(reqMethodPos + 2, headerEndPos - (reqMethodPos + 2));
 				parseRequestHeader(clientData, reqHeader);
 				clientData.flagHeaderRead = true;
-
-				if (headerEndPos + 4 < clientData.readString.size()) {
-					clientData.bodyString.append(clientData.readString.substr(headerEndPos + 4));
-				}
+				clientData.bodyString.append(clientData.readString.substr(headerEndPos + 4));
+				clientData.readString.clear();
 			}
 		}
 	} else if (!clientData.flagBodyRead) {
 		clientData.bodyString.append(clientData.readString);
 	}
-	if (clientData.contentLength > 0) {
-		if (static_cast<ssize_t>(clientData.bodyString.size()) >= static_cast<ssize_t>(clientData.contentLength)) {
+
+	std::map<std::string, std::string>::iterator contentLengthIt = clientData.header.find("Content-Length");
+	if (contentLengthIt != clientData.header.end()) {
+		clientData.contentLength = static_cast<ssize_t>(std::atol(contentLengthIt->second.c_str()));
+
+		if (static_cast<ssize_t>(clientData.bodyString.size()) == static_cast<ssize_t>(clientData.contentLength))
 			clientData.flagBodyRead = true;
-		}
-	} else {
-		clientData.flagBodyRead = true;
 	}
-	// DEBUG("\n==============================================\n" + clientData.bodyString + "\n==============================================\n");
-	
 	clientData.readString.clear();
 }
 
@@ -69,6 +62,7 @@ void HttpRequest::parseRequestLine(clientState &clientData, std::string &line) {
 			clientData.method = CGI;
 		else
 			clientData.method = DEFAULT;
+	
 		clientData.requestLine.insert(std::make_pair("method", method));
 		std::string url;
 		ss >> url;
