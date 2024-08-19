@@ -110,7 +110,7 @@ std::string HttpResponse::errorHandlingGet(int code, clientState &req) {
 std::string HttpResponse::respond_Get(clientState &req) {
 	std::map<std::string, std::string>::const_iterator url = req.requestLine.find("url");
 	if (url != req.requestLine.end()) {
-		std::string route = "./www" + (url->second == "/" ? "/text.html" : url->second);
+		std::string route = "./www" + (url->second == "/" ? "/index.html" : url->second);
 		size_t pos = route.find_last_of('.');
 		std::string contentType = g_mimeTypes[route.substr(pos + 1)];
 		// std::cout << "Content Type: " << contentType << std::endl;

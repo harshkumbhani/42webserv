@@ -156,7 +156,7 @@ void SocketManager::pollin(pollfd &pollFd) {
     if (bytesRead == 0) {
       return ;
     } else if (bytesRead == -1) {
-      ERROR("Error from recv fuction: " << pollFd.fd << "\n" + std::string(strerror(errno)));
+      // ERROR("Error from recv fuction: " << pollFd.fd << "\n" + std::string(strerror(errno)));
       clients[pollFd.fd].closeConnection = true;
       return ;
     }
