@@ -148,29 +148,29 @@ void SocketManager::assignServerBlock(int &pollFd) {
 }
 
 
-void SocketManager::assignServerBlock(int &pollFd) {
-  auto hostIt = clients[pollFd].header.find("Host");
+// void SocketManager::assignServerBlock(int &pollFd) {
+//   auto hostIt = clients[pollFd].header.find("Host");
 
-  if (hostIt == clients[pollFd].header.end())
-    return;
+//   if (hostIt == clients[pollFd].header.end())
+//     return;
 
-  std::regex pattern(R"(([^:]+):(\d+))");
-  std::smatch matches;
-  std::string domain;
-  int port = 0;
+//   std::regex pattern(R"(([^:]+):(\d+))");
+//   std::smatch matches;
+//   std::string domain;
+//   int port = 0;
 
-  if (std::regex_match(clients[pollFd].header["Host"], matches, pattern)) {
-    domain = matches[1].str();
-    port = std::stoi(matches[2].str());
+//   if (std::regex_match(clients[pollFd].header["Host"], matches, pattern)) {
+//     domain = matches[1].str();
+//     port = std::stoi(matches[2].str());
 
-    for (auto &server : servers) {
-      if (server.server_name == domain && server.listen == port) {
-        clients[pollFd].serverData = server;
-        break;
-      }
-    }
-  }
-}
+//     for (auto &server : servers) {
+//       if (server.server_name == domain && server.listen == port) {
+//         clients[pollFd].serverData = server;
+//         break;
+//       }
+//     }
+//   }
+// }
 
 void SocketManager::pollin(pollfd &pollFd) {
   if (isServerFd(pollFd.fd) == true) {

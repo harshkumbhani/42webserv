@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:08:24 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/19 12:02:33 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/08/21 14:17:10 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,13 +30,10 @@ std::string HttpResponse::generateHtml(int code, const std::string& codeMessage)
 		<< "<meta charset=\"UTF-8\">"
 		<< "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
 		<< "<title>Webserv - " << code_str << "</title>"
-		//<< "<link rel=\"stylesheet\" href=\"\\styles.css\">"
-		//<< "<link rel=\"icon\" type=\"image/x-icon\" href=\"favicon.ico\">"
 		<< "</head>"
 		<< "<body class=\"background\">"
 		<< "<div class=\"error\">" << code_str << " - " << codeMessage << "</div>"
 		<< "<hr>"
-		//<< "<div class=\"info\"></div>"  // Add specific message if needed
 		<< "<button onclick=\"window.history.back()\" class=\"back-button\">Back</button>"
 		<< "</body>"
 		<< "</html>";
@@ -44,7 +41,7 @@ std::string HttpResponse::generateHtml(int code, const std::string& codeMessage)
 	return stream.str();
 }
 
-std::string HttpResponse::statusCode(int code) {
+std::string HttpResponse::statusCodes(int code) {
 	std::string codeMessage;
 	if (code == 400)
 		codeMessage = "Bad Request";
@@ -57,14 +54,14 @@ std::string HttpResponse::statusCode(int code) {
 	return generateHtml(code, codeMessage);
 }
 
-std::string HttpResponse::metaData(clientState &req) {
+std::string HttpResponse::metaData(clientState &clientData) {
 	std::string headerMetaData = "";
-	std::map<std::string, std::string>::iterator hd = req.header.begin();
-	while (hd != req.header.end()) {
+	std::map<std::string, std::string>::iterator hd = clientData.header.begin();
+	while (hd != clientData.header.end()) {
 		if (hd->first == "Content-Length" || hd->first == "Content-Type" || \
 			hd->first == "Connection" || hd->first == "Date" \
 			|| hd->first == "Server" || hd->first == "Range"){
-			req.header.erase(hd++);
+			clientData.header.erase(hd++);
 		} else {
 			headerMetaData += hd->first + ": " + hd->second + "\r\n";
 			++hd;
@@ -81,7 +78,7 @@ std::string HttpResponse::webserverStamp(void) {
 	return std::string(buf);
 }
 
-std::string HttpResponse::errorHandlingGet(int code, clientState &req) {
+std::string HttpResponse::errorHandlingGet(int code, clientState &clientData) {
 	std::string errorCode;
 	std::stringstream ss;
 	ss << code;
@@ -92,8 +89,8 @@ std::string HttpResponse::errorHandlingGet(int code, clientState &req) {
 	else if (code == 404) sms = "Not Found";
 	else if (code == 500) sms = "Internal Server Error";
 	else sms = "Unknown Error";
-	_StatusLine = req.requestLine["httpversion"] + " " + errorCode + " " + sms + "\r\n";
-	std::string status_page = statusCode(code);
+	_StatusLine = clientData.requestLine[2] + " " + errorCode + " " + sms + "\r\n";
+	std::string status_page = statusCodes(code);
 	std::stringstream pageSizeStream;
 	pageSizeStream << status_page.size();
 	std::string pageSize;
@@ -101,47 +98,39 @@ std::string HttpResponse::errorHandlingGet(int code, clientState &req) {
 
 	_Header = "Content-Type: text/html\r\nContent-Length: " + pageSize + "\r\nConnection: close\r\n";
 	_Body = status_page;
-	std::string headerMetaData = metaData(req);
+	std::string headerMetaData = metaData(clientData);
 	_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
 	_Response = _StatusLine + _Header + _Body;
 	return _Response;
 }
 
-std::string HttpResponse::respond_Get(clientState &req) {
-	std::map<std::string, std::string>::const_iterator url = req.requestLine.find("url");
-	if (url != req.requestLine.end()) {
-		std::string route = "./www" + (url->second == "/" ? "/index.html" : url->second);
-		size_t pos = route.find_last_of('.');
-		std::string contentType = g_mimeTypes[route.substr(pos + 1)];
-		// std::cout << "Content Type: " << contentType << std::endl;
-		std::ifstream route_file(route.c_str());
-		if (route_file.fail())
-			return errorHandlingGet(404, req);
-		else {
-			struct stat statFile;
-			if(stat(route.c_str(), &statFile) != 0) {
-				WARNING("Unable to get file properties");
-				exit(42);
-			}
-			std::string buffer((std::istreambuf_iterator<char>(route_file)), std::istreambuf_iterator<char>());
-			_StatusLine = req.requestLine["httpversion"] + " 200 OK\r\n";
-
-			std::stringstream ss;
-			ss << statFile.st_size;
-			std::string fileSize;
-			ss >> fileSize;
-
-			_Header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
-			_Body = buffer;
-			// std::cout << "\n------------------------BODY-------------------------\n";
-			// std::cout << buffer.size() << std::endl;
-			// std::cout << "\n------------------------BODY END-------------------------\n";
-			route_file.close();
+std::string HttpResponse::respond_Get(clientState &clientData) {
+	std::string route = "./www" + (clientData.requestLine[1] == "/" ? "/index.html" : clientData.requestLine[1]);
+	size_t pos = route.find_last_of('.');
+	std::string contentType = g_mimeTypes[route.substr(pos + 1)];
+	std::ifstream route_file(route.c_str());
+	if (route_file.fail())
+		return errorHandlingGet(404, clientData);
+	else {
+		struct stat statFile;
+		if(stat(route.c_str(), &statFile) != 0) {
+			WARNING("Unable to get file properties");
+			exit(42);
 		}
-		std::string headerMetaData = metaData(req);
-		_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
-	} else
-		throw std::runtime_error("Url Missing");
+		std::string buffer((std::istreambuf_iterator<char>(route_file)), std::istreambuf_iterator<char>());
+		_StatusLine = clientData.requestLine[2] + " 200 OK\r\n";
+
+		std::stringstream ss;
+		ss << statFile.st_size;
+		std::string fileSize;
+		ss >> fileSize;
+
+		_Header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
+		_Body = buffer;
+		route_file.close();
+	}
+	std::string headerMetaData = metaData(clientData);
+	_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
 	_Response = _StatusLine + _Header + _Body;
 	return _Response;
 }
@@ -168,7 +157,7 @@ std::string buildHttpResponse(const std::string &httpVersion, int statusCode, co
 	return statusLine + headers + "\r\n" + body;
 }
 
-std::string HttpResponse::successHandling(int statusCode, clientState &req, const std::string &messageBody) {
+std::string HttpResponse::successHandling(int statusCode, clientState &clientData, const std::string &messageBody) {
 	std::string statusMessage;
 	switch (statusCode) {
 		case 200:
@@ -186,10 +175,10 @@ std::string HttpResponse::successHandling(int statusCode, clientState &req, cons
 			break;
 	}
 	std::string responseBody = messageBody.empty() ? "<html><body><h1>" + statusMessage + "</h1></body></html>" : messageBody;
-	return buildHttpResponse(req.requestLine["httpversion"], statusCode, statusMessage, responseBody);
+	return buildHttpResponse(clientData.requestLine[2], statusCode, statusMessage, responseBody);
 }
 
-std::string HttpResponse::errorHandlingPost(int statusCode, clientState &req) {
+std::string HttpResponse::errorHandlingPost(int statusCode, clientState &clientData) {
 	std::string statusMessage;
 	switch (statusCode) {
 		case 400:
@@ -219,18 +208,22 @@ std::string HttpResponse::errorHandlingPost(int statusCode, clientState &req) {
 			break;
 	}
 	std::string responseBody = "<html><body><h1>" + statusMessage + "</h1></body></html>";
-	return buildHttpResponse(req.requestLine["httpversion"], statusCode, statusMessage, responseBody);
+	return buildHttpResponse(clientData.requestLine[2], statusCode, statusMessage, responseBody);
 }
 
-void HttpResponse::write_to_file(const std::string& path, const std::string& content) {
-	std::cout << "\n\n Path : " << path << "\n\n";
+bool HttpResponse::write_to_file(clientState &clientData, const std::string& path, const std::string& content) {
 	std::ofstream outFile(path.c_str(), std::ios::binary);
-	if (!outFile)
+	if (!outFile){
 		WARNING("Error: Unable to open file for writing: " + path);
+		clientData.flagFileStatus = true;
+	}
 	outFile.write(content.c_str(), content.size());
 	outFile.close();
-	if (!outFile)
+	if (!outFile){
 		WARNING("Error: Failed to write file: " + path);
+		clientData.flagFileStatus = true;
+	}
+	return (clientData.flagFileStatus);
 }
 
 void HttpResponse::parse_headers(std::istringstream& contentStream, std::string& fileName, std::string& fileContent) {
@@ -275,326 +268,94 @@ std::string HttpResponse::findBoundary(const std::map<std::string, std::string>&
 
 void HttpResponse::parseRequestBody(clientState &clientData) {
 	std::string boundary = "--" + clientData.boundary;
-	std::cout << "\n\nboundary: " << boundary << "\n\n";
-	// while (true) {
-		std::size_t boundaryStart = clientData.bodyString.find(boundary);
-		if (boundaryStart == std::string::npos)
-			return;
-		std::size_t boundaryEnd = clientData.bodyString.find("\r\n", boundaryStart);
-		if (boundaryEnd == std::string::npos)
-			return;
-		boundaryEnd += 2;
-		std::size_t nextBoundaryStart = clientData.bodyString.find(boundary, boundaryEnd);
-		if (nextBoundaryStart == std::string::npos)
-			return;
-		std::string bodyPart = clientData.bodyString.substr(boundaryEnd, nextBoundaryStart - boundaryEnd);
-		DEBUG("body size: " << bodyPart.size());
-		std::istringstream contentStream(bodyPart);
-		std::string fileName;
-		std::string fileContent;
+	std::size_t boundaryStart = clientData.bodyString.find(boundary);
+	if (boundaryStart == std::string::npos)
+		return;
+	std::size_t boundaryEnd = clientData.bodyString.find("\r\n", boundaryStart);
+	if (boundaryEnd == std::string::npos)
+		return;
+	boundaryEnd += 2;
+	std::size_t nextBoundaryStart = clientData.bodyString.find(boundary, boundaryEnd);
+	if (nextBoundaryStart == std::string::npos)
+		return;
+	std::string bodyPart = clientData.bodyString.substr(boundaryEnd, nextBoundaryStart - boundaryEnd);
+	std::istringstream contentStream(bodyPart);
+	std::string fileName;
+	std::string fileContent;
 
-		parse_headers(contentStream, fileName, fileContent);
-		// if (fileName.empty())
-		// 	fileName = "unknown";
-		DEBUG("FILE SIZE: " << fileContent.size() << "\n");
-		std::string filePath = "./www/upload/Files/" + fileName;
-		write_to_file(filePath, fileContent);
-		clientData.fileName = fileName;
-		clientData.bodyString.erase(0, nextBoundaryStart);
-		clientData.flagBodyRead = true;
-		std::cout << "File saved to: " << filePath << std::endl;
-		// std::cout << "File content:\n" << fileContent << std::endl;
-	// }
+	parse_headers(contentStream, fileName, fileContent);
+	std::string filePath = "./www/upload/Files/" + fileName;
+	clientData.flagFileStatus = write_to_file(clientData, filePath, fileContent);
+	clientData.fileName = fileName;
+	clientData.bodyString.erase(0, nextBoundaryStart);
+	clientData.flagBodyRead = true;
 	return;
 }
 
 std::string HttpResponse::response_Post(clientState &clientData) {
-	std::map<std::string, std::string>::const_iterator url = clientData.requestLine.find("url");
-	if (url == clientData.requestLine.end())
-		return errorHandlingPost(400, clientData);
-
-	std::string route = "./www" + url->second;
+	std::string route = "./www" + clientData.requestLine[1];
 	if (!is_valid_str(route))
 		return errorHandlingPost(400, clientData);
 
 	size_t pos = route.find_last_of('.');
 	std::string contentType = g_mimeTypes[route.substr(pos + 1)];
 
-	DEBUG(clientData.bodyString.size());
-	DEBUG(static_cast<size_t>(clientData.contentLength));
 	clientData.boundary = findBoundary(clientData.header);
-	// if (clientData.bodyString.size() >= static_cast<size_t>(clientData.contentLength)) {
-		// DEBUG(clientData.bodyString);
 	parseRequestBody(clientData);
 	clientData.bodyString.clear();
-	DEBUG("route: " << route);
-	// }
-
-	// std::ifstream route_file(route.c_str());
-	// if (route_file.fail()) {
-	// 	return errorHandlingPost(404, clientData);
-	// } else {
-	// 	std::string buffer((std::istreambuf_iterator<char>(route_file)), std::istreambuf_iterator<char>());
-	// 	route_file.close();
-		return successHandling(201, clientData, "201 Created");
-	// }
+	if (clientData.flagFileStatus == true)
+		return (generateHttpResponse(400, "No file was uploaded; please attach a file."));
+	return successHandling(201, clientData, "201 Created");
 }
 
-
-// std::string HttpResponse::response_Post(clientState &req) {
-	// std::map<std::string, std::string>::const_iterator url = req.requestLine.find("url");
-	// if (url == req.requestLine.end()) {
-	// 	throw std::runtime_error("Url Missing");
-	// }
-
-	// std::string route = "./www" + (url->second == "/" ? "/index.html" : url->second);
-
-	// std::string extension = url->second.substr(url->second.find_last_of('.') + 1);
-	// size_t pos = route.find_last_of('.');
-	// std::string contentType = g_mimeTypes[route.substr(pos + 1)];
-
-// 	if (!is_valid_str(route))
-// 		return errorHandling(400, req);
-
-// 	std::ifstream route_file(route.c_str());
-// 	if (route_file.fail()) {
-// 		std::ofstream outfile(route.c_str());
-// 		outfile << req.bodyString;
-// 		outfile.close();
-
-// 		std::ifstream test_created_file(route.c_str());
-// 		if (test_created_file.fail()) {
-// 			DEBUG("File failed to create");
-// 			throw std::runtime_error("FILE NOT CREATED");
-// 		}
-
-// 		std::string buffer((std::istreambuf_iterator<char>(test_created_file)), std::istreambuf_iterator<char>());
-// 		test_created_file.close();
-
-// 		_StatusLine = req.requestLine["httpversion"] + " 201 Created\r\n";
-// 		std::stringstream ss;
-// 		ss << buffer.size();
-// 		std::string fileSize;
-// 		ss >> fileSize;
-// 		// _Header = "Content-Type: " + extension + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
-// 		_Header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
-// 		_Body = buffer;
-// 	} else {
-// 		std::string buffer((std::istreambuf_iterator<char>(route_file)), std::istreambuf_iterator<char>());
-// 		route_file.close();
-
-// 		_StatusLine = req.requestLine["httpversion"] + " 200 OK\r\n";
-// 		std::stringstream ss;
-// 		ss << buffer.size();
-// 		std::string fileSize;
-// 		ss >> fileSize;
-// 		// _Header = "Content-Type: " + extension + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
-// 		_Header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
-// 		_Body = buffer;
-// 	}
-
-// 	_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + metaData(req);
-// 	_Response = _StatusLine + _Header + _Body;
-
-// 	// DEBUG(_Response);
-// 	return _Response;
-// }
-
-//==================================================================================================
-
-
-// std::string delete_body_sms(int code) {
-// 	std::string two_00 = "{\"message\": \"Request deleted successfully\",\"userId\": 123}";
-// 	std::string four_04 = "{\"error\": \"Not Found\",\"message\": \"User not found\"}";
-// 	std::string five_00 = "{\"error\": \"Internal Server Error\",\"message\": " "\"An unexpected error occurred.\"}";
-
-// 	if (code == 200)
-// 		return (two_00);
-// 	else if (code == 404)
-// 		return (four_04);
-// 	else if (code == 500)
-// 		return (five_00);
-// 	DEBUG(code);
-// 	return ("What type of code");
-// }
-
-// std::string HttpResponse::response_Delete(clientState &req) {
-// 	std::map<std::string, std::string>::const_iterator url = req.requestLine.find("url");
-// 	if (url != req.requestLine.end()) {
-// 		std::string route = "./www/store/general/" + url->second;
-// 		std::ifstream route_file(route.c_str());
-// 		std::string extension = url->second;
-// 		size_t pos = extension.find_last_of('.');
-// 		// std::string mime = parser.mimes[extension.substr(pos + 1)];
-// 		if (is_valid_str(route) == false) {
-// 			_StatusLine = req.requestLine.find("httpversion")->second + " " + "400" + " Bad Request\r\n";
-// 			std::string status_page = statusCode(400);
-// 			std::stringstream ss;
-// 			ss << status_page.size();
-// 			std::string pageSize;
-// 			ss >> pageSize;
-// 			_Header = "Content-Type: text/html\r\nContent-Length: " + pageSize + "\r\nConnection: close\r\n";
-// 			_Body = status_page;
-// 		} else if (route_file.fail() == false) {
-// 			int content_len;
-// 			std::stringstream ss;
-// 			ss << req.header.find("Content-Length")->second;
-// 			ss >> content_len;
-// 			if (content_len == 0 && std::remove(route.c_str()) == 0) {
-// 				_StatusLine = req.requestLine.find("httpversion")->second + " " + "204" + " No Content\r\n";
-// 				_Header = "Connection: keep-alive\r\n";
-// 			} else if (std::remove(route.c_str()) == 0) {
-// 				std::string buf = delete_body_sms(200);
-// 				std::stringstream ss;
-// 				ss >> buf;
-// 				route_file.close();
-// 				std::stringstream sss;
-// 				sss << buf.size();
-// 				std::string fileSize;
-// 				sss >> fileSize;
-// 				_StatusLine = req.requestLine.find("httpversion")->second + " " + "200" + " OK\r\n";
-// 				_Header = "Content-Type: " + extension.substr(pos + 1) + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
-// 				_Body = buf;
-// 			} else {
-// 				std::string buf = delete_body_sms(500);
-// 				std::stringstream ss;
-// 				ss >> buf;
-// 				route_file.close();
-// 				std::stringstream sss;
-// 				sss << buf.size();
-// 				std::string fileSize;
-// 				sss >> fileSize;
-// 				_StatusLine = req.requestLine.find("httpversion")->second + " " + "500" + " Internal Server Error\r\n";
-// 				_Header = "Content-Type: " + extension.substr(pos + 1) + "\r\nContent-Length: " + fileSize + "\r\nConnection: close\r\n";
-// 				_Body = buf;
-// 			}
-// 		} else {
-// 			std::string buf = delete_body_sms(404);
-// 			std::stringstream ss;
-// 			ss >> buf;
-// 			route_file.close();
-// 			std::stringstream sss;
-// 			sss << buf.size();
-// 			std::string fileSize;
-// 			sss >> fileSize;
-// 			_StatusLine = req.requestLine.find("httpversion")->second + " " + "404" + " Not Found\r\n";
-// 			_Header = "Content-Type: " + extension.substr(pos + 1) + "\r\nContent-Length: " + fileSize + "\r\nConnection: close\r\n";
-// 			_Body = buf;
-// 		}
-// 		time_t now = time(0);
-// 		char buf[100];
-// 		strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", gmtime(&now));
-// 		_Header = _Header + "Date: " + std::string(buf) + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n\r\n";
-// 	} else {
-// 		throw std::runtime_error("Url Missing");
-// 	}
-// 	_Response = _StatusLine + _Header + _Body;
-// 	return (_Response);
-// }
-//==================================================================================================
-
-std::string delete_body_sms(int code) {
-	if (code == 200)
-		return "{\"message\": \"Request deleted successfully\",\"userId\": 123}";
-	else if (code == 404)
-		return "{\"error\": \"Not Found\",\"message\": \"User not found\"}";
-	else if (code == 500)
-		return "{\"error\": \"Internal Server Error\",\"message\": \"An unexpected error occurred.\"}";
-	
-	// DEBUG(code);
-	return "What type of code";
-}
-
-std::string generateStatusLine(const std::string &httpVersion, int code, const std::string &message) {
-	std::ostringstream oss;
-	oss << httpVersion << " " << code << " " << message << "\r\n";
-	return oss.str();
-}
-
-std::string generateHeaders(const std::string &contentType, size_t contentLength, const std::string &connection) {
-	std::ostringstream oss;
-	oss << "Content-Type: " << contentType << "\r\n"
-		<< "Content-Length: " << contentLength << "\r\n"
-		<< "Connection: " << connection << "\r\n";
-	return oss.str();
-}
-
-std::string generateDateHeader() {
-	time_t now = time(0);
-	char buf[100];
-	strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", gmtime(&now));
-	return std::string("Date: ") + buf + "\r\n";
-}
-
-std::string HttpResponse::response_Delete(clientState &req) {
-	std::map<std::string, std::string>::const_iterator url = req.requestLine.find("url");
-	if (url == req.requestLine.end()) {
-		throw std::runtime_error("Url Missing");
+//================================DELETE=====================================
+std::string HttpResponse::generateHttpResponse(int statusCode, const std::string& message) {
+	std::ostringstream response;
+	response << "HTTP/1.1 " << statusCode << " ";
+	if (statusCode == 200) {
+		response << "OK";
+	} else if (statusCode == 404) {
+		response << "Not Found";
+	} else if (statusCode == 400) {
+		response << "Bad Request";
+	} else if (statusCode == 500) {
+		response << "Internal Server Error";
+	} else if (statusCode == 413) {
+		response << "Payload Too Large";
 	}
+	response << "\r\n";
+	response << "Content-Type: text/plain\r\n";
+	response << "Content-Length: " << message.length() << "\r\n";
+	response << "\r\n";
 
-	std::string route = "./www/store/general/" + url->second;
-	std::ifstream route_file(route.c_str());
-	// std::string extension = url->second;
-	size_t pos = route.find_last_of('.');
-	// std::string contentType = extension.substr(pos + 1);
-	std::string contentType = g_mimeTypes[route.substr(pos + 1)];
+	response << message;
+	return response.str();
+}
 
-	if (!is_valid_str(route)) {
-		_StatusLine = generateStatusLine(req.requestLine.find("httpversion")->second, 400, "Bad Request");
-		std::string status_page = statusCode(400);
-		_Header = generateHeaders("text/html", status_page.size(), "close");
-		_Body = status_page;
-	} else if (!route_file.fail()) {
-		int content_len;
-		std::istringstream(req.header.find("Content-Length")->second) >> content_len;
+std::string HttpResponse::responseDelete(clientState &clientData) {
+	const std::string& filePath = "./www/upload/Files" + clientData.requestLine[1];
 
-		if (content_len == 0 && std::remove(route.c_str()) == 0) {
-			_StatusLine = generateStatusLine(req.requestLine.find("httpversion")->second, 204, "No Content");
-			_Header = generateHeaders("", 0, "keep-alive");
-		} else if (std::remove(route.c_str()) == 0) {
-			std::string buf = delete_body_sms(200);
-			_StatusLine = generateStatusLine(req.requestLine.find("httpversion")->second, 200, "OK");
-			_Header = generateHeaders(contentType, buf.size(), "keep-alive");
-			_Body = buf;
-		} else {
-			std::string buf = delete_body_sms(500);
-			_StatusLine = generateStatusLine(req.requestLine.find("httpversion")->second, 500, "Internal Server Error");
-			_Header = generateHeaders(contentType, buf.size(), "close");
-			_Body = buf;
-		}
+	FILE* file = std::fopen(filePath.c_str(), "r");
+	if (!file)
+		return generateHttpResponse(404, "File not found.");
+	std::fclose(file);
+
+	if (std::remove(filePath.c_str()) == 0)
+		return generateHttpResponse(200, "File deleted successfully.");
+	else
+		return generateHttpResponse(500, std::strerror(errno));
+}
+
+std::string HttpResponse::respond(clientState &clientData) {
+	if (clientData.requestLine[0] == "GET") {
+		return respond_Get(clientData);
+	} else if (clientData.requestLine[0] == "POST") {
+		if (clientData.flagFileSizeTooBig)
+			return (generateHttpResponse(413, "Request body size exceeds the maximum allowed size."));
+		return response_Post(clientData);
+	} else if (clientData.requestLine[0] == "DELETE") {
+		return responseDelete(clientData);
 	} else {
-		std::string buf = delete_body_sms(404);
-		_StatusLine = generateStatusLine(req.requestLine.find("httpversion")->second, 404, "Not Found");
-		_Header = generateHeaders(contentType, buf.size(), "close");
-		_Body = buf;
-	}
-
-	_Header += generateDateHeader() + "Server: Webserv/harsh/oreste/v1.0\r\n\r\n";
-	_Response = _StatusLine + _Header + _Body;
-	return _Response;
-}
-
-std::string HttpResponse::respond(clientState &req) {
-	// Ensure the "method" key exists in the requestLine map
-	std::map<std::string, std::string>::const_iterator metho = req.requestLine.find("method");
-
-	//if (metho != req.requestLine.end()) {
-	//	DEBUG("HTTP Method PRESENT: " + metho->second);
-	//}else
-	//	DEBUG("Method not found in requestLine!");
-
-	if (metho != req.requestLine.end()) {
-		if (metho->second == "GET") {
-			return respond_Get(req);
-		} else if (metho->second == "POST") {
-			return response_Post(req);
-		} else if (metho->second == "DELETE") {
-			return response_Delete(req);
-		} else {
-			return errorHandlingPost(405, req);
-		}
-	} else {
-		return errorHandlingPost(400, req);
+		return errorHandlingPost(405, clientData);
 	}
 }
-
