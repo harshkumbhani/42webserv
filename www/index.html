@@ -4,23 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Webserv</title>
-		<link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Background video continues from where it left off -->
     <video autoplay muted loop id="background-video" poster="./assets/home.jpg">
         <source src="./assets/bg3.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
-    <!-- <audio id="notification" src="./assets/music.mp3" muted></audio> -->
+
     <img src="./assets/logo.jpg" alt="project logo" id="logo">
     <div class="project-credit">Project by: Harsh and Oreste </div>
-    <div class="button-container">
+
+    <!-- Button container will disappear when DELETE is clicked -->
+    <div class="button-container" id="buttons">
         <button class="button-style">GET</button>
         <button class="button-style" onclick="openModal()">POST</button>
-        <button class="button-style">DELETE</button>
+        <button class="button-style" onclick="loadDirectoryListing()">DELETE</button>
         <button class="button-style">CGI</button>
         <button class="button-style">REDIRECTION</button>
+    </div>
+
+    <!-- Placeholder for the directory listing -->
+    <div id="directory-listing" style="display: none;">
+        <button onclick="closeDirectoryListing()" style="margin-bottom: 10px;">Close</button>
+        <table>
+            <!--<thead>
+                <tr>
+                    <th>Icon</th>
+                    <th>Name</th>
+                </tr>
+            </thead>-->
+            <tbody id="tableBody">
+                <!-- Table rows generated dynamically by C++ program -->
+            </tbody>
+        </table>
     </div>
 
     <div id="fileUploadModal" class="modal">
@@ -44,5 +63,35 @@
         </a>
     </div>
 
+    <script>
+        // Function to hide the buttons and load the directory listing
+        function loadDirectoryListing() {
+            // Hide the button container
+            document.getElementById('buttons').style.display = 'none';
+
+            // Fetch and inject the directory listing HTML
+            fetch('/directory_listing.html')
+                .then(response => response.text())  // Expecting plain text (HTML)
+                .then(htmlSnippet => {
+                    // Inject the HTML directly into the table body
+                    document.getElementById('tableBody').innerHTML = htmlSnippet;
+                    document.getElementById('directory-listing').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error loading directory listing:', error);
+                });
+        }
+
+        function closeDirectoryListing() {
+            // Hide the directory listing
+            document.getElementById('directory-listing').style.display = 'none';
+
+            // Show the button container
+            document.getElementById('buttons').style.display = 'block';
+
+            // Optionally clear the content of the directory listing if needed
+            document.getElementById('tableBody').innerHTML = '';
+        }
+    </script>
 </body>
 </html>

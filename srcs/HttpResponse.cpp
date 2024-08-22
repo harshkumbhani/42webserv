@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: harsh <harsh@student.42.fr>                +#+  +:+       +#+        */
+/*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:08:24 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/18 15:36:39 by harsh            ###   ########.fr       */
+/*   Updated: 2024/08/19 15:32:41 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -404,7 +404,7 @@ void HttpResponse::parseRequestBody(clientState &clientData) {
 		// if (fileName.empty())
 		// 	fileName = "unknown";
 		DEBUG("FILE SIZE: " << fileContent.size() << "\n");
-		std::string filePath = "./www/upload/Files/" + fileName;
+		std::string filePath = "./www/upload/" + fileName;
 		write_to_file(filePath, fileContent);
 		clientData.fileName = fileName;
 		clientData.bodyString.erase(0, nextBoundaryStart);
