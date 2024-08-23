@@ -70,7 +70,7 @@
             document.getElementById('buttons').style.display = 'none';
 
             // Fetch and inject the directory listing HTML
-            fetch('/directory_listing.html')
+            fetch('/pages/delete.html')
                 .then(response => response.text())  // Expecting plain text (HTML)
                 .then(htmlSnippet => {
                     // Inject the HTML directly into the table body
