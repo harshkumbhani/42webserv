@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2024/08/25 10:16:42 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/08/25 22:12:28 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -192,7 +192,7 @@ std::string HttpResponse::errorHandlingPost(int statusCode, clientState &clientD
 			statusMessage = "Forbidden";
 			break;
 		case 404:
-			statusMessage = "Not Found";
+			statusMessage = "Page Not Found";
 			break;
 		case 405:
 			statusMessage = "Method Not Allowed Error";
@@ -289,7 +289,7 @@ void HttpResponse::parseRequestBody(clientState &clientData) {
 		// 	fileName = "unknown";
 		DEBUG("FILE SIZE: " << fileContent.size() << "\n");
 		std::string filePath = "./www/upload/" + fileName;
-		write_to_file(filePath, fileContent);
+		write_to_file(clientData, filePath, fileContent);
 		clientData.fileName = fileName;
 		clientData.bodyString.erase(0, nextBoundaryStart);
 		clientData.flagBodyRead = true;
@@ -346,14 +346,32 @@ std::string HttpResponse::responseDelete(clientState &clientData) {
 	if (!file)
 		return generateHttpResponse(404, "File not found.");
 	std::fclose(file);
-
 	if (std::remove(filePath.c_str()) == 0)
 		return generateHttpResponse(200, "File deleted successfully.");
 	else
 		return generateHttpResponse(500, std::strerror(errno));
 }
 
+void	HttpResponse::methodsAllowed(clientState &clientData) {
+	std::string	currMethod = clientData.requestLine[0];
+	std::string	path = clientData.requestLine[1].substr(0, clientData.requestLine[1].find_last_of("/"));
+	DEBUG(path);
+	std::vector<Location>::iterator	it;
+	for (it = clientData.serverData.location.begin(); it != clientData.serverData.location.end(); ++it) {
+		if (it->path == "/" + path) {
+			std::vector<std::string>::iterator	jt;
+			for (jt = it->methods.begin(); jt != it->methods.end(); ++jt) {
+				if (jt->c_str() == currMethod)
+					return ;
+			}
+			errorHandlingPost(405, clientData);
+		}
+	}
+	errorHandlingPost(404, clientData);
+}
+
 std::string HttpResponse::respond(clientState &clientData) {
+	methodsAllowed(clientData);
 	if (clientData.requestLine[0] == "GET") {
 		return respond_Get(clientData);
 	} else if (clientData.requestLine[0] == "POST") {

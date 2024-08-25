@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:09:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/21 14:12:21 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/08/25 22:44:00 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,14 +35,30 @@ enum status { OK = 200, NOT_FOUND = 404, BAD_REQUEST = 400 };
 class HttpRequest;
 
 class HttpResponse {
-	public:
-		HttpResponse();
-		~HttpResponse();
-
+	private:
 		std::string _StatusLine;
 		std::string _Header;
 		std::string _Body;
 		std::string _Response;
+		const std::map<int, std::string> httpErrorMap
+		{
+			{200,"OK"},
+			{201,"Created"},
+			{202,"Accepted"},
+			{400,"Bad Request"},
+			{401,"Unauthorized"},
+			{403,"Forbidden"},
+			{404,"Page Not Found"},
+			{405,"Method Not Allowed Error"},
+			{413,"Payload Too Large"},
+			{500,"Internal Server Error"},
+			{501,"Not Implemented"}
+		};
+
+	public:
+		HttpResponse();
+		~HttpResponse();
+
 
 		std::string	metaData(clientState &clientData);
 		std::string	webserverStamp(void);
@@ -66,6 +82,7 @@ class HttpResponse {
 		std::string	findBoundary(const std::map<std::string, std::string>& headers);
 		void		parseRequestBody(clientState &clientData);
 		std::string	generateHttpResponse(int statusCode, const std::string& message);
+		void		methodsAllowed(clientState &clientData);
 };
 
 #endif
