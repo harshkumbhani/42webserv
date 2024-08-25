@@ -6,7 +6,7 @@
 /*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2024/08/25 20:04:19 by hkumbhan         ###   ########.fr       */
+/*   Updated: 2024/08/26 00:22:46 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,8 +105,110 @@ std::string HttpResponse::errorHandlingGet(int code, clientState &clientData) {
 	return _Response;
 }
 
+std::string HttpResponse::deleteListing(clientState &clientData) {
+	std::string directoryPath = clientData.serverData.root + clientData.requestLine[1];
+	
+	if (std::filesystem::is_directory(directoryPath) == false) {
+		return generateHttpResponse(404, "Not Found");;
+	}
+	
+	std::ostringstream html;
+	html << "<table style=\"width: 100%; text-align: center;\">\n"
+			<< "    <thead>\n"
+			<< "        <tr>\n"
+			<< "            <th colspan=\"3\" style=\"font-weight: bold; color: black; text-align: center;\">Directory: " + directoryPath + "</th>\n"
+			<< "        </tr>\n"
+			<< "        <tr>\n"
+			<< "            <th>Icon</th>\n"
+			<< "            <th>Name</th>\n"
+			<< "            <th>Action</th>\n"
+			<< "        </tr>\n"
+			<< "    </thead>\n";
+
+	
+	for(const auto &entry : std::filesystem::directory_iterator(directoryPath)) {
+		const auto &path = entry.path();
+		std::string filename = path.filename().string();
+		std::string icon = entry.is_directory() ? "📁" : "📄";
+		std::string deleteLink = "/delete?file=" + filename;
+
+		html << "<tr>\n"
+					<< "    <td>" << icon << "</td>\n"
+					<< "    <td><a href=\"" << clientData.requestLine[1] + "/" + filename << "\">" << filename << "</a></td>\n"
+					<< "    <td><button class=\"delete-style\" onclick=\""
+					<< "fetch('" << deleteLink << "', {method: 'DELETE'})"
+					<< ".then(function(response) { "
+					<< "if (response.ok) { "
+					<< "loadDirectoryListing();"  // Reload the directory listing without closing it
+					<< "} else { "
+					<< "alert('Delete failed with status: ' + response.status);"
+					<< "}"
+					<< "})"
+					<< ".catch(function(error) {"
+					<< "alert('Network error or no response from server');"
+					<< "})\">"
+					<< "Delete</button></td>\n"
+					<< "</tr>\n";
+		}
+	_StatusLine = clientData.requestLine[2] + " 200 OK\r\n";
+	_Header = "Content-Type: text/html\r\nContent-Length: " + std::to_string(html.str().size()) + "\r\nConnection: keep-alive\r\n";
+	std::string headerMetaData = metaData(clientData);
+	_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+	_Response = _StatusLine + _Header + html.str();
+	return _Response;
+}
+
+std::string HttpResponse::directoryListing(clientState &clientData) {
+	std::string directoryPath = clientData.serverData.root + clientData.requestLine[1];
+	
+	if (!std::filesystem::is_directory(directoryPath)) {
+		return generateHttpResponse(404, "Not Found");
+	}
+	
+	std::ostringstream html;
+	html << "<table style=\"width: 100%; text-align: center;\">\n"
+		 << "    <thead>\n"
+		 << "        <tr>\n"
+		 << "            <th colspan=\"2\" style=\"font-weight: bold; color: black; text-align: center;\">Directory: " + directoryPath + "</th>\n"
+		 << "        </tr>\n"
+		 << "        <tr>\n"
+		 << "            <th>Icon</th>\n"
+		 << "            <th>Name</th>\n"
+		 << "        </tr>\n"
+		 << "    </thead>\n";
+
+	for (const auto &entry : std::filesystem::directory_iterator(directoryPath)) {
+		const auto &path = entry.path();
+		std::string filename = path.filename().string();
+		std::string icon = entry.is_directory() ? "📁" : "📄";
+
+		html << "<tr>\n"
+			 << "    <td>" << icon << "</td>\n"
+			 << "    <td><a href=\"" << clientData.requestLine[1] + "/" + filename << "\">" << filename << "</a></td>\n"
+			 << "</tr>\n";
+	}
+
+	_StatusLine = clientData.requestLine[2] + " 200 OK\r\n";
+	_Header = "Content-Type: text/html\r\nContent-Length: " + std::to_string(html.str().size()) + "\r\nConnection: keep-alive\r\n";
+	std::string headerMetaData = metaData(clientData);
+	_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+	_Response = _StatusLine + _Header + html.str();
+	return _Response;
+}
+
 std::string HttpResponse::respond_Get(clientState &clientData) {
-	std::string route = "./www" + (clientData.requestLine[1] == "/" ? "/index.html" : clientData.requestLine[1]);
+
+	//std::string directoryPath = clientData.serverData.root + clientData.requestLine[1];
+
+
+	std::string route = clientData.serverData.root + (clientData.requestLine[1] == "/" ? "/index.html" : clientData.requestLine[1]);
+	if (clientData.requestLine[1].substr(0, 7) == "/upload" && std::filesystem::is_directory(route)) {
+		if (clientData.requestLine[1] == "/upload")
+			return deleteListing(clientData);
+		else
+			return directoryListing(clientData);
+	}
+	clientData.header["X-File-Type"] = "file";
 	size_t pos = route.find_last_of('.');
 	std::string contentType = g_mimeTypes[route.substr(pos + 1)];
 	std::ifstream route_file(route.c_str());
@@ -312,7 +414,8 @@ std::string HttpResponse::response_Post(clientState &clientData) {
 	clientData.bodyString.clear();
 	if (clientData.flagFileStatus == true)
 		return (generateHttpResponse(400, "No file was uploaded; please attach a file."));
-	return successHandling(201, clientData, "201 Created");
+	
+	return generateHttpResponse(201, "File Created");
 }
 
 
@@ -385,8 +488,29 @@ std::string HttpResponse::generateHttpResponse(int statusCode, const std::string
 	return response.str();
 }
 
+std::string urlDecode(const std::string& value) {
+    std::string decoded;
+		decoded.reserve(value.size());
+
+		for(size_t i = 0; i < value.size(); i++) {
+			if (value[i] == '%') {
+				if (i + 2 < value.size() && value[i + 1] == '2' && value[i + 2] == '0') {
+					decoded += ' ';
+					i += 2;
+				} else {
+					decoded += value[i];
+				}
+			} else {
+				decoded += value[i];
+			}
+		}
+    return decoded;
+}
+
 std::string HttpResponse::responseDelete(clientState &clientData) {
-	const std::string& filePath = "./www/upload/" + clientData.requestLine[1];
+	std::string filename = urlDecode(clientData.requestLine[1].substr(clientData.requestLine[1].find("=") + 1));
+	const std::string& filePath = clientData.serverData.root + "/upload/" + filename;
+	std::cout << "\n\n\n\n\nfile name: " << filename << "\n\n\n";
 
 	FILE* file = std::fopen(filePath.c_str(), "r");
 	if (!file)
@@ -399,9 +523,7 @@ std::string HttpResponse::responseDelete(clientState &clientData) {
 		return generateHttpResponse(500, std::strerror(errno));
 }
 
-
 std::string HttpResponse::respondRedirect(clientState &clientData) {
-	std::cout << "\n\n\nREDIRECT: " << clientData.header["Location"] << "\n\n\n";
 	for (auto &location : clientData.serverData.location) {
 		if (!location.redirect.empty()) {
 			if (location.redirect.substr(0, 7) != "http://" && location.redirect.substr(0, 8) != "https://") {
@@ -409,13 +531,11 @@ std::string HttpResponse::respondRedirect(clientState &clientData) {
 			} else {
 				clientData.header["Location"] = location.redirect;
 			}
-
 			_StatusLine = clientData.requestLine[2] + " 302 Found\r\n";
 			std::string headerMetaData = metaData(clientData);
 			_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
 			_Response = _StatusLine + _Header;
 
-			std::cout << "\n\n\n Headers: \n" << _Response << "\n\n";
 			return _Response;
 		}
 	}

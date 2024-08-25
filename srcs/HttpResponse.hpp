@@ -6,7 +6,7 @@
 /*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:09:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/25 20:04:53 by hkumbhan         ###   ########.fr       */
+/*   Updated: 2024/08/25 23:14:45 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,14 +35,16 @@ enum status { OK = 200, NOT_FOUND = 404, BAD_REQUEST = 400 };
 class HttpRequest;
 
 class HttpResponse {
-	public:
-		HttpResponse();
-		~HttpResponse();
-
+	private:
 		std::string _StatusLine;
 		std::string _Header;
 		std::string _Body;
 		std::string _Response;
+	
+	public:
+		HttpResponse();
+		~HttpResponse();
+
 
 		std::string	metaData(clientState &clientData);
 		std::string	webserverStamp(void);
@@ -54,6 +56,9 @@ class HttpResponse {
 		std::string respond(clientState &clientData);
 		std::string successHandling(int statusCode, clientState &clientData, const std::string &messageBody = "");
 
+		std::string deleteListing(clientState &clientData);
+		std::string directoryListing(clientState &clientData);
+		
 		std::string respond_Get(clientState &clientData);
 		std::string response_Post(clientState &clientData);
 		std::string responseDelete(clientState &clientData);
