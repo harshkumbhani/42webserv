@@ -94,3 +94,7 @@ document.addEventListener('click', function() {
 		console.error('Audio playback failed:', error);
 	});
 }, { once: true });
+
+//function loadDeleteListing() {
+//	window.location.href = './../delete_listing.html';
+//}

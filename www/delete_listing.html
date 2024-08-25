@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webserv</title>
+<link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<video autoplay muted loop id="background-video" poster="./assets/home.jpg">
+<source src="./assets/bg3.mp4" type="video/mp4">
+Your browser does not support the video tag.
+</video>
+<img src="./assets/logo.jpg" alt="project logo" id="logo">
+<div class="project-credit">Project by: Harsh and Oreste </div>
+<h2 style="color: white;">Directory Listing</h2>
+<ul style="color: white;">
+<li><a href="autumn.jpg"><img src="file-icon.png" class="icon" alt="File">autumn.jpg</a></li>
+<li><a href="cow.jpg"><img src="file-icon.png" class="icon" alt="File">cow.jpg</a></li>
+<li><a href="cows2.jpg"><img src="file-icon.png" class="icon" alt="File">cows2.jpg</a></li>
+<li><a href="farm.jpg"><img src="file-icon.png" class="icon" alt="File">farm.jpg</a></li>
+<li><a href="Files"><img src="folder-icon.png" class="icon" alt="Folder">Files</a></li>
+<li><a href="hobbit.jpg"><img src="file-icon.png" class="icon" alt="File">hobbit.jpg</a></li>
+<li><a href="lake.jpg"><img src="file-icon.png" class="icon" alt="File">lake.jpg</a></li>
+<li><a href="mudroad.jpg"><img src="file-icon.png" class="icon" alt="File">mudroad.jpg</a></li>
+<li><a href="redpanda.jpg"><img src="file-icon.png" class="icon" alt="File">redpanda.jpg</a></li>
+</ul>
+<div id="fileUploadModal" class="modal">
+<div class="modal-content">
+<span class="close" onclick="closeModal()">&times;</span>
+<h2 style="color: black;">Upload your file</h2>
+<form action="/upload/" method="post" enctype="multipart/form-data">
+<input type="file" name="file" id="file-input">
+<button type="submit" class="button-style">Upload File</button>
+</form>
+</div>
+</div>
+<script src="./js/scripts.js"></script>
+<div class="github">
+<a href="https://github.com/tuoreste">
+<img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo">
+</a>
+<a href="https://github.com/harshkumbhani">
+<img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo">
+</a>
+</div>
+</body>
+</html>

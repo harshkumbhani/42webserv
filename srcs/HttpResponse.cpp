@@ -5,10 +5,11 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/06/18 19:08:24 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/21 14:17:10 by otuyishi         ###   ########.fr       */
+/*   Created: Invalid date        by                   #+#    #+#             */
+/*   Updated: 2024/08/25 10:16:42 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 
 #include "HttpResponse.hpp"
 
@@ -283,12 +284,18 @@ void HttpResponse::parseRequestBody(clientState &clientData) {
 	std::string fileName;
 	std::string fileContent;
 
-	parse_headers(contentStream, fileName, fileContent);
-	std::string filePath = "./www/upload/Files/" + fileName;
-	clientData.flagFileStatus = write_to_file(clientData, filePath, fileContent);
-	clientData.fileName = fileName;
-	clientData.bodyString.erase(0, nextBoundaryStart);
-	clientData.flagBodyRead = true;
+		parse_headers(contentStream, fileName, fileContent);
+		// if (fileName.empty())
+		// 	fileName = "unknown";
+		DEBUG("FILE SIZE: " << fileContent.size() << "\n");
+		std::string filePath = "./www/upload/" + fileName;
+		write_to_file(filePath, fileContent);
+		clientData.fileName = fileName;
+		clientData.bodyString.erase(0, nextBoundaryStart);
+		clientData.flagBodyRead = true;
+		std::cout << "File saved to: " << filePath << std::endl;
+		// std::cout << "File content:\n" << fileContent << std::endl;
+	// }
 	return;
 }
 
