@@ -42,26 +42,40 @@
         </table>
     </div>
 
-    <div id="fileUploadModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h2 style="color: black;">Upload your file</h2>
-            <form action="/upload/" method="post" enctype="multipart/form-data">
-                <input type="file" name="file" id="file-input">
-                <button type="submit" class="button-style">Upload File</button>
-            </form>
-        </div>
-    </div>
-    <script src="./js/scripts.js"></script>
+	<!-- Modal for file upload -->
+	<div id="fileUploadModal" class="modal">
+		<div class="modal-content">
+			<span class="close" onclick="closeModal()">&times;</span>
+			<h2 style="color: black;">Upload your file</h2>
+			<form action="/upload/" method="post" enctype="multipart/form-data">
+				<input type="file" name="file" id="file-input">
+				<button type="submit" class="button-style">Upload File</button>
+			</form>
+		</div>
+	</div>
 
-    <div class="github">
-        <a href="https://github.com/tuoreste">
-            <img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo">
-        </a>
-        <a href="https://github.com/harshkumbhani">
-            <img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo">
-        </a>
-    </div>
+	<!-- Modal for file deletion -->
+	<div id="fileDeleteModal" class="modal">
+		<div class="modal-content">
+			<span class="close" onclick="closeDeleteModal()">&times;</span>
+			<h2 style="color: black;">Delete a file</h2>
+			<form id="deleteForm">
+				<!-- Files will be dynamically added here via JavaScript -->
+			</form>
+			<button id="deleteButton">Delete Selected File</button>
+		</div>
+	</div>
+
+	<script src="./js/scripts.js"></script>
+
+	<div class="github">
+		<a href="https://github.com/tuoreste">
+			<img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo">
+		</a>
+		<a href="https://github.com/harshkumbhani">
+			<img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo">
+		</a>
+	</div>
 
     <script>
         // Function to hide the buttons and load the directory listing
