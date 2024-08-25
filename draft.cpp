@@ -26,7 +26,7 @@ std::string generateDirectoryListingHTML(const std::string& directoryPath) {
 						html << "<tr>\n"
 								<< "    <td>" << icon << "</td>\n"
 								<< "    <td><a href=\"" << directoryPath + "/" + filename << "\">" << filename << "</a></td>\n"
-								<< "    <td><button onclick=\""
+								<< "    <td><button class=\"delete-style\" onclick=\""
 								<< "fetch('" << deleteLink << "', {method: 'DELETE'})"
 								<< ".then(function(response) { "
 								<< "if (response.ok) { "
