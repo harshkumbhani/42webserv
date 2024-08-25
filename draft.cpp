@@ -16,18 +16,31 @@ std::string generateDirectoryListingHTML(const std::string& directoryPath) {
          << "</tr>\n";
 
     // Iterate over the directory contents
-    for (const auto& entry : fs::directory_iterator(directoryPath)) {
-        const auto& path = entry.path();
-        std::string filename = path.filename().string();
-        std::string icon = entry.is_directory() ? "📁" : "📄"; // Folder or file icon
+		for (const auto& entry : fs::directory_iterator(directoryPath)) {
+						const auto& path = entry.path();
+						std::string filename = path.filename().string();
+						std::string icon = entry.is_directory() ? "📁" : "📄"; // Folder or file icon
+						std::string deleteLink = "/delete?file=" + filename; // URL for delete
 
-        // Generate the HTML row for each file or directory
-        html << "<tr>\n"
-             << "    <td>" << icon << "</td>\n"
-             << "    <td><a href=\"" << directoryPath + filename << "\">" << filename << "</a></td>\n"
-             << "    <td><a href=\"/delete?file=" << filename << "\" onclick=\"return confirm('Are you sure you want to delete " << filename << "?');\">Delete</a></td>\n"
-             << "</tr>\n";
-    }
+						// Generate the HTML row for each file or directory
+						html << "<tr>\n"
+								<< "    <td>" << icon << "</td>\n"
+								<< "    <td><a href=\"" << directoryPath + "/" + filename << "\">" << filename << "</a></td>\n"
+								<< "    <td><button onclick=\""
+								<< "fetch('" << deleteLink << "', {method: 'DELETE'})"
+								<< ".then(function(response) { "
+								<< "if (response.ok) { "
+								<< "window.location.reload();"
+								<< "} else { "
+								<< "alert('Delete failed with status: ' + response.status);"
+								<< "}"
+								<< "})"
+								<< ".catch(function(error) {"
+								<< "alert('Network error or no response from server');"
+								<< "})\">"
+								<< "Delete</button></td>\n"
+								<< "</tr>\n";
+				}
 
     return html.str();
 }
