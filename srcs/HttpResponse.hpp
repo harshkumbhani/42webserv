@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:09:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/21 14:12:21 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/08/25 20:04:53 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,7 @@ class HttpResponse {
 		std::string	errorHandlingGet(int code, clientState &clientData);
 
 		std::string statusCodes(int code);
+		std::string generateErrorPage(int code, const std::string& message);
 		std::string generateHtml(int code, const std::string& codeMessage);
 		std::string respond(clientState &clientData);
 		std::string successHandling(int statusCode, clientState &clientData, const std::string &messageBody = "");
@@ -56,6 +57,7 @@ class HttpResponse {
 		std::string respond_Get(clientState &clientData);
 		std::string response_Post(clientState &clientData);
 		std::string responseDelete(clientState &clientData);
+		std::string respondRedirect(clientState &clientData);
 
 		bool is_valid_str(const std::string &str);
 		bool is_valid_char(char c);

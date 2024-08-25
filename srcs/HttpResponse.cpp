@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2024/08/25 10:16:42 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/08/25 20:04:19 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -289,7 +289,7 @@ void HttpResponse::parseRequestBody(clientState &clientData) {
 		// 	fileName = "unknown";
 		DEBUG("FILE SIZE: " << fileContent.size() << "\n");
 		std::string filePath = "./www/upload/" + fileName;
-		write_to_file(filePath, fileContent);
+		write_to_file(clientData, filePath, fileContent);
 		clientData.fileName = fileName;
 		clientData.bodyString.erase(0, nextBoundaryStart);
 		clientData.flagBodyRead = true;
@@ -315,8 +315,54 @@ std::string HttpResponse::response_Post(clientState &clientData) {
 	return successHandling(201, clientData, "201 Created");
 }
 
+
 //================================DELETE=====================================
+
+std::string HttpResponse::generateErrorPage(int code, const std::string& message) {
+    return R"(
+			<!DOCTYPE html>
+			<html lang="en">
+			<head>
+					<meta charset="UTF-8">
+					<meta name="viewport" content="width=device-width, initial-scale=1.0">
+					<title>Error )" + std::to_string(code) + R"(</title>
+					<style>
+							body {
+									margin: 0;
+									padding: 0;
+									display: flex;
+									justify-content: center;
+									align-items: center;
+									height: 100vh;
+									background: linear-gradient(135deg, #1a1a1a, #333);
+									color: white;
+									font-family: Arial, sans-serif;
+							}
+							.container {
+									text-align: center;
+							}
+							h1 {
+									font-size: 6em;
+									margin: 0;
+							}
+							p {
+									font-size: 1.5em;
+									margin: 0;
+							}
+					</style>
+			</head>
+			<body>
+					<div class="container">
+							<h1>)" + std::to_string(code) + R"(</h1>
+							<p>)" + message + R"(</p>
+					</div>
+			</body>
+			</html>
+			)";
+}
+
 std::string HttpResponse::generateHttpResponse(int statusCode, const std::string& message) {
+	std::string msg = generateErrorPage(statusCode, message);
 	std::ostringstream response;
 	response << "HTTP/1.1 " << statusCode << " ";
 	if (statusCode == 200) {
@@ -331,16 +377,16 @@ std::string HttpResponse::generateHttpResponse(int statusCode, const std::string
 		response << "Payload Too Large";
 	}
 	response << "\r\n";
-	response << "Content-Type: text/plain\r\n";
-	response << "Content-Length: " << message.length() << "\r\n";
+	response << "Content-Type: text/html\r\n";
+	response << "Content-Length: " << msg.length() << "\r\n";
 	response << "\r\n";
 
-	response << message;
+	response << msg;
 	return response.str();
 }
 
 std::string HttpResponse::responseDelete(clientState &clientData) {
-	const std::string& filePath = "./www/upload/Files" + clientData.requestLine[1];
+	const std::string& filePath = "./www/upload/" + clientData.requestLine[1];
 
 	FILE* file = std::fopen(filePath.c_str(), "r");
 	if (!file)
@@ -353,8 +399,33 @@ std::string HttpResponse::responseDelete(clientState &clientData) {
 		return generateHttpResponse(500, std::strerror(errno));
 }
 
+
+std::string HttpResponse::respondRedirect(clientState &clientData) {
+	std::cout << "\n\n\nREDIRECT: " << clientData.header["Location"] << "\n\n\n";
+	for (auto &location : clientData.serverData.location) {
+		if (!location.redirect.empty()) {
+			if (location.redirect.substr(0, 7) != "http://" && location.redirect.substr(0, 8) != "https://") {
+				clientData.header["Location"] = "https://" + location.redirect;
+			} else {
+				clientData.header["Location"] = location.redirect;
+			}
+
+			_StatusLine = clientData.requestLine[2] + " 302 Found\r\n";
+			std::string headerMetaData = metaData(clientData);
+			_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+			_Response = _StatusLine + _Header;
+
+			std::cout << "\n\n\n Headers: \n" << _Response << "\n\n";
+			return _Response;
+		}
+	}
+	return generateHttpResponse(404, "Page Not Found");
+}
+
 std::string HttpResponse::respond(clientState &clientData) {
-	if (clientData.requestLine[0] == "GET") {
+	if (clientData.requestLine[1] == "/redirect") {
+		return respondRedirect(clientData);
+	} else if (clientData.requestLine[0] == "GET") {
 		return respond_Get(clientData);
 	} else if (clientData.requestLine[0] == "POST") {
 		if (clientData.flagFileSizeTooBig)
