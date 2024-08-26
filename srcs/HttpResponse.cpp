@@ -6,7 +6,7 @@
 /*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2024/08/26 15:29:11 by hkumbhan         ###   ########.fr       */
+/*   Updated: 2024/08/26 16:08:15 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -418,17 +418,12 @@ void HttpResponse::parseRequestBody(clientState &clientData) {
 	std::string fileContent;
 
 		parse_headers(contentStream, fileName, fileContent);
-		// if (fileName.empty())
-		// 	fileName = "unknown";
-		DEBUG("FILE SIZE: " << fileContent.size() << "\n");
 		std::string filePath = "./www/upload/" + fileName;
 		write_to_file(clientData, filePath, fileContent);
 		clientData.fileName = fileName;
 		clientData.bodyString.erase(0, nextBoundaryStart);
 		clientData.flagBodyRead = true;
 		std::cout << "File saved to: " << filePath << std::endl;
-		// std::cout << "File content:\n" << fileContent << std::endl;
-	// }
 	return;
 }
 
@@ -444,14 +439,13 @@ std::string HttpResponse::response_Post(clientState &clientData) {
 	parseRequestBody(clientData);
 	clientData.bodyString.clear();
 	if (clientData.flagFileStatus == true)
-		return (generateHttpResponse(400, "No file was uploaded; please attach a file."));
+		return (generateHttpResponse(400, httpErrorMap.at(400)));
 	
-	return generateHttpResponse(201, "File Created");
+	return generateHttpResponse(201, httpErrorMap.at(201));
 }
 
 
 //================================DELETE=====================================
-
 std::string HttpResponse::generateErrorPage(int code, const std::string& message) {
     return R"(
 			<!DOCTYPE html>
@@ -555,7 +549,7 @@ std::string urlDecode(const std::string& value) {
 				decoded += value[i];
 			}
 		}
-    return decoded;
+	return decoded;
 }
 
 std::string HttpResponse::responseDelete(clientState &clientData) {
@@ -600,11 +594,11 @@ std::string HttpResponse::respond(clientState &clientData) {
 		return respond_Get(clientData);
 	} else if (clientData.requestLine[0] == "POST") {
 		if (clientData.flagFileSizeTooBig)
-			return (generateHttpResponse(413, "Request body size exceeds the maximum allowed size."));
+			return (generateHttpResponse(413, httpErrorMap.at(413)));
 		return response_Post(clientData);
 	} else if (clientData.requestLine[0] == "DELETE") {
 		return responseDelete(clientData);
 	} else {
-		return errorHandlingPost(405, clientData);
+		return generateHttpResponse(405, httpErrorMap.at(405));
 	}
 }

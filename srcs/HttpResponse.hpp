@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
+/*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:09:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/26 12:04:25 by hkumbhan         ###   ########.fr       */
+/*   Updated: 2024/08/26 15:06:44 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,11 +40,24 @@ class HttpResponse {
 		std::string _Header;
 		std::string _Body;
 		std::string _Response;
-	
+		const std::map<int, std::string> httpErrorMap
+		{
+			{200,"OK"},
+			{201,"Created"},
+			{202,"Accepted"},
+			{400,"Bad Request"},
+			{401,"Unauthorized"},
+			{403,"Forbidden"},
+			{404,"Page Not Found"},
+			{405,"Method Not Allowed Error"},
+			{413,"Payload Too Large"},
+			{500,"Internal Server Error"},
+			{501,"Not Implemented"}
+		};
+
 	public:
 		HttpResponse();
 		~HttpResponse();
-
 
 		std::string	metaData(clientState &clientData);
 		std::string	webserverStamp(void);
