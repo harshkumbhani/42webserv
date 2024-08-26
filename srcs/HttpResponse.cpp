@@ -6,10 +6,9 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2024/08/26 12:49:28 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/08/26 20:29:24 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
 
 
 #include "HttpResponse.hpp"
@@ -198,8 +197,22 @@ std::string HttpResponse::directoryListing(clientState &clientData) {
 }
 
 std::string HttpResponse::handleGetFile(clientState &clientData) {
-	std::string route = clientData.serverData.root + "/upload/Harsh_Kumbhani_CV.pdf";
-	clientData.header["X-File-Type"] = "file";
+	static int i = 0;
+	static std::vector<std::string> getImageFiles;
+
+	if (getImageFiles.empty() == true) {
+		for(const auto &entry : std::filesystem::directory_iterator("www/getimage")){
+			const auto &path = entry.path();
+			std::string filename = clientData.serverData.root + "/getimage/" + path.filename().string();
+			getImageFiles.push_back(filename);
+		}
+	}
+	
+	if (i >= static_cast<int>(getImageFiles.size())) {
+		i = 0;
+	}
+	
+	std::string route = getImageFiles[i++];
 	size_t pos = route.find_last_of('.');
 	std::string contentType = g_mimeTypes[route.substr(pos + 1)];
 	std::ifstream route_file(route.c_str());
@@ -214,12 +227,9 @@ std::string HttpResponse::handleGetFile(clientState &clientData) {
 		std::string buffer((std::istreambuf_iterator<char>(route_file)), std::istreambuf_iterator<char>());
 		_StatusLine = clientData.requestLine[2] + " 200 OK\r\n";
 
-		std::stringstream ss;
-		ss << statFile.st_size;
-		std::string fileSize;
-		ss >> fileSize;
-
-		_Header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
+		_Header = "Content-Type: " + contentType + "\r\n"
+							"Content-Length: " + std::to_string(statFile.st_size) + "\r\n"
+							"Connection: keep-alive\r\n";
 		_Body = buffer;
 		route_file.close();
 	}
@@ -420,17 +430,12 @@ void HttpResponse::parseRequestBody(clientState &clientData) {
 	std::string fileContent;
 
 		parse_headers(contentStream, fileName, fileContent);
-		// if (fileName.empty())
-		// 	fileName = "unknown";
-		DEBUG("FILE SIZE: " << fileContent.size() << "\n");
 		std::string filePath = "./www/upload/" + fileName;
 		write_to_file(clientData, filePath, fileContent);
 		clientData.fileName = fileName;
 		clientData.bodyString.erase(0, nextBoundaryStart);
 		clientData.flagBodyRead = true;
 		std::cout << "File saved to: " << filePath << std::endl;
-		// std::cout << "File content:\n" << fileContent << std::endl;
-	// }
 	return;
 }
 
@@ -446,14 +451,13 @@ std::string HttpResponse::response_Post(clientState &clientData) {
 	parseRequestBody(clientData);
 	clientData.bodyString.clear();
 	if (clientData.flagFileStatus == true)
-		return (generateHttpResponse(400, "No file was uploaded; please attach a file."));
+		return (generateHttpResponse(400, httpErrorMap.at(400)));
 	
-	return generateHttpResponse(201, "File Created");
+	return generateHttpResponse(201, httpErrorMap.at(201));
 }
 
 
 //================================DELETE=====================================
-
 std::string HttpResponse::generateErrorPage(int code, const std::string& message) {
     return R"(
 			<!DOCTYPE html>
@@ -557,7 +561,7 @@ std::string urlDecode(const std::string& value) {
 				decoded += value[i];
 			}
 		}
-    return decoded;
+	return decoded;
 }
 
 std::string HttpResponse::responseDelete(clientState &clientData) {
@@ -620,11 +624,11 @@ std::string HttpResponse::respond(clientState &clientData) {
 		return respond_Get(clientData);
 	} else if (clientData.requestLine[0] == "POST") {
 		if (clientData.flagFileSizeTooBig)
-			return (generateHttpResponse(413, "Request body size exceeds the maximum allowed size."));
+			return (generateHttpResponse(413, httpErrorMap.at(413)));
 		return response_Post(clientData);
 	} else if (clientData.requestLine[0] == "DELETE") {
 		return responseDelete(clientData);
 	} else {
-		return errorHandlingPost(405, clientData);
+		return generateHttpResponse(405, httpErrorMap.at(405));
 	}
 }
