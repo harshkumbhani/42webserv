@@ -19,7 +19,7 @@
         <button class="button-style">GET</button>
         <button class="button-style" onclick="openModal()">POST</button>
         <button class="button-style">DELETE</button>
-        <button class="button-style">CGI</button>
+        <button class="button-style" onclick="openModalCgi()">CGI</button>
         <button class="button-style">REDIRECTION</button>
     </div>
 
@@ -33,6 +33,21 @@
             </form>
         </div>
     </div>
+<!-- *CGI -->
+    <div id="fileUploadModal" class="cgimodal">
+        <div class="modal-content">
+            <!-- <span class="close" onclick="closeModalCgi()">&times;</span> -->
+            <h2 style="color: black;">CGI tester</h2>
+            <form action="/upload/" method="post" enctype="multipart/form-data">
+            <h3 style="color: black;">Text</h3>
+                <input type="text" name="file" id="file-input">
+            <h3 style="color: black;">Number</h3>
+                <input type="text" name="file" id="file-input">
+                <button type="submit" class="button-style">CGI</button>
+            </form>
+        </div>
+    </div>
+
     <script src="./js/scripts.js"></script>
 
     <div class="github">

@@ -23,3 +23,20 @@ document.addEventListener('click', function() {
         console.error('Audio playback failed:', error);
     });
 }, { once: true });
+
+// CGI 
+var cgimodal = document.getElementById("fileUploadModal");
+
+function openModalCgi() {
+	cgimodal.style.display = "block";
+}
+
+function closeModalCgi() {
+	cgimodal.style.display = "none";
+}
+
+window.onclick = function(event) {
+	if (event.target == cgimodal) {
+		cgimodal.style.display = "none";
+	}
+}
