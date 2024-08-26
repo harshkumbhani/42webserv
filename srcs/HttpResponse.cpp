@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: harsh <harsh@student.42.fr>                +#+  +:+       +#+        */
+/*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2024/08/26 08:55:19 by harsh            ###   ########.fr       */
+/*   Updated: 2024/08/26 12:18:32 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,7 +116,7 @@ std::string HttpResponse::deleteListing(clientState &clientData) {
 	html << "<table style=\"width: 100%; text-align: center;\">\n"
 			<< "    <thead>\n"
 			<< "        <tr>\n"
-			<< "            <th colspan=\"3\" style=\"font-weight: bold; color: black; text-align: center;\">Directory: " + directoryPath + "</th>\n"
+			<< "            <th colspan=\"3\" style=\"font-weight: bold; color: #ADD8E6; text-align: center;\">Directory: " + directoryPath + "</th>\n"
 			<< "        </tr>\n"
 			<< "        <tr>\n"
 			<< "            <th>Icon</th>\n"
@@ -196,10 +196,39 @@ std::string HttpResponse::directoryListing(clientState &clientData) {
 	return _Response;
 }
 
+std::string HttpResponse::handleGetFile(clientState &clientData) {
+	std::string route = clientData.serverData.root + "/upload/Harsh_Kumbhani_CV.pdf";
+	clientData.header["X-File-Type"] = "file";
+	size_t pos = route.find_last_of('.');
+	std::string contentType = g_mimeTypes[route.substr(pos + 1)];
+	std::ifstream route_file(route.c_str());
+	if (route_file.fail())
+		return errorHandlingGet(404, clientData);
+	else {
+		struct stat statFile;
+		if(stat(route.c_str(), &statFile) != 0) {
+			WARNING("Unable to get file properties");
+			exit(42);
+		}
+		std::string buffer((std::istreambuf_iterator<char>(route_file)), std::istreambuf_iterator<char>());
+		_StatusLine = clientData.requestLine[2] + " 200 OK\r\n";
+
+		std::stringstream ss;
+		ss << statFile.st_size;
+		std::string fileSize;
+		ss >> fileSize;
+
+		_Header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
+		_Body = buffer;
+		route_file.close();
+	}
+	std::string headerMetaData = metaData(clientData);
+	_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+	_Response = _StatusLine + _Header + _Body;
+	return _Response;
+}
+
 std::string HttpResponse::respond_Get(clientState &clientData) {
-
-	//std::string directoryPath = clientData.serverData.root + clientData.requestLine[1];
-
 
 	std::string route = clientData.serverData.root + (clientData.requestLine[1] == "/" ? "/index.html" : clientData.requestLine[1]);
 	if (clientData.requestLine[1].substr(0, 7) == "/upload" && std::filesystem::is_directory(route)) {
@@ -207,6 +236,9 @@ std::string HttpResponse::respond_Get(clientState &clientData) {
 			return deleteListing(clientData);
 		else
 			return directoryListing(clientData);
+	}
+	if (clientData.requestLine[1] == "/get-files") {
+		return handleGetFile(clientData);
 	}
 	clientData.header["X-File-Type"] = "file";
 	size_t pos = route.find_last_of('.');
@@ -452,12 +484,32 @@ std::string HttpResponse::generateErrorPage(int code, const std::string& message
 									font-size: 1.5em;
 									margin: 0;
 							}
+							.back-button {
+									margin-top: 20px;
+									padding: 10px 20px;
+									font-size: 1em;
+									color: #333;
+									background-color: white;
+									border: none;
+									cursor: pointer;
+									border-radius: 5px;
+									text-decoration: none;
+							}
+							.back-button:hover {
+									background-color: #ddd;
+							}
 					</style>
+					<script>
+						function goBack() {
+							window.history.back()
+						}
+					</script>
 			</head>
 			<body>
 					<div class="container">
 							<h1>)" + std::to_string(code) + R"(</h1>
 							<p>)" + message + R"(</p>
+							<button class="back-button" onclick="goBack() ">Go Back</button>
 					</div>
 			</body>
 			</html>

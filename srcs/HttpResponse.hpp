@@ -6,7 +6,7 @@
 /*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:09:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/25 23:14:45 by hkumbhan         ###   ########.fr       */
+/*   Updated: 2024/08/26 12:04:25 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,6 +58,7 @@ class HttpResponse {
 
 		std::string deleteListing(clientState &clientData);
 		std::string directoryListing(clientState &clientData);
+		std::string handleGetFile(clientState &clientData);
 		
 		std::string respond_Get(clientState &clientData);
 		std::string response_Post(clientState &clientData);
