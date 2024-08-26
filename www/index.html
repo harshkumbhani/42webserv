@@ -19,23 +19,25 @@
 
     <!-- Button container will disappear when DELETE is clicked -->
     <div class="button-container" id="buttons">
-        <button class="button-style">GET</button>
+        <button class="button-style" onclick="handleGet()">GET</button>
         <button class="button-style" onclick="openModal()">POST</button>
-        <button class="button-style" onclick="loadDirectoryListing()">DELETE</button>
+        <button class="button-style" onclick="loadDirectoryListing('/upload')">DELETE</button>
         <button class="button-style">CGI</button>
-        <button class="button-style">REDIRECTION</button>
+        <button class="button-style" onclick="window.location.href='/redirect'">REDIRECTION</button>
     </div>
+
+		<!-- Placeholder for displaying file contents -->
+    <div id="file-display" style="display: none;">
+			<button onclick="closeFileDisplay()" style="margin-bottom: 10px;" class="delete-style">Close</button>
+			<div id="file-content" style="overflow: auto; max-height: 400px; max-width: 100%; background-color: white; padding: 10px; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);">
+					<!-- File contents, image, or video will be displayed here -->
+			</div>
+		</div>
 
     <!-- Placeholder for the directory listing -->
     <div id="directory-listing" style="display: none;">
-        <button onclick="closeDirectoryListing()" style="margin-bottom: 10px;">Close</button>
+        <button onclick="closeDirectoryListing()" style="margin-bottom: 10px;" class="delete-style">Close</button>
         <table>
-            <!--<thead>
-                <tr>
-                    <th>Icon</th>
-                    <th>Name</th>
-                </tr>
-            </thead>-->
             <tbody id="tableBody">
                 <!-- Table rows generated dynamically by C++ program -->
             </tbody>
@@ -47,7 +49,7 @@
 		<div class="modal-content">
 			<span class="close" onclick="closeModal()">&times;</span>
 			<h2 style="color: black;">Upload your file</h2>
-			<form action="/upload/" method="post" enctype="multipart/form-data">
+			<form action="/upload" method="post" enctype="multipart/form-data">
 				<input type="file" name="file" id="file-input">
 				<button type="submit" class="button-style">Upload File</button>
 			</form>
@@ -77,35 +79,115 @@
 		</a>
 	</div>
 
-    <script>
-        // Function to hide the buttons and load the directory listing
-        function loadDirectoryListing() {
-            // Hide the button container
-            document.getElementById('buttons').style.display = 'none';
+  <script>
+		function loadDirectoryListing(path) {
+			document.getElementById('buttons').style.display = 'none';
+			fetch(path)
+			.then(response => {
+				const contentType = response.headers.get('Content-Type');
+				const isFile = response.headers.get('X-File-Type') === 'file';
 
-            // Fetch and inject the directory listing HTML
-            fetch('/pages/delete.html')
-                .then(response => response.text())  // Expecting plain text (HTML)
-                .then(htmlSnippet => {
-                    // Inject the HTML directly into the table body
-                    document.getElementById('tableBody').innerHTML = htmlSnippet;
-                    document.getElementById('directory-listing').style.display = 'block';
-                })
-                .catch(error => {
-                    console.error('Error loading directory listing:', error);
-                });
-        }
+				if (contentType && contentType.startsWith('text/html') && !isFile) {
+					return response.text().then(htmlSnippet => {
+						document.getElementById('tableBody').innerHTML = htmlSnippet;
+						document.getElementById('directory-listing').style.display = 'block';
+						addDirectoryLinkListeners();  // Re-add listeners to the newly loaded content
+					});
+				} else {
+					const fileURL = response.url;
+					window.open(fileURL, '_blank');  // Open the file in a new tab
+				}
+			})
+			.catch(error => {
+					console.error('Error loading directory listing:', error);
+			});
+		}
 
-        function closeDirectoryListing() {
-            // Hide the directory listing
-            document.getElementById('directory-listing').style.display = 'none';
+		function closeDirectoryListing() {
+			document.getElementById('directory-listing').style.display = 'none';
+			document.getElementById('buttons').style.display = 'block';
+			document.getElementById('tableBody').innerHTML = '';
+		}
 
-            // Show the button container
-            document.getElementById('buttons').style.display = 'block';
+		function addDirectoryLinkListeners() {
+			document.querySelectorAll('#tableBody a').forEach(link => {
+				link.addEventListener('click', function (event) {
+					event.preventDefault();  // Prevent default link behavior
+					loadDirectoryListing(this.getAttribute('href'));  // Load the clicked directory
+				});
+			});
+		}
 
-            // Optionally clear the content of the directory listing if needed
-            document.getElementById('tableBody').innerHTML = '';
-        }
-    </script>
+		// Initial setup
+		document.addEventListener('DOMContentLoaded', function() {
+			addDirectoryLinkListeners();
+		});
+
+		function handleGet() {
+			document.getElementById('buttons').style.display = 'none';
+
+			fetch('/get-files')
+			.then(response => {
+				const contentType = response.headers.get('Content-Type');
+
+				if(contentType.startsWith('text/')) {
+					return response.text().then(text => {
+						displayText(text);
+					});
+				} else {
+					return response.blob().then(blob => {
+						const fileURL = URL.createObjectURL(blob);
+						displayBinaryContent(fileURL, contentType);
+					});
+				}
+			})
+			.catch(error => {
+				console.error('Error fetching file:', error);
+			});
+		}
+
+		function displayText(text) {
+    	document.getElementById('file-content').textContent = text.substring(0, 200) + '...'; // Show only the first 200 characters
+    	document.getElementById('file-display').style.display = 'block';
+		}
+
+		function displayBinaryContent(fileURL, contentType) {
+				const container = document.getElementById('file-content');
+				container.innerHTML = '';  // Clear existing content
+
+				let element;
+
+				if (contentType.startsWith('image/')) {
+						element = document.createElement('img');
+						element.style.maxWidth = '100%';
+						element.style.maxHeight = '400px';
+				} else if (contentType === 'application/pdf') {
+						element = document.createElement('iframe');
+						element.style.width = '100%';
+						element.style.height = '400px';
+				} else if (contentType.startsWith('video/')) {
+						element = document.createElement('video');
+						element.controls = true;
+						element.style.maxWidth = '100%';
+						element.style.maxHeight = '400px';
+				} else {
+						element = document.createElement('a');
+						element.href = fileURL;
+						element.textContent = 'Download File';
+						element.download = ''; // Let the browser set the filename automatically
+				}
+
+				element.src = fileURL;
+				container.appendChild(element);
+				document.getElementById('file-display').style.display = 'block';
+		}
+
+		function closeFileDisplay() {
+				document.getElementById('file-display').style.display = 'none';
+				document.getElementById('buttons').style.display = 'block';
+				document.getElementById('file-content').textContent = '';
+		}
+
+	</script>
 </body>
 </html>

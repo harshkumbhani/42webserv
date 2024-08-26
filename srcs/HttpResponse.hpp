@@ -6,9 +6,10 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:09:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/25 22:44:00 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/08/26 13:05:41 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 
 #ifndef HTTPRESPONSE_HPP
 #define HTTPRESPONSE_HPP
@@ -40,21 +41,7 @@ class HttpResponse {
 		std::string _Header;
 		std::string _Body;
 		std::string _Response;
-		const std::map<int, std::string> httpErrorMap
-		{
-			{200,"OK"},
-			{201,"Created"},
-			{202,"Accepted"},
-			{400,"Bad Request"},
-			{401,"Unauthorized"},
-			{403,"Forbidden"},
-			{404,"Page Not Found"},
-			{405,"Method Not Allowed Error"},
-			{413,"Payload Too Large"},
-			{500,"Internal Server Error"},
-			{501,"Not Implemented"}
-		};
-
+	
 	public:
 		HttpResponse();
 		~HttpResponse();
@@ -65,13 +52,19 @@ class HttpResponse {
 		std::string	errorHandlingGet(int code, clientState &clientData);
 
 		std::string statusCodes(int code);
+		std::string generateErrorPage(int code, const std::string& message);
 		std::string generateHtml(int code, const std::string& codeMessage);
 		std::string respond(clientState &clientData);
 		std::string successHandling(int statusCode, clientState &clientData, const std::string &messageBody = "");
 
+		std::string deleteListing(clientState &clientData);
+		std::string directoryListing(clientState &clientData);
+		std::string handleGetFile(clientState &clientData);
+		
 		std::string respond_Get(clientState &clientData);
 		std::string response_Post(clientState &clientData);
 		std::string responseDelete(clientState &clientData);
+		std::string respondRedirect(clientState &clientData);
 
 		bool is_valid_str(const std::string &str);
 		bool is_valid_char(char c);

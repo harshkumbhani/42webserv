@@ -26,7 +26,7 @@ std::string generateDirectoryListingHTML(const std::string& directoryPath) {
 						html << "<tr>\n"
 								<< "    <td>" << icon << "</td>\n"
 								<< "    <td><a href=\"" << directoryPath + "/" + filename << "\">" << filename << "</a></td>\n"
-								<< "    <td><button onclick=\""
+								<< "    <td><button class=\"delete-style\" onclick=\""
 								<< "fetch('" << deleteLink << "', {method: 'DELETE'})"
 								<< ".then(function(response) { "
 								<< "if (response.ok) { "
@@ -47,7 +47,7 @@ std::string generateDirectoryListingHTML(const std::string& directoryPath) {
 
 int main() {
     // Specify the directory you want to list
-    std::string directoryPath = "./www/upload/"; // Current directory
+    std::string directoryPath = "www/upload/"; // Current directory
 
     // Generate the directory listing HTML
     std::string html = generateDirectoryListingHTML(directoryPath);

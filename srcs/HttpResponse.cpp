@@ -6,9 +6,10 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2024/08/25 22:12:28 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/08/26 12:49:28 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 
 
 #include "HttpResponse.hpp"
@@ -105,8 +106,142 @@ std::string HttpResponse::errorHandlingGet(int code, clientState &clientData) {
 	return _Response;
 }
 
+std::string HttpResponse::deleteListing(clientState &clientData) {
+	std::string directoryPath = clientData.serverData.root + clientData.requestLine[1];
+	
+	if (std::filesystem::is_directory(directoryPath) == false) {
+		return generateHttpResponse(404, "Not Found");;
+	}
+	
+	std::ostringstream html;
+	html << "<table style=\"width: 100%; text-align: center;\">\n"
+			<< "    <thead>\n"
+			<< "        <tr>\n"
+			<< "            <th colspan=\"3\" style=\"font-weight: bold; color: #ADD8E6; text-align: center;\">Directory: " + directoryPath + "</th>\n"
+			<< "        </tr>\n"
+			<< "        <tr>\n"
+			<< "            <th>Icon</th>\n"
+			<< "            <th>Name</th>\n"
+			<< "            <th>Action</th>\n"
+			<< "        </tr>\n"
+			<< "    </thead>\n";
+
+	
+	for(const auto &entry : std::filesystem::directory_iterator(directoryPath)) {
+		const auto &path = entry.path();
+		std::string filename = path.filename().string();
+		std::string icon = entry.is_directory() ? "📁" : "📄";
+		std::string deleteLink = "/delete?file=" + filename;
+
+		html << "<tr>\n"
+					<< "    <td>" << icon << "</td>\n"
+					<< "    <td><a href=\"" << clientData.requestLine[1] + "/" + filename << "\">" << filename << "</a></td>\n"
+					<< "    <td><button class=\"delete-style\" onclick=\""
+					<< "fetch('" << deleteLink << "', {method: 'DELETE'})"
+					<< ".then(function(response) { "
+					<< "if (response.ok) { "
+					<< "loadDirectoryListing('/upload');"  // Reload the directory listing without closing it
+					<< "} else { "
+					<< "alert('Delete failed with status: ' + response.status);"
+					<< "}"
+					<< "})"
+					<< ".catch(function(error) {"
+					<< "alert('Network error or no response from server');"
+					<< "})\">"
+					<< "Delete</button></td>\n"
+					<< "</tr>\n";
+		}
+	_StatusLine = clientData.requestLine[2] + " 200 OK\r\n";
+	_Header = "Content-Type: text/html\r\nContent-Length: " + std::to_string(html.str().size()) + "\r\nConnection: keep-alive\r\n";
+	std::string headerMetaData = metaData(clientData);
+	_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+	_Response = _StatusLine + _Header + html.str();
+	return _Response;
+}
+
+std::string HttpResponse::directoryListing(clientState &clientData) {
+	std::string directoryPath = clientData.serverData.root + clientData.requestLine[1];
+	
+	if (!std::filesystem::is_directory(directoryPath)) {
+		return generateHttpResponse(404, "Not Found");
+	}
+	
+	std::ostringstream html;
+	html << "<table style=\"width: 100%; text-align: center;\">\n"
+		 << "    <thead>\n"
+		 << "        <tr>\n"
+		 << "            <th colspan=\"2\" style=\"font-weight: bold; color: black; text-align: center;\">Directory: " + directoryPath + "</th>\n"
+		 << "        </tr>\n"
+		 << "        <tr>\n"
+		 << "            <th>Icon</th>\n"
+		 << "            <th>Name</th>\n"
+		 << "        </tr>\n"
+		 << "    </thead>\n";
+
+	for (const auto &entry : std::filesystem::directory_iterator(directoryPath)) {
+		const auto &path = entry.path();
+		std::string filename = path.filename().string();
+		std::string icon = entry.is_directory() ? "📁" : "📄";
+
+		html << "<tr>\n"
+			 << "    <td>" << icon << "</td>\n"
+			 << "    <td><a href=\"" << clientData.requestLine[1] + "/" + filename << "\">" << filename << "</a></td>\n"
+			 << "</tr>\n";
+	}
+
+	_StatusLine = clientData.requestLine[2] + " 200 OK\r\n";
+	_Header = "Content-Type: text/html\r\nContent-Length: " + std::to_string(html.str().size()) + "\r\nConnection: keep-alive\r\n";
+	std::string headerMetaData = metaData(clientData);
+	_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+	_Response = _StatusLine + _Header + html.str();
+	return _Response;
+}
+
+std::string HttpResponse::handleGetFile(clientState &clientData) {
+	std::string route = clientData.serverData.root + "/upload/Harsh_Kumbhani_CV.pdf";
+	clientData.header["X-File-Type"] = "file";
+	size_t pos = route.find_last_of('.');
+	std::string contentType = g_mimeTypes[route.substr(pos + 1)];
+	std::ifstream route_file(route.c_str());
+	if (route_file.fail())
+		return errorHandlingGet(404, clientData);
+	else {
+		struct stat statFile;
+		if(stat(route.c_str(), &statFile) != 0) {
+			WARNING("Unable to get file properties");
+			exit(42);
+		}
+		std::string buffer((std::istreambuf_iterator<char>(route_file)), std::istreambuf_iterator<char>());
+		_StatusLine = clientData.requestLine[2] + " 200 OK\r\n";
+
+		std::stringstream ss;
+		ss << statFile.st_size;
+		std::string fileSize;
+		ss >> fileSize;
+
+		_Header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
+		_Body = buffer;
+		route_file.close();
+	}
+	std::string headerMetaData = metaData(clientData);
+	_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+	_Response = _StatusLine + _Header + _Body;
+	return _Response;
+}
+
 std::string HttpResponse::respond_Get(clientState &clientData) {
-	std::string route = "./www" + (clientData.requestLine[1] == "/" ? "/index.html" : clientData.requestLine[1]);
+
+	std::string route = clientData.serverData.root + (clientData.requestLine[1] == "/" ? "/index.html" : clientData.requestLine[1]);
+	if (clientData.requestLine[1].substr(0, 7) == "/upload" && std::filesystem::is_directory(route)) {
+		if (clientData.requestLine[1] == "/upload")
+			return deleteListing(clientData);
+		else
+			return directoryListing(clientData);
+	}
+	if (clientData.requestLine[1] == "/get-files") {
+		return handleGetFile(clientData);
+	}
+	clientData.header["X-File-Type"] = "file";
 	size_t pos = route.find_last_of('.');
 	std::string contentType = g_mimeTypes[route.substr(pos + 1)];
 	std::ifstream route_file(route.c_str());
@@ -312,11 +447,78 @@ std::string HttpResponse::response_Post(clientState &clientData) {
 	clientData.bodyString.clear();
 	if (clientData.flagFileStatus == true)
 		return (generateHttpResponse(400, "No file was uploaded; please attach a file."));
-	return successHandling(201, clientData, "201 Created");
+	
+	return generateHttpResponse(201, "File Created");
 }
 
+
 //================================DELETE=====================================
+
+std::string HttpResponse::generateErrorPage(int code, const std::string& message) {
+    return R"(
+			<!DOCTYPE html>
+			<html lang="en">
+			<head>
+					<meta charset="UTF-8">
+					<meta name="viewport" content="width=device-width, initial-scale=1.0">
+					<title>Error )" + std::to_string(code) + R"(</title>
+					<style>
+							body {
+									margin: 0;
+									padding: 0;
+									display: flex;
+									justify-content: center;
+									align-items: center;
+									height: 100vh;
+									background: linear-gradient(135deg, #1a1a1a, #333);
+									color: white;
+									font-family: Arial, sans-serif;
+							}
+							.container {
+									text-align: center;
+							}
+							h1 {
+									font-size: 6em;
+									margin: 0;
+							}
+							p {
+									font-size: 1.5em;
+									margin: 0;
+							}
+							.back-button {
+									margin-top: 20px;
+									padding: 10px 20px;
+									font-size: 1em;
+									color: #333;
+									background-color: white;
+									border: none;
+									cursor: pointer;
+									border-radius: 5px;
+									text-decoration: none;
+							}
+							.back-button:hover {
+									background-color: #ddd;
+							}
+					</style>
+					<script>
+						function goBack() {
+							window.history.back()
+						}
+					</script>
+			</head>
+			<body>
+					<div class="container">
+							<h1>)" + std::to_string(code) + R"(</h1>
+							<p>)" + message + R"(</p>
+							<button class="back-button" onclick="goBack() ">Go Back</button>
+					</div>
+			</body>
+			</html>
+			)";
+}
+
 std::string HttpResponse::generateHttpResponse(int statusCode, const std::string& message) {
+	std::string msg = generateErrorPage(statusCode, message);
 	std::ostringstream response;
 	response << "HTTP/1.1 " << statusCode << " ";
 	if (statusCode == 200) {
@@ -331,16 +533,37 @@ std::string HttpResponse::generateHttpResponse(int statusCode, const std::string
 		response << "Payload Too Large";
 	}
 	response << "\r\n";
-	response << "Content-Type: text/plain\r\n";
-	response << "Content-Length: " << message.length() << "\r\n";
+	response << "Content-Type: text/html\r\n";
+	response << "Content-Length: " << msg.length() << "\r\n";
 	response << "\r\n";
 
-	response << message;
+	response << msg;
 	return response.str();
 }
 
+std::string urlDecode(const std::string& value) {
+    std::string decoded;
+		decoded.reserve(value.size());
+
+		for(size_t i = 0; i < value.size(); i++) {
+			if (value[i] == '%') {
+				if (i + 2 < value.size() && value[i + 1] == '2' && value[i + 2] == '0') {
+					decoded += ' ';
+					i += 2;
+				} else {
+					decoded += value[i];
+				}
+			} else {
+				decoded += value[i];
+			}
+		}
+    return decoded;
+}
+
 std::string HttpResponse::responseDelete(clientState &clientData) {
-	const std::string& filePath = "./www/upload/Files" + clientData.requestLine[1];
+	std::string filename = urlDecode(clientData.requestLine[1].substr(clientData.requestLine[1].find("=") + 1));
+	const std::string& filePath = clientData.serverData.root + "/upload/" + filename;
+	std::cout << "\n\n\n\n\nfile name: " << filename << "\n\n\n";
 
 	FILE* file = std::fopen(filePath.c_str(), "r");
 	if (!file)
@@ -370,9 +593,30 @@ void	HttpResponse::methodsAllowed(clientState &clientData) {
 	errorHandlingPost(404, clientData);
 }
 
+std::string HttpResponse::respondRedirect(clientState &clientData) {
+	for (auto &location : clientData.serverData.location) {
+		if (!location.redirect.empty()) {
+			if (location.redirect.substr(0, 7) != "http://" && location.redirect.substr(0, 8) != "https://") {
+				clientData.header["Location"] = "https://" + location.redirect;
+			} else {
+				clientData.header["Location"] = location.redirect;
+			}
+			_StatusLine = clientData.requestLine[2] + " 302 Found\r\n";
+			std::string headerMetaData = metaData(clientData);
+			_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+			_Response = _StatusLine + _Header;
+
+			return _Response;
+		}
+	}
+	return generateHttpResponse(404, "Page Not Found");
+}
+
 std::string HttpResponse::respond(clientState &clientData) {
 	methodsAllowed(clientData);
-	if (clientData.requestLine[0] == "GET") {
+	if (clientData.requestLine[1] == "/redirect") {
+		return respondRedirect(clientData);
+	} else if (clientData.requestLine[0] == "GET") {
 		return respond_Get(clientData);
 	} else if (clientData.requestLine[0] == "POST") {
 		if (clientData.flagFileSizeTooBig)

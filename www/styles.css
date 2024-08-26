@@ -135,6 +135,16 @@ h2 {
 	cursor: pointer;
 }
 
+.delete-style {
+	padding: 10px 20px;
+	margin: 5px;
+	background-color: hsl(0, 0%, 3%);
+	color: white;
+	font-size: 15px;
+	border-radius: 5px;
+	cursor: pointer;
+}
+
 .button-container {
 	position: absolute;
 	top: 50%;

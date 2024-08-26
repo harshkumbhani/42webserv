@@ -6,7 +6,7 @@
 <tr>
 	<td>📄</td>
 	<td><a href="./www/upload//autumn.jpg">autumn.jpg</a></td>
-	<td><button onclick="fetch('/delete?file=autumn.jpg', {method: 'DELETE'}).then(function(response) { if (response.ok) { window.location.reload();} else { alert('Delete failed with status: ' + response.status);}}).catch(function(error) {alert('Network error or no response from server');})">Delete</button></td>
+	<td><button class="delete-style" onclick="fetch('/delete?file=autumn.jpg', {method: 'DELETE'}).then(function(response) { if (response.ok) { window.location.reload();} else { alert('Delete failed with status: ' + response.status);}}).catch(function(error) {alert('Network error or no response from server');})">Delete</button></td>
 </tr>
 <tr>
 	<td>📄</td>
