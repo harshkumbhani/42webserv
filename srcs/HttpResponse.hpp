@@ -60,7 +60,7 @@ class HttpResponse {
 		std::string deleteListing(clientState &clientData);
 		std::string directoryListing(clientState &clientData);
 		std::string handleGetFile(clientState &clientData);
-		
+
 		std::string respond_Get(clientState &clientData);
 		std::string response_Post(clientState &clientData);
 		std::string responseDelete(clientState &clientData);
