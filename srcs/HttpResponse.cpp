@@ -6,7 +6,7 @@
 /*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2024/08/26 12:18:32 by hkumbhan         ###   ########.fr       */
+/*   Updated: 2024/08/26 15:29:11 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -197,8 +197,7 @@ std::string HttpResponse::directoryListing(clientState &clientData) {
 }
 
 std::string HttpResponse::handleGetFile(clientState &clientData) {
-	std::string route = clientData.serverData.root + "/upload/Harsh_Kumbhani_CV.pdf";
-	clientData.header["X-File-Type"] = "file";
+	std::string route = clientData.serverData.root + "/getimage/hobbit.jpg";
 	size_t pos = route.find_last_of('.');
 	std::string contentType = g_mimeTypes[route.substr(pos + 1)];
 	std::ifstream route_file(route.c_str());

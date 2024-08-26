@@ -14,26 +14,21 @@
         Your browser does not support the video tag.
     </video>
 
+		
     <img src="./assets/logo.jpg" alt="project logo" id="logo">
     <div class="project-credit">Project by: Harsh and Oreste </div>
-
+		
     <!-- Button container will disappear when DELETE is clicked -->
     <div class="button-container" id="buttons">
-        <button class="button-style" onclick="handleGet()">GET</button>
-        <button class="button-style" onclick="openModal()">POST</button>
-        <button class="button-style" onclick="loadDirectoryListing('/upload')">DELETE</button>
-        <button class="button-style">CGI</button>
-        <button class="button-style" onclick="window.location.href='/redirect'">REDIRECTION</button>
-    </div>
-
-		<!-- Placeholder for displaying file contents -->
-    <div id="file-display" style="display: none;">
-			<button onclick="closeFileDisplay()" style="margin-bottom: 10px;" class="delete-style">Close</button>
-			<div id="file-content" style="overflow: auto; max-height: 400px; max-width: 100%; background-color: white; padding: 10px; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);">
-					<!-- File contents, image, or video will be displayed here -->
+			<button class="button-style" onclick="loadGetPage()">GET</button>
+			<button class="button-style" onclick="openModal()">POST</button>
+			<button class="button-style" onclick="loadDirectoryListing('/upload')">DELETE</button>
+			<button class="button-style">CGI</button>
+			<button class="button-style" onclick="window.location.href='/redirect'">REDIRECTION</button>
 			</div>
-		</div>
-
+			
+		<div id="content-placeholder"></div>
+		
     <!-- Placeholder for the directory listing -->
     <div id="directory-listing" style="display: none;">
         <button onclick="closeDirectoryListing()" style="margin-bottom: 10px;" class="delete-style">Close</button>
@@ -123,71 +118,28 @@
 			addDirectoryLinkListeners();
 		});
 
-		function handleGet() {
-			document.getElementById('buttons').style.display = 'none';
+		function loadGetPage() {
+            // Hide the buttons
+            document.getElementById('buttons').style.display = 'none';
 
-			fetch('/get-files')
-			.then(response => {
-				const contentType = response.headers.get('Content-Type');
+            // Load the content of getPage.html
+            fetch('/pages/getPage.html')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('content-placeholder').innerHTML = html;
 
-				if(contentType.startsWith('text/')) {
-					return response.text().then(text => {
-						displayText(text);
-					});
-				} else {
-					return response.blob().then(blob => {
-						const fileURL = URL.createObjectURL(blob);
-						displayBinaryContent(fileURL, contentType);
-					});
-				}
-			})
-			.catch(error => {
-				console.error('Error fetching file:', error);
-			});
-		}
-
-		function displayText(text) {
-    	document.getElementById('file-content').textContent = text.substring(0, 200) + '...'; // Show only the first 200 characters
-    	document.getElementById('file-display').style.display = 'block';
-		}
-
-		function displayBinaryContent(fileURL, contentType) {
-				const container = document.getElementById('file-content');
-				container.innerHTML = '';  // Clear existing content
-
-				let element;
-
-				if (contentType.startsWith('image/')) {
-						element = document.createElement('img');
-						element.style.maxWidth = '100%';
-						element.style.maxHeight = '400px';
-				} else if (contentType === 'application/pdf') {
-						element = document.createElement('iframe');
-						element.style.width = '100%';
-						element.style.height = '400px';
-				} else if (contentType.startsWith('video/')) {
-						element = document.createElement('video');
-						element.controls = true;
-						element.style.maxWidth = '100%';
-						element.style.maxHeight = '400px';
-				} else {
-						element = document.createElement('a');
-						element.href = fileURL;
-						element.textContent = 'Download File';
-						element.download = ''; // Let the browser set the filename automatically
-				}
-
-				element.src = fileURL;
-				container.appendChild(element);
-				document.getElementById('file-display').style.display = 'block';
-		}
-
-		function closeFileDisplay() {
-				document.getElementById('file-display').style.display = 'none';
-				document.getElementById('buttons').style.display = 'block';
-				document.getElementById('file-content').textContent = '';
-		}
-
+                // Re-run any scripts within the loaded HTML
+                const scripts = document.querySelectorAll('#content-placeholder script');
+                scripts.forEach(oldScript => {
+                    const newScript = document.createElement('script');
+                    newScript.textContent = oldScript.textContent;
+                    oldScript.replaceWith(newScript);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading GET page:', error);
+            });
+        }
 	</script>
 </body>
 </html>

@@ -1,0 +1,46 @@
+<div style="padding-top: 20px; padding-bottom: 10px;">
+	<button onclick="goBack()" class="button-style">
+			BACK
+	</button>
+</div>
+
+<div style="padding-top: 20px; padding-bottom: 10px;">
+		<button class="button-style" onclick="getImage()">
+				GET IMAGE
+		</button>
+</div>
+
+<div class="image-container">
+		<img id="getImage" class="image" style="display: none; overflow: auto; max-height: 400px; max-width: 100%; background-color: white; padding: 10px; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);">
+</div>
+
+<script>
+	const getImage = async () => {
+			try {
+					console.log('GET request initiated');
+					const response = await fetch('/get-files');
+
+					if (!response.ok) {
+							throw new Error(`HTTP error! Status: ${response.status}`);
+					}
+
+					const blob = await response.blob();
+					const imageUrl = URL.createObjectURL(blob);
+					const img = document.getElementById('getImage');
+
+					img.src = imageUrl;
+					img.style.display = 'block';
+					img.onload = () => URL.revokeObjectURL(imageUrl);  // Clean up the object URL after loading
+			} catch (error) {
+					console.error('Error:', error);
+					alert('Error: ' + error.message);
+			}
+	};
+
+	const goBack = () => {
+			// Remove the injected GET page content
+			document.getElementById('content-placeholder').innerHTML = '';
+			// Show the original buttons
+			document.getElementById('buttons').style.display = 'block';
+	};
+</script>
