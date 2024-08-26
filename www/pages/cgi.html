@@ -1,0 +1,102 @@
+<!-- <div style="padding-top: 20px; padding-bottom: 10px;">
+	<button onclick="goBack()" class="button-style">
+		BACK
+	</button>
+</div>
+
+<div style="padding-top: 20px; padding-bottom: 10px;">
+	<label for="textInput">Enter Text:</label>
+	<input type="text" id="textInput" placeholder="Enter text here">
+
+	<label for="numberInput">Enter Number:</label>
+	<input type="number" id="numberInput" placeholder="Enter a number">
+	
+	<button class="button-style" onclick="getText()">
+		RUN TEST
+	</button>
+</div>
+
+<div id="output" style="padding-top: 20px;"></div>
+
+<script>
+	const goBack = () => {
+		// Remove the injected GET page content
+		document.getElementById('content-placeholder').innerHTML = '';
+		// Show the original buttons
+		document.getElementById('buttons').style.display = 'block';
+	};
+
+	const getText =  () => {
+		// Get the input values
+		const str = document.getElementById('textInput').value;
+		const n = parseInt(document.getElementById('numberInput').value);
+		
+		// Initialize the output string
+		let output = '';
+		
+		// Repeat the string 'n' times
+		for (let i = 0; i < n; i++) {
+			output += str + '\n';
+		}
+		
+		// Display the result
+		document.getElementById('output').innerText = output.trim();
+	};
+</script> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CGI Page</title>
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<script>
+	const goBack = () => {
+		// Remove the injected GET page content
+		document.getElementById('content-placeholder').innerHTML = '';
+		// Show the original buttons
+		document.getElementById('buttons').style.display = 'block';
+	};
+
+	const randomRedirect = (event, originalUrl) => {
+		window.location.href = originalUrl;
+		event.preventDefault();
+	}
+
+</script>
+<body class="background">
+<button onclick="goBack()" class="button-style">
+	Back
+</button>
+<div class="content">
+	This is the CGI page. Here you can simulate a CGI request.
+</div>
+
+<div style="padding-top: 10px;">
+	<!-- <a onclick="randomRedirect(event, '../cgi/helloworld.py')"><button>CGI</button></a>
+	<a onclick="randomRedirect(event, '../cgi/infinite_hello.py')"><button>INFINITE CGI</button></a>
+	<a onclick="randomRedirect(event, '../cgi/invalid.py')"><button>INVALID CGI</button></a>
+	<a onclick="randomRedirect(event, '../cgi/missing.py')"><button>MISSING CGI</button></a> -->
+	<div style="padding-top: 40px;"></div>
+	<form action="../cgi/hello.py" method="get">
+		<label for="param">Param</label>
+        <input id="param" required type="text" name="param">
+		<label for="nbr">Number</label>
+        <input id="nbr" required type="number" min="1" name="num">
+        <button type="submit">GET CGI</button>
+    </form>
+    <form style="padding-top: 20px;" action="../cgi/hello.py" method="post">
+		<label for="param">Param</label>
+		<input id="param" required type="text" name="param">
+		<label for="nbr">Number</label>
+		<input id="nbr" required type="number" min="1" name="num">
+        <button type="submit">POST CGI</button>
+    </form>
+</div>
+
+
+</body>
+</html>

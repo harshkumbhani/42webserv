@@ -16,14 +16,14 @@
 
 		
     <img src="./assets/logo.jpg" alt="project logo" id="logo">
-    <div class="project-credit">Project by: Harsh and Oreste </div>
+    <div class="project-credit">Project by: Harsh , Oreste nd Moheddine </div>
 		
     <!-- Button container will disappear when DELETE is clicked -->
     <div class="button-container" id="buttons">
 			<button class="button-style" onclick="loadGetPage()">GET</button>
 			<button class="button-style" onclick="openModal()">POST</button>
 			<button class="button-style" onclick="loadDirectoryListing('/upload')">DELETE</button>
-			<button class="button-style">CGI</button>
+			<button class="button-style" onclick="loadGetCGI()">CGI</button>
 			<button class="button-style" onclick="window.location.href='/redirect'">REDIRECTION</button>
 			</div>
 			
@@ -62,16 +62,20 @@
 				<button id="deleteButton">Delete Selected File</button>
 			</div>
 		</div>
+	</div>
 
-		<script src="./js/scripts.js"></script>
+	<script src="./js/scripts.js"></script>
 
-		<div class="github">
-			<a href="https://github.com/tuoreste">
-				<img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo">
-			</a>
-			<a href="https://github.com/harshkumbhani">
-				<img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo">
-			</a>
-		</div>
+	<div class="github">
+		<a href="https://github.com/moheddine-belhaj">
+			<img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo">
+		</a>
+		<a href="https://github.com/tuoreste">
+			<img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo">
+		</a>
+		<a href="https://github.com/harshkumbhani">
+			<img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo">
+		</a>
+	</div>
 </body>
 </html>
