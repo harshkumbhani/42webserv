@@ -21,7 +21,7 @@
     <div class="button-container" id="buttons">
         <button class="button-style">GET</button>
         <button class="button-style" onclick="openModal()">POST</button>
-        <button class="button-style" onclick="loadDirectoryListing()">DELETE</button>
+        <button class="button-style" onclick="loadDirectoryListing('/upload')">DELETE</button>
         <button class="button-style">CGI</button>
         <button class="button-style" onclick="window.location.href='/redirect'">REDIRECTION</button>
     </div>
@@ -72,70 +72,48 @@
 	</div>
 
     <script>
-				function loadDirectoryListing() {
-						document.getElementById('buttons').style.display = 'none';
-						fetch('/upload')
-								.then(response => response.text())
-								.then(htmlSnippet => {
-										document.getElementById('tableBody').innerHTML = htmlSnippet;
-										document.getElementById('directory-listing').style.display = 'block';
-								})
-								.catch(error => {
-										console.error('Error loading directory listing:', error);
-								});
-				}
-
-        function closeDirectoryListing() {
-            document.getElementById('directory-listing').style.display = 'none';
-            document.getElementById('buttons').style.display = 'block';
-            document.getElementById('tableBody').innerHTML = '';
-        }
-    </script>
-</body>
-</html>
-
-
-<!--function loadDirectoryListing(path) {
-	document.getElementById('buttons').style.display = 'none';
-
-	fetch(path)
+		function loadDirectoryListing(path) {
+			document.getElementById('buttons').style.display = 'none';
+			fetch(path)
 			.then(response => {
-					const contentType = response.headers.get('Content-Type');
-					const isFile = response.headers.get('X-File-Type') === 'file';
+				const contentType = response.headers.get('Content-Type');
+				const isFile = response.headers.get('X-File-Type') === 'file';
 
-					if (contentType && contentType.startsWith('text/html') && !isFile) {
-							return response.text().then(htmlSnippet => {
-									document.getElementById('tableBody').innerHTML = htmlSnippet;
-									document.getElementById('directory-listing').style.display = 'block';
-									addDirectoryLinkListeners();  // Re-add listeners to the newly loaded content
-							});
-					} else {
-							// It's a file, handle file content differently
-							const fileURL = response.url;
-							window.open(fileURL, '_blank');  // Open the file in a new tab
-					}
+				if (contentType && contentType.startsWith('text/html') && !isFile) {
+					return response.text().then(htmlSnippet => {
+						document.getElementById('tableBody').innerHTML = htmlSnippet;
+						document.getElementById('directory-listing').style.display = 'block';
+						addDirectoryLinkListeners();  // Re-add listeners to the newly loaded content
+					});
+				} else {
+					const fileURL = response.url;
+					window.open(fileURL, '_blank');  // Open the file in a new tab
+				}
 			})
 			.catch(error => {
 					console.error('Error loading directory listing:', error);
 			});
-	}
+		}
 
-	function closeDirectoryListing() {
-		document.getElementById('directory-listing').style.display = 'none';
-		document.getElementById('buttons').style.display = 'block';
-		document.getElementById('tableBody').innerHTML = '';
-	}
+		function closeDirectoryListing() {
+			document.getElementById('directory-listing').style.display = 'none';
+			document.getElementById('buttons').style.display = 'block';
+			document.getElementById('tableBody').innerHTML = '';
+		}
 
-	function addDirectoryLinkListeners() {
-		document.querySelectorAll('#tableBody a').forEach(link => {
-			link.addEventListener('click', function (event) {
-				event.preventDefault();  // Prevent default link behavior
-				loadDirectoryListing(this.getAttribute('href'));  // Load the clicked directory
+		function addDirectoryLinkListeners() {
+			document.querySelectorAll('#tableBody a').forEach(link => {
+				link.addEventListener('click', function (event) {
+					event.preventDefault();  // Prevent default link behavior
+					loadDirectoryListing(this.getAttribute('href'));  // Load the clicked directory
+				});
 			});
-		});
-	}
+		}
 
 	// Initial setup
 	document.addEventListener('DOMContentLoaded', function() {
 		addDirectoryLinkListeners();
-	});-->
+	});
+	</script>
+</body>
+</html>

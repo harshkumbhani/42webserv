@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
+/*   By: harsh <harsh@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2024/08/26 00:22:46 by hkumbhan         ###   ########.fr       */
+/*   Updated: 2024/08/26 08:55:19 by harsh            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -139,7 +139,7 @@ std::string HttpResponse::deleteListing(clientState &clientData) {
 					<< "fetch('" << deleteLink << "', {method: 'DELETE'})"
 					<< ".then(function(response) { "
 					<< "if (response.ok) { "
-					<< "loadDirectoryListing();"  // Reload the directory listing without closing it
+					<< "loadDirectoryListing('/upload');"  // Reload the directory listing without closing it
 					<< "} else { "
 					<< "alert('Delete failed with status: ' + response.status);"
 					<< "}"
