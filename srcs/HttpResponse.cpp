@@ -6,7 +6,7 @@
 /*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2024/08/26 16:08:15 by hkumbhan         ###   ########.fr       */
+/*   Updated: 2024/08/26 17:08:32 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -197,7 +197,22 @@ std::string HttpResponse::directoryListing(clientState &clientData) {
 }
 
 std::string HttpResponse::handleGetFile(clientState &clientData) {
-	std::string route = clientData.serverData.root + "/getimage/hobbit.jpg";
+	static int i = 0;
+	static std::vector<std::string> getImageFiles;
+
+	if (getImageFiles.empty() == true) {
+		for(const auto &entry : std::filesystem::directory_iterator("www/getimage")){
+			const auto &path = entry.path();
+			std::string filename = clientData.serverData.root + "/getimage/" + path.filename().string();
+			getImageFiles.push_back(filename);
+		}
+	}
+	
+	if (i >= static_cast<int>(getImageFiles.size())) {
+		i = 0;
+	}
+	
+	std::string route = getImageFiles[i++];
 	size_t pos = route.find_last_of('.');
 	std::string contentType = g_mimeTypes[route.substr(pos + 1)];
 	std::ifstream route_file(route.c_str());
@@ -212,12 +227,9 @@ std::string HttpResponse::handleGetFile(clientState &clientData) {
 		std::string buffer((std::istreambuf_iterator<char>(route_file)), std::istreambuf_iterator<char>());
 		_StatusLine = clientData.requestLine[2] + " 200 OK\r\n";
 
-		std::stringstream ss;
-		ss << statFile.st_size;
-		std::string fileSize;
-		ss >> fileSize;
-
-		_Header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
+		_Header = "Content-Type: " + contentType + "\r\n"
+							"Content-Length: " + std::to_string(statFile.st_size) + "\r\n"
+							"Connection: keep-alive\r\n";
 		_Body = buffer;
 		route_file.close();
 	}
