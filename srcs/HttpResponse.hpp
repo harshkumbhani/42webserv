@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:09:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/26 15:06:44 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/08/27 01:29:06 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,8 @@ class HttpResponse {
 		std::string _Header;
 		std::string _Body;
 		std::string _Response;
+		int fd[2];
+		pid_t pid;
 		const std::map<int, std::string> httpErrorMap
 		{
 			{200,"OK"},
@@ -78,6 +80,10 @@ class HttpResponse {
 		std::string responseDelete(clientState &clientData);
 		std::string respondRedirect(clientState &clientData);
 
+		std::string processCgi(clientState &clientData);
+		void	execute(clientState &clientData);
+		std::string parentProcess(clientState &clientData); 
+
 		bool is_valid_str(const std::string &str);
 		bool is_valid_char(char c);
 
@@ -86,7 +92,7 @@ class HttpResponse {
 		void		parse_headers(std::istringstream& contentStream, std::string& fileName, std::string& fileContent);
 		std::string	findBoundary(const std::map<std::string, std::string>& headers);
 		void		parseRequestBody(clientState &clientData);
-		std::string	generateHttpResponse(int statusCode, const std::string& message);
+		std::string	genericHttpCodeResponse(int statusCode, const std::string& message);
 };
 
 #endif
