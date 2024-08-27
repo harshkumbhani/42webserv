@@ -103,6 +103,7 @@ void SocketManager::acceptConnection(int &pollFd) {
   clients[clientSocket] = client;
 
   clients[clientSocket].clear();
+  clients[clientSocket].killChild = false; // change
   std::time(&clients[clientSocket].lastEventTime);
   SUCCESS("Accepted new client connection: " << clientSocket);
 }
@@ -316,11 +317,15 @@ void SocketManager::pollingAndConnections() {
         if (pollFds[i].revents & POLLOUT) {
           pollout(pollFds[i]);
         }
-        checkAndCloseStaleConnections(pollFds[i]);
+        if (!clients[pollFds[i].fd].isForked == false && clients[pollFds[i].fd].killChild == true) {
+          std::cout << "Klling socket..." << std::endl;
+          checkAndCloseStaleConnections(pollFds[i]);
+        }
       }
     }
   }
 }
+
 
 // Operator overloads
 

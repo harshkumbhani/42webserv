@@ -19,6 +19,8 @@
 #include <chrono>
 #include <thread>
 #include "Utils.hpp"
+#include <sys/wait.h>
+#include <filesystem>
 
 extern char **environ;
 

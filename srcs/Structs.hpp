@@ -114,6 +114,7 @@ struct clientState {
 	std::string	contentType;
 	std::string	boundary;
 	std::string	fileName;
+	bool killChild;
 
 	void clear() {
 	flagHeaderRead = false;
