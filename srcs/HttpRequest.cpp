@@ -29,7 +29,8 @@ void HttpRequest::requestBlock(clientState &clientData) {
 	if (contentLengthIt != clientData.header.end()) {
 		clientData.contentLength = static_cast<ssize_t>(std::atol(contentLengthIt->second.c_str()));
 		ServerParser	parserInstance;
-		clientData.flagFileSizeTooBig = clientData.contentLength > static_cast<ssize_t>(parserInstance.client_body_size);
+		if (clientData.contentLength > static_cast<ssize_t>(clientData.serverData.client_body_size))
+			clientData.flagFileSizeTooBig = true;
 		if (static_cast<ssize_t>(clientData.bodyString.size()) == static_cast<ssize_t>(clientData.contentLength))
 			clientData.flagBodyRead = true;
 	}

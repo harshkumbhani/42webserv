@@ -422,7 +422,7 @@ void HttpResponse::parseRequestBody(clientState &clientData) {
 		clientData.fileName = fileName;
 		clientData.bodyString.erase(0, nextBoundaryStart);
 		clientData.flagBodyRead = true;
-		std::cout << "File saved to: " << filePath << std::endl;
+		// std::cout << "File saved to: " << filePath << std::endl;
 	return;
 }
 
@@ -566,23 +566,49 @@ std::string HttpResponse::responseDelete(clientState &clientData) {
 		return generateHttpResponse(500, std::strerror(errno));
 }
 
-void	HttpResponse::methodsAllowed(clientState &clientData) {
-	std::string	currMethod = clientData.requestLine[0];
-	std::string	path = clientData.requestLine[1].substr(0, clientData.requestLine[1].find_last_of("/"));
-	DEBUG(path);
-	std::vector<Location>::iterator	it;
-	for (it = clientData.serverData.location.begin(); it != clientData.serverData.location.end(); ++it) {
-		if (it->path == "/" + path) {
-			std::vector<std::string>::iterator	jt;
-			for (jt = it->methods.begin(); jt != it->methods.end(); ++jt) {
-				if (jt->c_str() == currMethod)
-					return ;
+// void	HttpResponse::methodsAllowed(clientState &clientData) {
+// 	std::string	currMethod = clientData.requestLine[0];
+// 	std::string	path = clientData.requestLine[1].substr(0, clientData.requestLine[1].find_last_of("/"));
+// 	DEBUG("The path: " + path);
+// 	std::vector<Location>::iterator	it;
+// 	for (it = clientData.serverData.location.begin(); it != clientData.serverData.location.end(); ++it) {
+// 		if (it->path == "/" + path) {
+// 			std::vector<std::string>::iterator	jt;
+// 			for (jt = it->methods.begin(); jt != it->methods.end(); ++jt) {
+// 				if (jt->c_str() == currMethod)
+// 					return ;
+// 			}
+// 			errorHandlingPost(405, clientData);
+// 		}
+// 	}
+// 	errorHandlingPost(404, clientData);
+// }
+
+void HttpResponse::methodsAllowed(clientState &clientData) {
+	std::string currMethod = clientData.requestLine[0];
+	std::string path = clientData.requestLine[1];
+
+	if (path.find("http://") == 0 || path.find("https://") == 0) {
+		path = path.substr(path.find("/", path.find("://") + 3));
+	}
+	DEBUG("The path: " + path);
+	for (std::vector<Location>::iterator it = clientData.serverData.location.begin(); 
+		it != clientData.serverData.location.end(); ++it) {
+		if (it->path == path) {
+			for (std::vector<std::string>::iterator jt = it->methods.begin(); 
+				jt != it->methods.end(); ++jt) {
+				if (*jt == currMethod) {
+					return;
+				}
 			}
 			errorHandlingPost(405, clientData);
+			return;
 		}
 	}
 	errorHandlingPost(404, clientData);
 }
+
+
 
 std::string HttpResponse::respondRedirect(clientState &clientData) {
 	for (auto &location : clientData.serverData.location) {
@@ -596,7 +622,6 @@ std::string HttpResponse::respondRedirect(clientState &clientData) {
 			std::string headerMetaData = metaData(clientData);
 			_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
 			_Response = _StatusLine + _Header;
-
 			return _Response;
 		}
 	}
@@ -610,7 +635,7 @@ std::string HttpResponse::respond(clientState &clientData) {
 	} else if (clientData.requestLine[0] == "GET") {
 		return respond_Get(clientData);
 	} else if (clientData.requestLine[0] == "POST") {
-		if (clientData.flagFileSizeTooBig)
+		if (clientData.flagFileSizeTooBig == true)
 			return (generateHttpResponse(413, httpErrorMap.at(413)));
 		return response_Post(clientData);
 	} else if (clientData.requestLine[0] == "DELETE") {
