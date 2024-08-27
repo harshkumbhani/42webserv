@@ -93,8 +93,13 @@ struct clientState {
 	bool flagBodyRead;
 	bool flagPartiallyRead;
 	bool isKeepAlive;
-  bool closeConnection;
+	bool closeConnection;
+	bool flagFileSizeTooBig;
+	bool flagFileStatus;
+	bool isForked;
 	methods method;
+	int	fd[2];
+	pid_t	pid;
 	ssize_t bytesRead;
 	ssize_t contentLength;
 	time_t lastEventTime;
@@ -102,34 +107,36 @@ struct clientState {
 	std::vector<char> body;
 	std::string readString;
 	std::string writeString;
-	std::map<std::string, std::string> requestLine;
+
+	std::vector<std::string> requestLine;
 	std::map<std::string, std::string> header;
 	ServerParser serverData;
-	//POST content-type
 	std::string	contentType;
 	std::string	boundary;
 	std::string	fileName;
 
 	void clear() {
-    flagHeaderRead = false;
-    flagBodyRead = false;
-    flagPartiallyRead = false;
-    isKeepAlive = false;
-    closeConnection = false;
-    method = DEFAULT; // Or some default method
-    bytesRead = -1;
-    contentLength = 0;
-    bodyString.clear();
-    body.clear();
-    readString.clear();
-    writeString.clear();
-    requestLine.clear();
-    header.clear();
-    serverData.clear(); // Assuming ServerParser has a clear method
-    contentType.clear();
-    boundary.clear();
-    fileName.clear();
-  }
+	flagHeaderRead = false;
+	flagBodyRead = false;
+	flagPartiallyRead = false;
+	isKeepAlive = false;
+	closeConnection = false;
+	isForked = false;
+	method = DEFAULT; // Or some default method
+	pid = -1;
+	bytesRead = -1;
+	contentLength = 0;
+	bodyString.clear();
+	body.clear();
+	readString.clear();
+	writeString.clear();
+	requestLine.clear();
+	header.clear();
+	serverData.clear(); // Assuming ServerParser has a clear method
+	contentType.clear();
+	boundary.clear();
+	fileName.clear();
+}
 };
 
 #endif

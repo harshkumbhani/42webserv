@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 18:55:01 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/19 12:02:18 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/08/26 22:52:44 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,8 @@ void HttpRequest::requestBlock(clientState &clientData) {
 	std::map<std::string, std::string>::iterator contentLengthIt = clientData.header.find("Content-Length");
 	if (contentLengthIt != clientData.header.end()) {
 		clientData.contentLength = static_cast<ssize_t>(std::atol(contentLengthIt->second.c_str()));
-
+		ServerParser	parserInstance;
+		clientData.flagFileSizeTooBig = clientData.contentLength > static_cast<ssize_t>(parserInstance.client_body_size);
 		if (static_cast<ssize_t>(clientData.bodyString.size()) == static_cast<ssize_t>(clientData.contentLength))
 			clientData.flagBodyRead = true;
 	}
@@ -49,28 +50,24 @@ void HttpRequest::requestBlock(clientState &clientData) {
 
 void HttpRequest::parseRequestLine(clientState &clientData, std::string &line) {
 	std::istringstream ss(line);
-	while (!ss.eof()) {
-		std::string method;
-		ss >> method;
-		if (method == "POST")
-			clientData.method = POST;
-		else if (method == "GET")
-			clientData.method = GET;
-		else if (method == "DELETE")
-			clientData.method = DELETE;
-		else if (method == "CGI")
-			clientData.method = CGI;
-		else
-			clientData.method = DEFAULT;
-	
-		clientData.requestLine.insert(std::make_pair("method", method));
-		std::string url;
-		ss >> url;
-		clientData.requestLine.insert(std::make_pair("url", url));
-		std::string httpversion;
-		ss >> httpversion;
-		clientData.requestLine.insert(std::make_pair("httpversion", httpversion));
-	}
+	std::string method, url, httpversion;
+
+	ss >> method;
+	ss >> url;
+	ss >> httpversion;
+
+	if (method == "POST")
+		clientData.method = POST;
+	else if (method == "GET")
+		clientData.method = GET;
+	else if (method == "DELETE")
+		clientData.method = DELETE;
+	else
+		clientData.method = DEFAULT;
+
+	clientData.requestLine.push_back(method);
+	clientData.requestLine.push_back(url);
+	clientData.requestLine.push_back(httpversion);
 }
 
 void HttpRequest::parseRequestHeader(clientState &clientData, std::string &reqheader) {
@@ -99,5 +96,3 @@ void HttpRequest::parseRequestHeader(clientState &clientData, std::string &reqhe
 		}
 	}
 }
-
-// Host: localhost:8080

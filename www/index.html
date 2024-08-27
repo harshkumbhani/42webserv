@@ -4,60 +4,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Webserv</title>
-		<link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Background video continues from where it left off -->
     <video autoplay muted loop id="background-video" poster="./assets/home.jpg">
         <source src="./assets/bg3.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
-    <!-- <audio id="notification" src="./assets/music.mp3" muted></audio> -->
+
+		
     <img src="./assets/logo.jpg" alt="project logo" id="logo">
-    <div class="project-credit">Project by: Harsh and Oreste </div>
-    <div class="button-container">
-        <button class="button-style">GET</button>
-        <button class="button-style" onclick="openModal()">POST</button>
-        <button class="button-style">DELETE</button>
-        <button class="button-style" onclick="openModalCgi()">CGI</button>
-        <button class="button-style">REDIRECTION</button>
+    <div class="project-credit">Project by: Harsh , Oreste nd Moheddine </div>
+		
+    <!-- Button container will disappear when DELETE is clicked -->
+    <div class="button-container" id="buttons">
+			<button class="button-style" onclick="loadGetPage()">GET</button>
+			<button class="button-style" onclick="openModal()">POST</button>
+			<button class="button-style" onclick="loadDirectoryListing('/upload')">DELETE</button>
+			<button class="button-style" onclick="loadGetCGI()">CGI</button>
+			<button class="button-style" onclick="window.location.href='/redirect'">REDIRECTION</button>
+			</div>
+			
+		<div id="content-placeholder"></div>
+		
+    <!-- Placeholder for the directory listing -->
+    <div id="directory-listing" style="display: none;">
+        <button onclick="closeDirectoryListing()" style="margin-bottom: 10px;" class="delete-style">Close</button>
+        <table>
+            <tbody id="tableBody">
+                <!-- Table rows generated dynamically by C++ program -->
+            </tbody>
+        </table>
     </div>
 
-    <div id="fileUploadModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h2 style="color: black;">Upload your file</h2>
-            <form action="/upload/" method="post" enctype="multipart/form-data">
-                <input type="file" name="file" id="file-input">
-                <button type="submit" class="button-style">Upload File</button>
-            </form>
-        </div>
-    </div>
-<!-- *CGI -->
-    <div id="fileUploadModal" class="cgimodal">
-        <div class="modal-content">
-            <!-- <span class="close" onclick="closeModalCgi()">&times;</span> -->
-            <h2 style="color: black;">CGI tester</h2>
-            <form action="/upload/" method="post" enctype="multipart/form-data">
-            <h3 style="color: black;">Text</h3>
-                <input type="text" name="file" id="file-input">
-            <h3 style="color: black;">Number</h3>
-                <input type="text" name="file" id="file-input">
-                <button type="submit" class="button-style">CGI</button>
-            </form>
-        </div>
-    </div>
+		<!-- Modal for file upload -->
+		<div id="fileUploadModal" class="modal">
+			<div class="modal-content">
+				<span class="close" onclick="closeModal()">&times;</span>
+				<h2 style="color: black;">Upload your file</h2>
+				<form action="/upload" method="post" enctype="multipart/form-data">
+					<input type="file" name="file" id="file-input">
+					<button type="submit" class="button-style">Upload File</button>
+				</form>
+			</div>
+		</div>
 
-    <script src="./js/scripts.js"></script>
+		<!-- Modal for file deletion -->
+		<div id="fileDeleteModal" class="modal">
+			<div class="modal-content">
+				<span class="close" onclick="closeDeleteModal()">&times;</span>
+				<h2 style="color: black;">Delete a file</h2>
+				<form id="deleteForm">
+					<!-- Files will be dynamically added here via JavaScript -->
+				</form>
+				<button id="deleteButton">Delete Selected File</button>
+			</div>
+		</div>
+	</div>
 
-    <div class="github">
-        <a href="https://github.com/tuoreste">
-            <img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo">
-        </a>
-        <a href="https://github.com/harshkumbhani">
-            <img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo">
-        </a>
-    </div>
+	<script src="./js/scripts.js"></script>
 
+	<div class="github">
+		<a href="https://github.com/moheddine-belhaj">
+			<img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo">
+		</a>
+		<a href="https://github.com/tuoreste">
+			<img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo">
+		</a>
+		<a href="https://github.com/harshkumbhani">
+			<img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo">
+		</a>
+	</div>
 </body>
 </html>
