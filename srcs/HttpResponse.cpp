@@ -1,3 +1,16 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   HttpResponse.cpp                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: Invalid date        by                   #+#    #+#             */
+/*   Updated: 2024/08/27 13:49:31 by otuyishi         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+
 #include "HttpResponse.hpp"
 
 HttpResponse::HttpResponse() {}
@@ -66,6 +79,18 @@ std::string HttpResponse::webserverStamp(void) {
 	return std::string(buf);
 }
 
+std::string HttpResponse::buildHttpResponse(const std::string& statusLine, const std::string& contentType, const std::string& body, const clientState& clientData) {
+	std::string header;
+	header = "Content-Type: " + contentType + "\r\n";
+	header += "Content-Length: " + std::to_string(body.size()) + "\r\n";
+	header += "Connection: keep-alive\r\n";
+	header += "Date: " + webserverStamp() + "\r\n";
+	header += "Server: Webserv/harsh/oreste/v1.0\r\n";
+	header += metaData(const_cast<clientState &>(clientData));
+
+	return statusLine + header + body;
+}
+
 std::string HttpResponse::errorHandlingGet(int code, clientState &clientData) {
 	std::string errorCode;
 	std::stringstream ss;
@@ -77,26 +102,26 @@ std::string HttpResponse::errorHandlingGet(int code, clientState &clientData) {
 	else if (code == 404) sms = "Not Found";
 	else if (code == 500) sms = "Internal Server Error";
 	else sms = "Unknown Error";
-	_StatusLine = clientData.requestLine[2] + " " + errorCode + " " + sms + "\r\n";
+	_status_line = clientData.requestLine[2] + " " + errorCode + " " + sms + "\r\n";
 	std::string status_page = statusCodes(code);
 	std::stringstream pageSizeStream;
 	pageSizeStream << status_page.size();
 	std::string pageSize;
 	pageSizeStream >> pageSize;
 
-	_Header = "Content-Type: text/html\r\nContent-Length: " + pageSize + "\r\nConnection: close\r\n";
-	_Body = status_page;
+	_header = "Content-Type: text/html\r\nContent-Length: " + pageSize + "\r\nConnection: close\r\n";
+	_body = status_page;
 	std::string headerMetaData = metaData(clientData);
-	_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
-	_Response = _StatusLine + _Header + _Body;
-	return _Response;
+	_header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+	_response = _status_line + _header + _body;
+	return _response;
 }
 
 std::string HttpResponse::deleteListing(clientState &clientData) {
 	std::string directoryPath = clientData.serverData.root + clientData.requestLine[1];
 	
 	if (std::filesystem::is_directory(directoryPath) == false) {
-		return generateHttpResponse(404, "Not Found");;
+		return genericHttpCodeResponse(404, "Not Found");;
 	}
 	
 	std::ostringstream html;
@@ -137,19 +162,19 @@ std::string HttpResponse::deleteListing(clientState &clientData) {
 					<< "Delete</button></td>\n"
 					<< "</tr>\n";
 		}
-	_StatusLine = clientData.requestLine[2] + " 200 OK\r\n";
-	_Header = "Content-Type: text/html\r\nContent-Length: " + std::to_string(html.str().size()) + "\r\nConnection: keep-alive\r\n";
+	_status_line = clientData.requestLine[2] + " 200 OK\r\n";
+	_header = "Content-Type: text/html\r\nContent-Length: " + std::to_string(html.str().size()) + "\r\nConnection: keep-alive\r\n";
 	std::string headerMetaData = metaData(clientData);
-	_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
-	_Response = _StatusLine + _Header + html.str();
-	return _Response;
+	_header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+	_response = _status_line + _header + html.str();
+	return _response;
 }
 
 std::string HttpResponse::directoryListing(clientState &clientData) {
 	std::string directoryPath = clientData.serverData.root + clientData.requestLine[1];
 	
 	if (!std::filesystem::is_directory(directoryPath)) {
-		return generateHttpResponse(404, "Not Found");
+		return genericHttpCodeResponse(404, "Not Found");
 	}
 	
 	std::ostringstream html;
@@ -175,12 +200,12 @@ std::string HttpResponse::directoryListing(clientState &clientData) {
 			 << "</tr>\n";
 	}
 
-	_StatusLine = clientData.requestLine[2] + " 200 OK\r\n";
-	_Header = "Content-Type: text/html\r\nContent-Length: " + std::to_string(html.str().size()) + "\r\nConnection: keep-alive\r\n";
+	_status_line = clientData.requestLine[2] + " 200 OK\r\n";
+	_header = "Content-Type: text/html\r\nContent-Length: " + std::to_string(html.str().size()) + "\r\nConnection: keep-alive\r\n";
 	std::string headerMetaData = metaData(clientData);
-	_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
-	_Response = _StatusLine + _Header + html.str();
-	return _Response;
+	_header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+	_response = _status_line + _header + html.str();
+	return _response;
 }
 
 std::string HttpResponse::handleGetFile(clientState &clientData) {
@@ -212,18 +237,18 @@ std::string HttpResponse::handleGetFile(clientState &clientData) {
 			exit(42);
 		}
 		std::string buffer((std::istreambuf_iterator<char>(route_file)), std::istreambuf_iterator<char>());
-		_StatusLine = clientData.requestLine[2] + " 200 OK\r\n";
+		_status_line = clientData.requestLine[2] + " 200 OK\r\n";
 
-		_Header = "Content-Type: " + contentType + "\r\n"
+		_header = "Content-Type: " + contentType + "\r\n"
 							"Content-Length: " + std::to_string(statFile.st_size) + "\r\n"
 							"Connection: keep-alive\r\n";
-		_Body = buffer;
+		_body = buffer;
 		route_file.close();
 	}
 	std::string headerMetaData = metaData(clientData);
-	_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
-	_Response = _StatusLine + _Header + _Body;
-	return _Response;
+	_header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+	_response = _status_line + _header + _body;
+	return _response;
 }
 
 std::string HttpResponse::respond_Get(clientState &clientData) {
@@ -251,21 +276,21 @@ std::string HttpResponse::respond_Get(clientState &clientData) {
 			exit(42);
 		}
 		std::string buffer((std::istreambuf_iterator<char>(route_file)), std::istreambuf_iterator<char>());
-		_StatusLine = clientData.requestLine[2] + " 200 OK\r\n";
+		_status_line = clientData.requestLine[2] + " 200 OK\r\n";
 
 		std::stringstream ss;
 		ss << statFile.st_size;
 		std::string fileSize;
 		ss >> fileSize;
 
-		_Header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
-		_Body = buffer;
+		_header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
+		_body = buffer;
 		route_file.close();
 	}
 	std::string headerMetaData = metaData(clientData);
-	_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
-	_Response = _StatusLine + _Header + _Body;
-	return _Response;
+	_header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+	_response = _status_line + _header + _body;
+	return _response;
 }
 
 bool HttpResponse::is_valid_char(char c) {
@@ -280,7 +305,7 @@ bool HttpResponse::is_valid_str(const std::string &str) {
 	return true;
 }
 
-std::string buildHttpResponse(const std::string &httpVersion, int statusCode, const std::string &statusMessage, const std::string &body, const std::string &contentType = "text/html") {
+std::string generateHttpResponse(const std::string &httpVersion, int statusCode, const std::string &statusMessage, const std::string &body, const std::string &contentType = "text/html") {
 	std::string statusLine = httpVersion + " " + std::to_string(statusCode) + " " + statusMessage + "\r\n";
 	std::stringstream ss;
 	ss << body.size();
@@ -308,40 +333,12 @@ std::string HttpResponse::successHandling(int statusCode, clientState &clientDat
 			break;
 	}
 	std::string responseBody = messageBody.empty() ? "<html><body><h1>" + statusMessage + "</h1></body></html>" : messageBody;
-	return buildHttpResponse(clientData.requestLine[2], statusCode, statusMessage, responseBody);
+	return generateHttpResponse(clientData.requestLine[2], statusCode, statusMessage, responseBody);
 }
 
 std::string HttpResponse::errorHandlingPost(int statusCode, clientState &clientData) {
-	std::string statusMessage;
-	switch (statusCode) {
-		case 400:
-			statusMessage = "Bad Request";
-			break;
-		case 401:
-			statusMessage = "Unauthorized";
-			break;
-		case 403:
-			statusMessage = "Forbidden";
-			break;
-		case 404:
-			statusMessage = "Page Not Found";
-			break;
-		case 405:
-			statusMessage = "Method Not Allowed Error";
-			break;
-		case 500:
-			statusMessage = "Internal Server Error";
-			break;
-		case 501:
-			statusMessage = "Not Implemented";
-			break;
-		default:
-			statusCode = 500;
-			statusMessage = "Internal Server Error";
-			break;
-	}
-	std::string responseBody = "<html><body><h1>" + statusMessage + "</h1></body></html>";
-	return buildHttpResponse(clientData.requestLine[2], statusCode, statusMessage, responseBody);
+	return generateHttpResponse(clientData.requestLine[2], statusCode,
+			httpErrorMap.at(statusCode), generateErrorPage(statusCode, httpErrorMap.at(statusCode)));
 }
 
 bool HttpResponse::write_to_file(clientState &clientData, const std::string& path, const std::string& content) {
@@ -416,13 +413,12 @@ void HttpResponse::parseRequestBody(clientState &clientData) {
 	std::string fileName;
 	std::string fileContent;
 
-		parse_headers(contentStream, fileName, fileContent);
-		std::string filePath = "./www/upload/" + fileName;
-		write_to_file(clientData, filePath, fileContent);
-		clientData.fileName = fileName;
-		clientData.bodyString.erase(0, nextBoundaryStart);
-		clientData.flagBodyRead = true;
-		// std::cout << "File saved to: " << filePath << std::endl;
+	parse_headers(contentStream, fileName, fileContent);
+	std::string filePath = "./www/upload/" + fileName;
+	write_to_file(clientData, filePath, fileContent);
+	clientData.fileName = fileName;
+	clientData.bodyString.erase(0, nextBoundaryStart);
+	clientData.flagBodyRead = true;
 	return;
 }
 
@@ -438,91 +434,80 @@ std::string HttpResponse::response_Post(clientState &clientData) {
 	parseRequestBody(clientData);
 	clientData.bodyString.clear();
 	if (clientData.flagFileStatus == true)
-		return (generateHttpResponse(400, httpErrorMap.at(400)));
+		return (genericHttpCodeResponse(400, httpErrorMap.at(400)));
 	
-	return generateHttpResponse(201, httpErrorMap.at(201));
+	return genericHttpCodeResponse(201, httpErrorMap.at(201));
 }
 
 
 //================================DELETE=====================================
 std::string HttpResponse::generateErrorPage(int code, const std::string& message) {
     return R"(
-			<!DOCTYPE html>
-			<html lang="en">
-			<head>
-					<meta charset="UTF-8">
-					<meta name="viewport" content="width=device-width, initial-scale=1.0">
-					<title>Error )" + std::to_string(code) + R"(</title>
-					<style>
-							body {
-									margin: 0;
-									padding: 0;
-									display: flex;
-									justify-content: center;
-									align-items: center;
-									height: 100vh;
-									background: linear-gradient(135deg, #1a1a1a, #333);
-									color: white;
-									font-family: Arial, sans-serif;
-							}
-							.container {
-									text-align: center;
-							}
-							h1 {
-									font-size: 6em;
-									margin: 0;
-							}
-							p {
-									font-size: 1.5em;
-									margin: 0;
-							}
-							.back-button {
-									margin-top: 20px;
-									padding: 10px 20px;
-									font-size: 1em;
-									color: #333;
-									background-color: white;
-									border: none;
-									cursor: pointer;
-									border-radius: 5px;
-									text-decoration: none;
-							}
-							.back-button:hover {
-									background-color: #ddd;
-							}
-					</style>
-					<script>
-						function goBack() {
-							window.history.back()
-						}
-					</script>
-			</head>
-			<body>
-					<div class="container">
-							<h1>)" + std::to_string(code) + R"(</h1>
-							<p>)" + message + R"(</p>
-							<button class="back-button" onclick="goBack() ">Go Back</button>
-					</div>
-			</body>
-			</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Http Code )" + std::to_string(code) + R"(</title>
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 100vh;
+			background: linear-gradient(135deg, #1a1a1a, #333);
+			color: white;
+			font-family: Arial, sans-serif;
+		}
+		.container {
+			text-align: center;
+		}
+		h1 {
+			font-size: 6em;
+			margin: 0;
+		}
+		p {
+			font-size: 1.5em;
+			margin: 0;
+		}
+		.back-button {
+			margin-top: 20px;
+			padding: 10px 20px;
+			font-size: 1em;
+			color: #333;
+			background-color: white;
+			border: none;
+			cursor: pointer;
+			border-radius: 5px;
+			text-decoration: none;
+		}
+		.back-button:hover {
+			background-color: #ddd;
+		}
+	</style>
+	<script>
+		function goBack() {
+			window.history.back()
+		}
+	</script>
+</head>
+<body>
+	<div class="container">
+		<h1>)" + std::to_string(code) + R"(</h1>
+		<p>)" + message + R"(</p>
+		<button class="back-button" onclick="goBack() ">Go Back</button>
+	</div>
+</body>
+</html>
 			)";
 }
 
-std::string HttpResponse::generateHttpResponse(int statusCode, const std::string& message) {
+std::string HttpResponse::genericHttpCodeResponse(int statusCode, const std::string& message) {
 	std::string msg = generateErrorPage(statusCode, message);
 	std::ostringstream response;
-	response << "HTTP/1.1 " << statusCode << " ";
-	if (statusCode == 200) {
-		response << "OK";
-	} else if (statusCode == 404) {
-		response << "Not Found";
-	} else if (statusCode == 400) {
-		response << "Bad Request";
-	} else if (statusCode == 500) {
-		response << "Internal Server Error";
-	} else if (statusCode == 413) {
-		response << "Payload Too Large";
-	}
+	response << "HTTP/1.1 " << statusCode << " " << message;
 	response << "\r\n";
 	response << "Content-Type: text/html\r\n";
 	response << "Content-Length: " << msg.length() << "\r\n";
@@ -558,57 +543,13 @@ std::string HttpResponse::responseDelete(clientState &clientData) {
 
 	FILE* file = std::fopen(filePath.c_str(), "r");
 	if (!file)
-		return generateHttpResponse(404, "File not found.");
+		return genericHttpCodeResponse(404, "File not found.");
 	std::fclose(file);
 	if (std::remove(filePath.c_str()) == 0)
-		return generateHttpResponse(200, "File deleted successfully.");
+		return genericHttpCodeResponse(200, "File deleted successfully.");
 	else
-		return generateHttpResponse(500, std::strerror(errno));
+		return genericHttpCodeResponse(500, std::strerror(errno));
 }
-
-// void	HttpResponse::methodsAllowed(clientState &clientData) {
-// 	std::string	currMethod = clientData.requestLine[0];
-// 	std::string	path = clientData.requestLine[1].substr(0, clientData.requestLine[1].find_last_of("/"));
-// 	DEBUG("The path: " + path);
-// 	std::vector<Location>::iterator	it;
-// 	for (it = clientData.serverData.location.begin(); it != clientData.serverData.location.end(); ++it) {
-// 		if (it->path == "/" + path) {
-// 			std::vector<std::string>::iterator	jt;
-// 			for (jt = it->methods.begin(); jt != it->methods.end(); ++jt) {
-// 				if (jt->c_str() == currMethod)
-// 					return ;
-// 			}
-// 			errorHandlingPost(405, clientData);
-// 		}
-// 	}
-// 	errorHandlingPost(404, clientData);
-// }
-
-void HttpResponse::methodsAllowed(clientState &clientData) {
-	std::string currMethod = clientData.requestLine[0];
-	std::string path = clientData.requestLine[1];
-
-	if (path.find("http://") == 0 || path.find("https://") == 0) {
-		path = path.substr(path.find("/", path.find("://") + 3));
-	}
-	DEBUG("The path: " + path);
-	for (std::vector<Location>::iterator it = clientData.serverData.location.begin(); 
-		it != clientData.serverData.location.end(); ++it) {
-		if (it->path == path) {
-			for (std::vector<std::string>::iterator jt = it->methods.begin(); 
-				jt != it->methods.end(); ++jt) {
-				if (*jt == currMethod) {
-					return;
-				}
-			}
-			errorHandlingPost(405, clientData);
-			return;
-		}
-	}
-	errorHandlingPost(404, clientData);
-}
-
-
 
 std::string HttpResponse::respondRedirect(clientState &clientData) {
 	for (auto &location : clientData.serverData.location) {
@@ -618,29 +559,159 @@ std::string HttpResponse::respondRedirect(clientState &clientData) {
 			} else {
 				clientData.header["Location"] = location.redirect;
 			}
-			_StatusLine = clientData.requestLine[2] + " 302 Found\r\n";
+			_status_line = clientData.requestLine[2] + " 302 Found\r\n";
 			std::string headerMetaData = metaData(clientData);
-			_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
-			_Response = _StatusLine + _Header;
-			return _Response;
+			_header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+			_response = _status_line + _header;
+
+			return _response;
 		}
 	}
-	return generateHttpResponse(404, "Page Not Found");
+	return genericHttpCodeResponse(404, "Page Not Found");
 }
+
+/*--------   CGI   -----------*/
+
+std::string HttpResponse::processCgi(clientState &clientData) {
+	if (clientData.isForked == true)
+		return parentProcess(clientData);
+	INFO("CGI start");
+	if (pipe(clientData.fd) == -1) {
+		ERROR("Pipe failed");
+		return genericHttpCodeResponse(500, httpErrorMap.at(500));
+	}
+	clientData.pid = fork();
+	if (clientData.pid == -1) {
+		ERROR("Fork Failed");
+		close(clientData.fd[0]);
+		close(clientData.fd[1]);
+		return genericHttpCodeResponse(500, httpErrorMap.at(500));
+	}
+	
+	clientData.isForked = true;
+	
+	if (clientData.pid == 0) {
+		close(clientData.fd[0]);
+		dup2(clientData.fd[1], STDOUT_FILENO);
+		close(clientData.fd[1]);
+		execute(clientData);
+		exit(1);
+	} else {
+		close(clientData.fd[1]);
+		return parentProcess(clientData);
+	}
+}
+
+std::string HttpResponse::parentProcess(clientState &clientData) {
+	std::string result;
+	std::vector<char> buffer(4096);
+	
+	int status;
+	ssize_t count;
+
+	pid_t resultPid = waitpid(clientData.pid, &status, WNOHANG);
+	if (resultPid == 0) {
+		time_t currentTime = 0;
+
+		std::time(&currentTime);
+		if (std::difftime(currentTime, clientData.lastEventTime) > clientData.serverData.send_timeout) {
+			ERROR("CGI script timed out");
+			kill(clientData.pid, SIGKILL);
+			close(clientData.fd[0]);
+			clientData.isForked = false;
+			return genericHttpCodeResponse(504, httpErrorMap.at(504));
+		}
+		return result; // result is empty at this stage
+	} else if (resultPid == -1) {
+		ERROR("waitpid failed");
+		return genericHttpCodeResponse(502, httpErrorMap.at(502));
+	}
+	
+	if (WIFEXITED(status)) {
+		int exitStatus = WEXITSTATUS(status);
+		if (exitStatus == 0) {
+			while ((count = read(clientData.fd[0], buffer.data(), buffer.size())) > 0) {
+				result.append(buffer.data(), count);
+			}
+			
+			close(clientData.fd[0]);
+			clientData.isForked = false;
+			
+			if (result.empty()) {
+				return genericHttpCodeResponse(502, httpErrorMap.at(502));
+			}
+			_status_line = clientData.requestLine[2] + " 200 OK\r\n";
+			return buildHttpResponse(_status_line, "text/html", result, clientData);
+		} else {
+			ERROR("CGI Script exited with error status: " + std::to_string(exitStatus));
+			close(clientData.fd[0]);
+			return genericHttpCodeResponse(500, httpErrorMap.at(500));
+		}
+	} else {
+		ERROR("CGI script did not exit normally");
+		close(clientData.fd[0]);
+		return genericHttpCodeResponse(500, httpErrorMap.at(500));
+	}
+}
+
+void	HttpResponse::execute(clientState &clientData) {
+	std::string scriptname;
+	std::string query;
+	
+	if (clientData.method == POST) {
+		scriptname = clientData.serverData.root + clientData.requestLine[1];
+		query = clientData.bodyString;
+	} else if (clientData.method == GET) {
+		size_t pos = clientData.requestLine[1].find('?');
+		if (pos != std::string::npos) {
+			scriptname = clientData.serverData.root + clientData.requestLine[1].substr(0, pos);
+			query = clientData.requestLine[1].substr(pos + 1);
+		}
+	}
+
+	std::vector<std::string> env_strings = {
+	"QUERY_STRING=" + query,
+    "REQUEST_METHOD=" + clientData.requestLine[0],
+    "CONTENT_LENGTH=" + std::to_string(clientData.contentLength),
+    "GATEWAY_INTERFACE=CGI/1.1",
+    "SCRIPT_NAME=" + scriptname,
+    "SERVER_NAME=" + clientData.serverData.server_name,
+    "SERVER_PORT=" + std::to_string(clientData.serverData.listen),
+    "SERVER_PROTOCOL=HTTP/1.1"
+	};
+
+	std::vector<char*> env;
+	for (auto& str : env_strings) {
+		env.push_back(const_cast<char*>(str.c_str()));
+	}
+	env.push_back(nullptr);
+
+	char *args[] = {
+		const_cast<char *>("/usr/bin/python3"),
+		const_cast<char *>(scriptname.c_str()),
+		NULL
+  };
+	
+	execve(args[0], args, env.data());
+	ERROR("execve failed");
+}
+
 
 std::string HttpResponse::respond(clientState &clientData) {
 	methodsAllowed(clientData);
 	if (clientData.requestLine[1] == "/redirect") {
 		return respondRedirect(clientData);
+	} else if (clientData.requestLine[1].substr(0, 4) == "/cgi") {
+		return processCgi(clientData);
 	} else if (clientData.requestLine[0] == "GET") {
 		return respond_Get(clientData);
 	} else if (clientData.requestLine[0] == "POST") {
-		if (clientData.flagFileSizeTooBig == true)
-			return (generateHttpResponse(413, httpErrorMap.at(413)));
+		if (clientData.flagFileSizeTooBig)
+			return (genericHttpCodeResponse(413, httpErrorMap.at(413)));
 		return response_Post(clientData);
 	} else if (clientData.requestLine[0] == "DELETE") {
 		return responseDelete(clientData);
 	} else {
-		return generateHttpResponse(405, httpErrorMap.at(405));
+		return genericHttpCodeResponse(405, httpErrorMap.at(405));
 	}
 }

@@ -121,33 +121,6 @@ bool SocketManager::isClientFd(int pollFd) {
   return false;
 }
 
-//void SocketManager::assignServerBlock(int &pollFd) {
-//	std::map<std::string, std::string>::iterator hostIt = clients[pollFd].header.find("Host");
-
-//	if (hostIt == clients[pollFd].header.end())
-//		return;
-
-//	std::string host = hostIt->second;
-//	std::string domain;
-//	int port = 0;
-
-//	std::string::size_type colonPos = host.find(':');
-//	if (colonPos != std::string::npos) {
-//		domain = host.substr(0, colonPos);
-//		port = std::atoi(host.substr(colonPos + 1).c_str());
-//	} else {
-//		domain = host;
-//		port = 80;
-//	}
-//	for (std::vector<ServerParser>::iterator server = servers.begin(); server != servers.end(); ++server) {
-//		if (server->server_name == domain && server->listen == port) {
-//			clients[pollFd].serverData = *server;
-//			break;
-//		}
-//	}
-//}
-
-
 void SocketManager::assignServerBlock(int &pollFd) {
 	auto hostIt = clients[pollFd].header.find("Host");
 
@@ -217,6 +190,13 @@ void SocketManager::pollin(pollfd &pollFd) {
 
 
 void SocketManager::pollout(pollfd &pollFd) {
+
+	HttpResponse response;
+
+	if (clients[pollFd.fd].isForked == true) {
+		clients[pollFd.fd].writeString = response.respond(clients[pollFd.fd]);
+		return ;
+	}
 
   if (clients[pollFd.fd].writeString.empty() == true) {
     WARNING("Response buffer Empty on socket: " << pollFd.fd);

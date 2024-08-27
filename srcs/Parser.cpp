@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Parser.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/05/25 12:38:00 by otuyishi          #+#    #+#             */
+/*   Updated: 2024/08/27 13:52:34 by otuyishi         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "Parser.hpp"
 
 Parser::Parser(std::vector<lexer_node> lexer) : lexer(lexer) {
@@ -206,7 +218,7 @@ void Parser::finaliseServer(ServerParser &server) {
   if (server.keepalive_timeout == 0)
     server.keepalive_timeout = 60;
   if (server.send_timeout == 0)
-    server.send_timeout = 100;
+    server.send_timeout = 5;
   if (server.autoindex == "")
     server.autoindex = "off";
   if (server.listen == 0)
