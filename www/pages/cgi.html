@@ -4,6 +4,16 @@
 
 <div style="padding-top: 10px; display: flex; justify-content: space-between;">
 	<form action="/cgi/infiniteLoop.py" method="get" style="flex: 1; margin-right: 10px;">
+			<button class="button-style" style="width: 100%; padding: 10px; border-radius: 5px; background-color: #360143; color: white; border: none;">Infinite Loop Script</button>
+	</form>
+
+	<form action="/cgi/invalid.py" method="post" style="flex: 1; margin-left: 10px;">
+			<button class="button-style" style="width: 100%; padding: 10px; border-radius: 5px; background-color: #3e0404; color: white; border: none;">Invalid Script</button>
+	</form>
+</div>
+
+<div style="padding-top: 10px; display: flex; justify-content: space-between;">
+	<form action="/cgi/ascii.py" method="get" style="flex: 1; margin-right: 10px;">
 			<div style="margin-bottom: 15px;">
 					<label for="param-get" style="display: block; margin-bottom: 5px;">Simple word or Number</label>
 					<input id="param-get" required type="text" name="text" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ccc;">

@@ -6,7 +6,7 @@
 /*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2024/08/27 13:26:10 by hkumbhan         ###   ########.fr       */
+/*   Updated: 2024/08/27 14:04:08 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -625,6 +625,8 @@ std::string HttpResponse::parentProcess(clientState &clientData) {
 		return result; // result is empty at this stage
 	} else if (resultPid == -1) {
 		ERROR("waitpid failed");
+		close(clientData.fd[0]);
+		clientData.isForked = false;
 		return genericHttpCodeResponse(502, httpErrorMap.at(502));
 	}
 	
@@ -646,11 +648,13 @@ std::string HttpResponse::parentProcess(clientState &clientData) {
 		} else {
 			ERROR("CGI Script exited with error status: " + std::to_string(exitStatus));
 			close(clientData.fd[0]);
+			clientData.isForked = false;
 			return genericHttpCodeResponse(500, httpErrorMap.at(500));
 		}
 	} else {
 		ERROR("CGI script did not exit normally");
 		close(clientData.fd[0]);
+		clientData.isForked = false;
 		return genericHttpCodeResponse(500, httpErrorMap.at(500));
 	}
 }
