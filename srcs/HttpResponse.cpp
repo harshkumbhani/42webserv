@@ -582,7 +582,6 @@ std::string HttpResponse::processCgi(clientState &clientData) {
 		return genericHttpCodeResponse(500, httpErrorMap.at(500));
 	}
 	
-	clientData.isForked = true;
 	
 	if (clientData.pid == 0) {
 		close(clientData.fd[0]);
@@ -591,6 +590,10 @@ std::string HttpResponse::processCgi(clientState &clientData) {
 		execute(clientData);
 		exit(1);
 	} else {
+		std::cout << "Setting is special flag" << std::endl;
+		clientData.isForked = true;
+		clientData.isSpecial = true;
+		time(&clientData.newTime);
 		close(clientData.fd[1]);
 		return parentProcess(clientData);
 	}
@@ -601,30 +604,36 @@ std::string HttpResponse::parentProcess(clientState &clientData) {
 	std::vector<char> buffer(4096);
 	
 	int status;
-	ssize_t count;
 
+	time_t currentTime = 0;
+
+	std::time(&currentTime);
+	// std::cout << "diff time: " << std::difftime(currentTime, clientData.lastEventTime) << std::endl;
+	if (std::difftime(currentTime, clientData.lastEventTime) > clientData.serverData.send_timeout) {
+		ERROR("CGI script timed out");
+		kill(clientData.pid, SIGKILL);
+		waitpid(clientData.pid, &status, 0);
+		close(clientData.fd[0]);
+		clientData.isForked = false;
+		std::time(&clientData.lastEventTime);
+		clientData.killChild = true;
+		// clientData.closeConnection = false;
+		std::cout << "We are here - it timed out!" << clientData.isForked << std::endl;
+		return genericHttpCodeResponse(504, httpErrorMap.at(504));
+	}
 	pid_t resultPid = waitpid(clientData.pid, &status, WNOHANG);
 	if (resultPid == 0) {
-		time_t currentTime = 0;
-
-		std::time(&currentTime);
-		if (std::difftime(currentTime, clientData.lastEventTime) > clientData.serverData.send_timeout) {
-			ERROR("CGI script timed out");
-			kill(clientData.pid, SIGKILL);
-			close(clientData.fd[0]);
-			clientData.isForked = false;
-			clientData.killChild = true;
-			std::cout << "We are here - it timed out!" << std::endl;
-			return genericHttpCodeResponse(504, httpErrorMap.at(504));
-		}
-		return result; // result is empty at this stage
+		return ""; // result is empty at this stage
 	} else if (resultPid == -1) {
 		ERROR("waitpid failed");
 		close(clientData.fd[0]);
 		clientData.isForked = false;
+		clientData.killChild = true;
+		std::cout << "We are here in parentprocess()" << std::endl;
 		return genericHttpCodeResponse(502, httpErrorMap.at(502));
 	}
 	
+	ssize_t count;
 	if (WIFEXITED(status)) {
 		int exitStatus = WEXITSTATUS(status);
 		if (exitStatus == 0) {
@@ -634,6 +643,8 @@ std::string HttpResponse::parentProcess(clientState &clientData) {
 			
 			close(clientData.fd[0]);
 			clientData.isForked = false;
+			clientData.killChild = true;
+			std::cout << "I am here after WEXITSTATUS" << std::endl;
 			
 			if (result.empty()) {
 				return genericHttpCodeResponse(502, httpErrorMap.at(502));
@@ -644,12 +655,16 @@ std::string HttpResponse::parentProcess(clientState &clientData) {
 			ERROR("CGI Script exited with error status: " + std::to_string(exitStatus));
 			close(clientData.fd[0]);
 			clientData.isForked = false;
+			clientData.killChild = true;
+			std::cout << "We are here in parentprocess() ..............." << std::endl;
 			return genericHttpCodeResponse(500, httpErrorMap.at(500));
 		}
 	} else {
 		ERROR("CGI script did not exit normally");
 		close(clientData.fd[0]);
 		clientData.isForked = false;
+		clientData.killChild = true;
+		std::cout << "We are here in parentprocess() -------" << std::endl;
 		return genericHttpCodeResponse(500, httpErrorMap.at(500));
 	}
 }

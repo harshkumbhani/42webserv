@@ -103,6 +103,7 @@ struct clientState {
 	ssize_t bytesRead;
 	ssize_t contentLength;
 	time_t lastEventTime;
+	time_t newTime;
 	std::string bodyString;
 	std::vector<char> body;
 	std::string readString;
@@ -115,6 +116,7 @@ struct clientState {
 	std::string	boundary;
 	std::string	fileName;
 	bool killChild;
+	bool isSpecial;
 
 	void clear() {
 	flagHeaderRead = false;
@@ -122,7 +124,6 @@ struct clientState {
 	flagPartiallyRead = false;
 	isKeepAlive = false;
 	closeConnection = false;
-	isForked = false;
 	method = DEFAULT; // Or some default method
 	pid = -1;
 	bytesRead = -1;

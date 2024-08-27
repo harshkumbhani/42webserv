@@ -102,8 +102,10 @@ void SocketManager::acceptConnection(int &pollFd) {
   clientState client = (struct clientState){};
   clients[clientSocket] = client;
 
-  clients[clientSocket].clear();
+  // clients[clientSocket].clear();
   clients[clientSocket].killChild = false; // change
+  clients[clientSocket].isForked = false; // change
+  clients[clientSocket].isSpecial = false; // change
   std::time(&clients[clientSocket].lastEventTime);
   SUCCESS("Accepted new client connection: " << clientSocket);
 }
@@ -200,13 +202,16 @@ void SocketManager::pollout(pollfd &pollFd) {
 	}
 
   if (clients[pollFd.fd].writeString.empty() == true) {
+    if (clients[pollFd.fd].isSpecial == true) {
+      std::cout << "CGI socket :" << std::endl;
+    }
     WARNING("Response buffer Empty on socket: " << pollFd.fd);
     clients[pollFd.fd].clear();
     pollFd.events = POLLIN;
     return;
   }
 
-  if (clients[pollFd.fd].bytesRead > 0) {
+  // if (clients[pollFd.fd].bytesRead > 0) {
     ssize_t bytesSend = send(pollFd.fd, clients[pollFd.fd].writeString.c_str(),
                              clients[pollFd.fd].writeString.size(), 0);
 
@@ -227,46 +232,25 @@ void SocketManager::pollout(pollfd &pollFd) {
       ERROR("Failed to send a response on socket: " << pollFd.fd);
       clients[pollFd.fd].closeConnection = true;
     }
-  }
-}
-
-void SocketManager::closeClientConnection(int &pollFd) {
-  INFO("Closing client connection on fd: " << pollFd);
-
-  if (close(pollFd) == -1)
-    throw std::runtime_error("Failed to close client connection!");
-
-  std::vector<int>::iterator itServerFd =
-      std::find(serverSocketsFds.begin(), serverSocketsFds.end(), pollFd);
-  if (itServerFd != serverSocketsFds.end())
-    serverSocketsFds.erase(itServerFd);
-
-  std::vector<int>::iterator itClientFd =
-      std::find(clientSocketsFds.begin(), clientSocketsFds.end(), pollFd);
-  if (itClientFd != clientSocketsFds.end())
-    clientSocketsFds.erase(itClientFd);
-
-  std::vector<struct pollfd>::iterator it;
-  for (it = pollFds.begin(); it != pollFds.end(); it++) {
-    if (it->fd == pollFd) {
-      pollFds.erase(it);
-      break;
-    }
-  }
-  auto itmap = clients.find(pollFd);
-  if (itmap != clients.end()) {
-    clients.erase(pollFd);
-  }
+  // }
 }
 
 void SocketManager::checkAndCloseStaleConnections(struct pollfd &pollFd) {
   time_t currentTime = 0;
 
+  if (!clients[pollFd.fd].killChild) {
+    return;
+  }
+
   std::time(&currentTime);
   if ((clients[pollFd.fd].closeConnection == true) ||
-      std::difftime(currentTime, clients[pollFd.fd].lastEventTime) > 10) {
-
-    INFO("Closing client connection on fd: " << pollFd.fd);
+      std::difftime(currentTime, clients[pollFd.fd].lastEventTime) > clients[pollFd.fd].serverData.send_timeout + 2) {
+    
+    if (clients[pollFd.fd].isSpecial) {
+      std::cout << "We returning here! FORKED STATUS: " << clients[pollFd.fd].killChild << std::endl;
+    }
+      
+    INFO("--------Closing client connection on fd: " << pollFd.fd);
 
     if (close(pollFd.fd) == -1)
       throw std::runtime_error("Failed to close client connection!");
@@ -310,17 +294,15 @@ void SocketManager::pollingAndConnections() {
         pollin(pollFds[i]);
       }
       if (pollFds[i].revents & (POLLHUP | POLLERR | POLLNVAL)) {
-        checkAndCloseStaleConnections(pollFds[i]);
+        // checkAndCloseStaleConnections(pollFds[i]);
         continue;
       }
       if (isClientFd(pollFds[i].fd) == true) {
         if (pollFds[i].revents & POLLOUT) {
           pollout(pollFds[i]);
         }
-        if (!clients[pollFds[i].fd].isForked == false && clients[pollFds[i].fd].killChild == true) {
-          std::cout << "Klling socket..." << std::endl;
-          checkAndCloseStaleConnections(pollFds[i]);
-        }
+        checkAndCloseStaleConnections(pollFds[i]);
+
       }
     }
   }

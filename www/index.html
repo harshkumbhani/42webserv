@@ -4,43 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Webserv</title>
-    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
-    <link rel="stylesheet" href="styles.css">
+    <!-- <link rel="icon" type="image/x-icon" href="/assets/favicon.ico"> -->
+    <!-- <link rel="stylesheet" href="styles.css"> -->
 </head>
 <body>
     <!-- Background video continues from where it left off -->
-    <video autoplay muted loop id="background-video" poster="./assets/home.jpg">
+    <!-- <video autoplay muted loop id="background-video" poster="./assets/home.jpg">
         <source src="./assets/bg3.mp4" type="video/mp4">
         Your browser does not support the video tag.
-    </video>
+    </video> -->
 
 		
-    <img src="./assets/logo.jpg" alt="project logo" id="logo">
+    <!-- <img src="./assets/logo.jpg" alt="project logo" id="logo"> -->
     <div class="project-credit">Project by: Harsh , Oreste and Moheddine </div>
 		
     <!-- Button container will disappear when DELETE is clicked -->
-    <div class="button-container" id="buttons">
+		<div class="button-container" id="buttons">
 			<button class="button-style" onclick="loadGetPage()">GET</button>
 			<button class="button-style" onclick="openModal()">POST</button>
-			<button class="button-style" onclick="loadDirectoryListing('/upload')">DELETE</button>
+			<button class="button-style" onclick="loadDirectoryListing('/upload')">DELETE</button> -->
 			<button class="button-style" onclick="loadGetCGI()">CGI</button>
-			<button class="button-style" onclick="window.location.href='/redirect'">REDIRECTION</button>
+			<!-- <button class="button-style" onclick="window.location.href='/redirect'">REDIRECTION</button> -->
 			</div>
 			
 		<div id="content-placeholder"></div>
 		
     <!-- Placeholder for the directory listing -->
-    <div id="directory-listing" style="display: none;">
+    <!-- <div id="directory-listing" style="display: none;">
 		<table>
 			<tbody id="tableBody">
-				<!-- Table rows generated dynamically by C++ program -->
-			</tbody>
+				 Table rows generated dynamically by C++ program -->
+			<!-- </tbody>
 		</table>
 		<button onclick="closeDirectoryListing()" class="delete-style">Close</button>
-    </div>
+    </div> -->
 
 		<!-- Modal for file upload -->
-		<div id="fileUploadModal" class="modal">
+		<!-- <div id="fileUploadModal" class="modal">
 			<div class="modal-content" style="width: 800px;">
 				<span class="close" onclick="closeModal()">&times;</span>
 				<h2 style="color: black;">Upload your file</h2>
@@ -49,10 +49,10 @@
 					<button type="submit" class="button-style">Upload File</button>
 				</form>
 			</div>
-		</div>
+		</div> -->
 
 		<!-- Modal for file deletion -->
-		<div id="fileDeleteModal" class="modal">
+		<!-- <div id="fileDeleteModal" class="modal">
 			<div class="modal-content">
 				<span class="close" onclick="closeDeleteModal()">&times;</span>
 				<h2 style="color: black;">Delete a file</h2>
@@ -61,12 +61,12 @@
 				</form>
 				<button id="deleteButton">Delete Selected File</button>
 			</div>
-		</div>
-	</div>
+		</div> -->
+	</div> -->
 
 	<script src="./js/scripts.js"></script>
 
-	<div class="github">
+	<!-- <div class="github">
 		<a href="https://github.com/moheddine-belhaj">
 			<img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo">
 		</a>
@@ -76,6 +76,6 @@
 		<a href="https://github.com/harshkumbhani">
 			<img src="./assets/github-mark.png" alt="github repo" id="kitty" class="github-logo">
 		</a>
-	</div>
+	</div> -->
 </body>
 </html>
