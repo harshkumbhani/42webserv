@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Parser.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/25 12:38:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/05/30 17:32:40 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/08/27 16:58:38 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 Parser::Parser(std::vector<lexer_node> lexer) : lexer(lexer) {
   parseConfigurations(this->lexer);
+  parseMimeTypes(mimeTypeFilePath);
 }
 
 Parser::~Parser() {}
@@ -217,7 +218,7 @@ void Parser::finaliseServer(ServerParser &server) {
   if (server.keepalive_timeout == 0)
     server.keepalive_timeout = 60;
   if (server.send_timeout == 0)
-    server.send_timeout = 100;
+    server.send_timeout = 5;
   if (server.autoindex == "")
     server.autoindex = "off";
   if (server.listen == 0)
@@ -375,5 +376,28 @@ std::ostream &operator<<(std::ostream &output, const std::vector<ServerParser> &
     }
     INFO("Server printing ended\n");
   }
+  return output;
+}
+
+std::ostream &operator<<(std::ostream &output, const ServerParser &nodes) {
+  // const std::vector<ServerParser> &nodes = parser.getParser();
+  // std::vector<ServerParser>::const_iterator it;
+  // for (it = nodes.begin(); it != nodes.end(); it++) {
+    INFO("Server printing started\n");
+    output << "keepalive_timeout: " << nodes.keepalive_timeout
+           << "\nsockfd: " << nodes.sockfd
+           << "\nsend timeout: " << nodes.send_timeout
+           << "\nlisten: " << nodes.listen << "\nserver_name: " << nodes.server_name
+           << "\nroot: " << nodes.root << "\nautoindex: " << nodes.autoindex
+           << "\nindex: " << nodes.index
+           << "\ndirectory listing: " << nodes.directory_listing
+           << "\nclient body size: " << nodes.client_body_size
+           << "\nLocation: \n";
+    std::vector<Location>::const_iterator itl;
+    for (itl = nodes.location.begin(); itl != nodes.location.end(); itl++) {
+      output << *itl;
+    }
+    INFO("Server printing ended\n");
+  // }
   return output;
 }

@@ -1,0 +1,96 @@
+<style>
+    .file-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        font-family: Arial, sans-serif;
+    }
+    .file-table th, .file-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    .file-table th {
+        background-color: #f2f2f2;
+        color: #333;
+    }
+    .file-table tr:hover {
+        background-color: #f5f5f5;
+    }
+    .file-table td a {
+        color: #007BFF;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    .file-table td a:hover {
+        text-decoration: underline;
+    }
+    .delete-button {
+        background-color: #ff4d4d;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .delete-button:hover {
+        background-color: #ff1a1a;
+    }
+    .icon {
+        font-size: 18px;
+        margin-right: 8px;
+    }
+</style>
+
+<table class="file-table">
+    <tr>
+        <th>Icon</th>
+        <th>Name</th>
+        <th>Action</th>
+    </tr>
+    <tr>
+        <td><span class="icon">📄</span></td>
+        <td><a href="./www/upload/autumn.jpg">autumn.jpg</a></td>
+        <td><button class="delete-button" onclick="fetch('/delete?file=autumn.jpg', {method: 'DELETE'}).then(function(response) { if (response.ok) { window.location.reload();} else { alert('Delete failed with status: ' + response.status);}}).catch(function(error) {alert('Network error or no response from server');})">Delete</button></td>
+    </tr>
+    <tr>
+        <td><span class="icon">📄</span></td>
+        <td><a href="./www/upload/cow.jpg">cow.jpg</a></td>
+        <td><button class="delete-button" onclick="fetch('/delete?file=cow.jpg', {method: 'DELETE'}).then(function(response) { if (response.ok) { window.location.reload();} else { alert('Delete failed with status: ' + response.status);}}).catch(function(error) {alert('Network error or no response from server');})">Delete</button></td>
+    </tr>
+    <tr>
+        <td><span class="icon">📄</span></td>
+        <td><a href="./www/upload/cows2.jpg">cows2.jpg</a></td>
+        <td><button class="delete-button" onclick="fetch('/delete?file=cows2.jpg', {method: 'DELETE'}).then(function(response) { if (response.ok) { window.location.reload();} else { alert('Delete failed with status: ' + response.status);}}).catch(function(error) {alert('Network error or no response from server');})">Delete</button></td>
+    </tr>
+    <tr>
+        <td><span class="icon">📄</span></td>
+        <td><a href="./www/upload/farm.jpg">farm.jpg</a></td>
+        <td><button class="delete-button" onclick="fetch('/delete?file=farm.jpg', {method: 'DELETE'}).then(function(response) { if (response.ok) { window.location.reload();} else { alert('Delete failed with status: ' + response.status);}}).catch(function(error) {alert('Network error or no response from server');})">Delete</button></td>
+    </tr>
+    <tr>
+        <td><span class="icon">📁</span></td>
+        <td><a href="./www/upload/Files">Files</a></td>
+        <td><button class="delete-button" onclick="fetch('/delete?file=Files', {method: 'DELETE'}).then(function(response) { if (response.ok) { window.location.reload();} else { alert('Delete failed with status: ' + response.status);}}).catch(function(error) {alert('Network error or no response from server');})">Delete</button></td>
+    </tr>
+    <tr>
+        <td><span class="icon">📄</span></td>
+        <td><a href="./www/upload/hobbit.jpg">hobbit.jpg</a></td>
+        <td><button class="delete-button" onclick="fetch('/delete?file=hobbit.jpg', {method: 'DELETE'}).then(function(response) { if (response.ok) { window.location.reload();} else { alert('Delete failed with status: ' + response.status);}}).catch(function(error) {alert('Network error or no response from server');})">Delete</button></td>
+    </tr>
+    <tr>
+        <td><span class="icon">📄</span></td>
+        <td><a href="./www/upload/lake.jpg">lake.jpg</a></td>
+        <td><button class="delete-button" onclick="fetch('/delete?file=lake.jpg', {method: 'DELETE'}).then(function(response) { if (response.ok) { window.location.reload();} else { alert('Delete failed with status: ' + response.status);}}).catch(function(error) {alert('Network error or no response from server');})">Delete</button></td>
+    </tr>
+    <tr>
+        <td><span class="icon">📄</span></td>
+        <td><a href="./www/upload/mudroad.jpg">mudroad.jpg</a></td>
+        <td><button class="delete-button" onclick="fetch('/delete?file=mudroad.jpg', {method: 'DELETE'}).then(function(response) { if (response.ok) { window.location.reload();} else { alert('Delete failed with status: ' + response.status);}}).catch(function(error) {alert('Network error or no response from server');})">Delete</button></td>
+    </tr>
+    <tr>
+        <td><span class="icon">📄</span></td>
+        <td><a href="./www/upload/redpanda.jpg">redpanda.jpg</a></td>
+        <td><button class="delete-button" onclick="fetch('/delete?file=redpanda.jpg', {method: 'DELETE'}).then(function(response) { if (response.ok) { window.location.reload();} else { alert('Delete failed with status: ' + response.status);}}).catch(function(error) {alert('Network error or no response from server');})">Delete</button></td>
+    </tr>
+</table>

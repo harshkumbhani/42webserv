@@ -1,20 +1,9 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   HttpResponse.hpp                                   :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/06/18 19:09:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/06/27 08:34:45 by otuyishi         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef HTTPRESPONSE_HPP
 #define HTTPRESPONSE_HPP
 
 #include "EventLogger.hpp"
 #include "HttpRequest.hpp"
+// #include "NewRequest.hpp"
 #include <cstdio>
 #include <ctime>
 #include <fstream>
@@ -26,35 +15,81 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <vector>
+#include <sys/stat.h>
+#include <chrono>
+#include <thread>
+#include "Utils.hpp"
 
-struct clientState;
+extern char **environ;
 
 enum status { OK = 200, NOT_FOUND = 404, BAD_REQUEST = 400 };
 
 class HttpRequest;
 
 class HttpResponse {
-public:
-  HttpResponse();
-  ~HttpResponse();
+	private:
+		std::string _status_line;
+		std::string _header;
+		std::string _body;
+		std::string _response;
 
-  std::string _StatusLine;
-  std::string _Header;
-  std::string _Body;
-  std::string _Response;
+		const std::map<int, std::string> httpErrorMap
+		{
+			{200,"OK"},
+			{201,"Created"},
+			{202,"Accepted"},
+			{400,"Bad Request"},
+			{401,"Unauthorized"},
+			{403,"Forbidden"},
+			{404,"Page Not Found"},
+			{405,"Method Not Allowed Error"},
+			{413,"Payload Too Large"},
+			{500,"Internal Server Error"},
+			{501,"Not Implemented"},
+			{502,"Bad Gateway"},
+			{504,"Gateway Timeout Server"}
+		};
 
-  std::string statusCode(int code);
-  std::string respond(clientState &req);
+	public:
+		HttpResponse();
+		~HttpResponse();
 
-  std::string respond_Get(clientState &req);
-  std::string response_Post(clientState &req);
-  std::string response_Delete(clientState &req);
+		std::string	metaData(clientState &clientData);
+		std::string	webserverStamp(void);
+		std::string	errorHandlingGet(int code, clientState &clientData);
 
-  // supporting funcs
-  bool is_valid_str(const std::string &str);
-  bool is_valid_char(char c);
+		std::string statusCodes(int code);
+		std::string generateErrorPage(int code, const std::string& message);
+		std::string generateHtml(int code, const std::string& codeMessage);
+		std::string respond(clientState &clientData);
+		std::string successHandling(int statusCode, clientState &clientData, const std::string &messageBody = "");
 
-private:
+		std::string deleteListing(clientState &clientData);
+		std::string directoryListing(clientState &clientData);
+		std::string handleGetFile(clientState &clientData);
+
+		std::string respond_Get(clientState &clientData);
+		std::string response_Post(clientState &clientData);
+		std::string responseDelete(clientState &clientData);
+		std::string respondRedirect(clientState &clientData);
+
+		std::string processCgi(clientState &clientData);
+		void	execute(clientState &clientData);
+		std::string parentProcess(clientState &clientData); 
+
+		std::string buildHttpResponse(const std::string& statusLine, const std::string& contentType,
+					const std::string& body, const clientState& clientData);
+
+		bool is_valid_str(const std::string &str);
+		bool is_valid_char(char c);
+		bool checkSuffix(const std::string &str, const std::string &suffix);
+
+		std::string errorHandlingPost(int statusCode, clientState &clientData);
+		bool 		write_to_file(clientState &clientData, const std::string& path, const std::string& content);
+		void		parse_headers(std::istringstream& contentStream, std::string& fileName, std::string& fileContent);
+		std::string	findBoundary(const std::map<std::string, std::string>& headers);
+		void		parseRequestBody(clientState &clientData);
+		std::string	genericHttpCodeResponse(int statusCode, const std::string& message);
 };
 
 #endif

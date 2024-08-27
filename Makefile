@@ -3,8 +3,8 @@
 ################################################################################
 
 NAME := webserv
-CC := c++ 
-CFLAGS = -Wextra -Wall -Werror -std=c++98 -MMD -MP $(addprefix -I, $(INC_DIRS))
+CC := c++
+CFLAGS = -Wextra -Wall -Werror -g -std=c++17 -MMD -MP $(addprefix -I, $(INC_DIRS))
 
 ################################################################################
 ###############                 PRINT OPTIONS                     ##############
@@ -20,7 +20,7 @@ LOG := printf "[$(BO)$(G)ⓘ INFO$(X)] %s\n"
 ################################################################################
 
 OBJ_DIR := _obj
-INC_DIRS := .
+INC_DIRS := . ./include/
 SRC_DIRS := ./srcs/
 
 # Tell the Makefile where headers and source files are
@@ -28,10 +28,10 @@ vpath %.hpp $(INC_DIRS)
 vpath %.cpp $(SRC_DIRS)
 
 ################################################################################
-###############                  SOURCE FILES                     ##############
+###############                 SOURCE FILES                     ##############
 ################################################################################
 
-SRCS := main.cpp Lexer.cpp EventLogger.cpp Parser.cpp \
+SRCS := main.cpp Lexer.cpp EventLogger.cpp Parser.cpp Utils.cpp \
 		SocketManager.cpp HttpRequest.cpp HttpResponse.cpp
 
 OBJS := $(addprefix $(OBJ_DIR)/, $(SRCS:%.cpp=%.o))

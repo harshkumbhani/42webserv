@@ -8,3 +8,8 @@
 *.out
 *test.txt
 *.dio
+*.log
+draft.cpp
+test.py
+log
+www/upload/

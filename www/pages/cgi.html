@@ -1,0 +1,31 @@
+<div class="cgi_style">
+<form action="/cgi/infinite.py" method="get" style="flex: 1; margin-right: 10px;" >
+	<button class="Infinite-Loop-Script" >Infinite Loop Script</button>
+</form>
+<form action="/cgi/invalid.py" method="get" class="cgi-button-right">
+	<button class="Invalid-Script-button" >Invalid Script</button>
+</form>
+<form action="/cgi/linux.sh" method="get" class="cgi-button-right">
+	<button class="Shell-Script-button ">Shell Script</button>
+</form>
+</div>
+<div style="padding-top: 10px; display: flex; justify-content: space-between;">
+<form action="/cgi/ascii.py" method="get" style="flex: 1; margin-right: 10px;">
+	<div style="margin-bottom: 15px;">
+		<!-- <label for="param-get" style="display: block; margin-bottom: 10px;">Simple word or Number</label> -->
+		<input id="param-get" required type="text" name="text" placeholder="Simple word or Number" style="width: 100%; padding: 8px; border-radius: 10px; border: 1px solid #ccc;">
+	</div>
+	<button class="button-style" style="width: 100%; padding: 10px; border-radius: 10px; background-color: #012245; color: white; border: none;">ASCII Generator (GET)</button>
+</form>
+<form action="/cgi/ascii.py" method="post" class="cgi-button-right">
+	<div style="margin-bottom: 15px;">
+		<!-- <label for="param-post" style="display: block; margin-bottom: 10px;">Simple word or Number</label> -->
+		<input id="param-post" required type="text" name="text" placeholder="Simple word or Number" style="width: 100%; padding: 8px; border-radius: 10px; border: 1px solid #ccc;">
+	</div>
+	<button class="button-style" style="width: 100%; padding: 10px; border-radius: 10px; background-color: #01300C; color: white; border: none;">ASCII Generator (POST)</button>
+</form>
+</div>
+
+<button onclick="goBack()" class="button-style" style="margin-top: 50px; ">
+Back
+</button>

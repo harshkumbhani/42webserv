@@ -1,28 +1,28 @@
 #include "Lexer.hpp"
 
 Lexer::Lexer(const char *filename) : filepath(filename) {
-  INFO("Tokenising " + std::string(filename) + " file");
-  directive_lookup["http"] = HTTP;
-  directive_lookup["server"] = SERVERBLOCK;
-  directive_lookup["keepalive_timeout"] = KEEPALIVE_TIMEOUT;
-  directive_lookup["send_timeout"] = SEND_TIMEOUT;
-  directive_lookup["listen"] = LISTEN;
-  directive_lookup["server_name"] = SERVER_NAME;
-  directive_lookup["root"] = ROOT;
-  directive_lookup["autoindex"] = AUTOINDEX;
-  directive_lookup["index"] = INDEX;
-  directive_lookup["directory_listing"] = DIR_LISTING;
-  directive_lookup["client_body_size"] = CLIENT_BODY_SIZE;
-  directive_lookup["location"] = LOCATION;
-  directive_lookup["methods"] = METHODS;
-  directive_lookup["redirect"] = REDIRECT;
-  directive_lookup["{"] = OPEN_CURLY_BRACKET;
-  directive_lookup["}"] = CLOSED_CURLY_BRACKET;
-  directive_lookup[";"] = SEMICOLON;
+	INFO("Tokenising " + std::string(filename) + " file");
+	directive_lookup["http"] = HTTP;
+	directive_lookup["server"] = SERVERBLOCK;
+	directive_lookup["keepalive_timeout"] = KEEPALIVE_TIMEOUT;
+	directive_lookup["send_timeout"] = SEND_TIMEOUT;
+	directive_lookup["listen"] = LISTEN;
+	directive_lookup["server_name"] = SERVER_NAME;
+	directive_lookup["root"] = ROOT;
+	directive_lookup["autoindex"] = AUTOINDEX;
+	directive_lookup["index"] = INDEX;
+	directive_lookup["directory_listing"] = DIR_LISTING;
+	directive_lookup["client_body_size"] = CLIENT_BODY_SIZE;
+	directive_lookup["location"] = LOCATION;
+	directive_lookup["methods"] = METHODS;
+	directive_lookup["redirect"] = REDIRECT;
+	directive_lookup["{"] = OPEN_CURLY_BRACKET;
+	directive_lookup["}"] = CLOSED_CURLY_BRACKET;
+	directive_lookup[";"] = SEMICOLON;
 
-  readfileintobuffer();
-  tokenize(buffer);
-  SUCCESS("Tokenised " + std::string(filename) + " file");
+	readfileintobuffer();
+	tokenize(buffer);
+	SUCCESS("Tokenised " + std::string(filename) + " file");
 }
 
 Lexer::~Lexer() {}
