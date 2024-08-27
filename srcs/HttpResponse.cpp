@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2024/08/27 13:49:31 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/08/27 16:38:30 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -696,9 +696,40 @@ void	HttpResponse::execute(clientState &clientData) {
 	ERROR("execve failed");
 }
 
+bool isMethodsAllowed(clientState &clientData) {
+	std::vector<Location> locations = clientData.serverData.location;
+	std::string path;
+	size_t slashPos = clientData.requestLine[1].find_first_of("/", 1);
+	if (slashPos != std::string::npos)
+		path = clientData.requestLine[1].substr(0, slashPos);
+	else
+		path = clientData.requestLine[1];
+
+	for (auto &loc : clientData.serverData.location) {
+		if (loc.path == path) {
+			for (auto &method : loc.methods) {
+				if (method == clientData.requestLine[0])
+					return true;
+			}
+			return false;
+		}
+	}
+
+	auto loc = std::find_if(locations.begin(), locations.end(), [](const Location& loc) {
+		return loc.path == "/";
+	});
+
+	for (auto &method : loc->methods) {
+		if (method == clientData.requestLine[0]) {
+			return true;
+		}
+	}
+	return false;
+}
 
 std::string HttpResponse::respond(clientState &clientData) {
-	methodsAllowed(clientData);
+	if (isMethodsAllowed(clientData) == false)
+		return genericHttpCodeResponse(405, httpErrorMap.at(405));
 	if (clientData.requestLine[1] == "/redirect") {
 		return respondRedirect(clientData);
 	} else if (clientData.requestLine[1].substr(0, 4) == "/cgi") {

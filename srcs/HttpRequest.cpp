@@ -6,7 +6,7 @@
 /*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 18:55:01 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/27 13:52:14 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/08/27 15:38:38 by otuyishi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@ HttpRequest::HttpRequest() {}
 
 HttpRequest::~HttpRequest() {}
 
-void HttpRequest::requestBlock(clientState &clientData) {
+void HttpRequest::requestBlock(clientState &clientData, std::vector<ServerParser> &servers) {
 	if (clientData.flagHeaderRead == false) {
 		std::string::size_type reqMethodPos = clientData.readString.find("\r\n");
 		if (reqMethodPos != std::string::npos) {
@@ -37,10 +37,35 @@ void HttpRequest::requestBlock(clientState &clientData) {
 		clientData.bodyString.append(clientData.readString);
 	}
 
+	if (clientData.serverData.root.empty() == true) {
+		auto hostIt = clientData.header.find("Host");
+
+		if (hostIt == clientData.header.end())
+			return;
+
+		std::regex pattern(R"(([^:]+):(\d+))");
+		std::smatch matches;
+		std::string domain;
+		int port = 0;
+
+		if (std::regex_match(clientData.header["Host"], matches, pattern)) {
+			domain = matches[1].str();
+			port = std::stoi(matches[2].str());
+
+			for (auto &server : servers) {
+				if (server.server_name == domain && server.listen == port) {
+					clientData.serverData = server;
+					break;
+				}
+			}
+		}
+	}
+
 	std::map<std::string, std::string>::iterator contentLengthIt = clientData.header.find("Content-Length");
 	if (contentLengthIt != clientData.header.end()) {
 		clientData.contentLength = static_cast<ssize_t>(std::atol(contentLengthIt->second.c_str()));
 		ServerParser	parserInstance;
+		std::cout << "contentLenght: " << clientData.contentLength << "\nserver allowed size: " << clientData.serverData.client_body_size << "\n\n";
 		if (clientData.contentLength > static_cast<ssize_t>(clientData.serverData.client_body_size))
 			clientData.flagFileSizeTooBig = true;
 		if (static_cast<ssize_t>(clientData.bodyString.size()) == static_cast<ssize_t>(clientData.contentLength))

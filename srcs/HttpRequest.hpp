@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include "HttpResponse.hpp"
+#include "SocketManager.hpp"
 
 class HttpResponse;
 
@@ -15,7 +16,7 @@ class HttpRequest {
 		HttpRequest();
 		~HttpRequest();
 
-		static void	requestBlock(clientState &clientData);
+		static void	requestBlock(clientState &clientData, std::vector<ServerParser> &servers);
 		static void	parseRequestLine(clientState &clientData, std::string &request);
 		static void	parseRequestHeader(clientState &clientData, std::string &reqheader);
 };
