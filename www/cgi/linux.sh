@@ -1,0 +1,13 @@
+#!/bin/bash
+echo "Content-type: text/html"
+echo ""
+echo "<html><head><title>ASCII Art</title></head>"
+echo "<body><pre>"
+echo "   .--."
+echo "  |o_o |"
+echo "  |:_/ |"
+echo " //   \ \\"
+echo "(|     | )"
+echo "/'\_   _/'\\"
+echo "\\___)=(___/"
+echo "</pre></body></html>"
