@@ -225,3 +225,7 @@ button:hover {
 	width: 800px;
 }
 
+.cgi-button-right {
+	flex: 1;
+	margin-left: 10px;
+}
