@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: otuyishi <otuyishi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 18:55:01 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/27 15:38:38 by otuyishi         ###   ########.fr       */
+/*   Updated: 2024/08/27 16:53:29 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,10 +64,10 @@ void HttpRequest::requestBlock(clientState &clientData, std::vector<ServerParser
 	std::map<std::string, std::string>::iterator contentLengthIt = clientData.header.find("Content-Length");
 	if (contentLengthIt != clientData.header.end()) {
 		clientData.contentLength = static_cast<ssize_t>(std::atol(contentLengthIt->second.c_str()));
-		ServerParser	parserInstance;
-		std::cout << "contentLenght: " << clientData.contentLength << "\nserver allowed size: " << clientData.serverData.client_body_size << "\n\n";
-		if (clientData.contentLength > static_cast<ssize_t>(clientData.serverData.client_body_size))
+		if (clientData.contentLength > static_cast<ssize_t>(clientData.serverData.client_body_size)) {
 			clientData.flagFileSizeTooBig = true;
+			clientData.flagBodyRead = true;
+		}
 		if (static_cast<ssize_t>(clientData.bodyString.size()) == static_cast<ssize_t>(clientData.contentLength))
 			clientData.flagBodyRead = true;
 	}
