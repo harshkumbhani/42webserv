@@ -617,7 +617,7 @@ std::string HttpResponse::parentProcess(clientState &clientData) {
 			std::cout << "We are here - it timed out!" << std::endl;
 			return genericHttpCodeResponse(504, httpErrorMap.at(504));
 		}
-		return "xddddd"; // result is empty at this stage
+		return result; // result is empty at this stage
 	} else if (resultPid == -1) {
 		ERROR("waitpid failed");
 		close(clientData.fd[0]);
