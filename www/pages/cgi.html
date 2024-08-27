@@ -1,31 +1,37 @@
-<button onclick="goBack()" class="button-style">
-	Back
-</button>
 
-<div style="padding-top: 10px; display: flex; justify-content: space-between;">
+  <!--<div style="padding-top: 10px;">
+	<form action="/cgi/infiniteLoop.py" method="get" style="margin-bottom: 10px;">
+		<button class="button-style" style="width: 100%; padding: 10px; border-radius: 10px; background-color: #360143; color: white; border: none;">Infinite Loop Script</button>
+	</form>
+  </div>-->
+  <div style="padding-top: 10px; display: flex; justify-content: space-between; width: 800px;">
 	<form action="/cgi/infiniteLoop.py" method="get" style="flex: 1; margin-right: 10px;">
-			<button class="button-style" style="width: 100%; padding: 10px; border-radius: 5px; background-color: #360143; color: white; border: none;">Infinite Loop Script</button>
+		<button class="button-style" style="width: 100%; padding: 10px; border-radius: 10px; background-color: #360143; color: white; border: none;">Infinite Loop Script</button>
 	</form>
-
 	<form action="/cgi/invalid.py" method="post" style="flex: 1; margin-left: 10px;">
-			<button class="button-style" style="width: 100%; padding: 10px; border-radius: 5px; background-color: #3e0404; color: white; border: none;">Invalid Script</button>
+		<button class="button-style" style="width: 100%; padding: 10px; border-radius: 10px; background-color: #3E0404; color: white; border: none;">Invalid Script</button>
 	</form>
-</div>
-
-<div style="padding-top: 10px; display: flex; justify-content: space-between;">
+	<form action="/cgi/linux.sh" method="post" style="flex: 1; margin-left: 10px;">
+	  <button class="button-style" style="width: 100%; padding: 10px; border-radius: 10px; background-color: #3E0404; color: white; border: none;">Shell Script</button>
+  </form>
+  </div>
+  <div style="padding-top: 10px; display: flex; justify-content: space-between;">
 	<form action="/cgi/ascii.py" method="get" style="flex: 1; margin-right: 10px;">
-			<div style="margin-bottom: 15px;">
-					<label for="param-get" style="display: block; margin-bottom: 5px;">Simple word or Number</label>
-					<input id="param-get" required type="text" name="text" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ccc;">
-			</div>
-			<button class="button-style" style="width: 100%; padding: 10px; border-radius: 5px; background-color: #012245; color: white; border: none;">ASCII Generator (GET)</button>
+		<div style="margin-bottom: 15px;">
+			<label for="param-get" style="display: block; margin-bottom: 10px;">Simple word or Number</label>
+			<input id="param-get" required type="text" name="text" style="width: 100%; padding: 8px; border-radius: 10px; border: 1px solid #ccc;">
+		</div>
+		<button class="button-style" style="width: 100%; padding: 10px; border-radius: 10px; background-color: #012245; color: white; border: none;">ASCII Generator (GET)</button>
 	</form>
-
 	<form action="/cgi/ascii.py" method="post" style="flex: 1; margin-left: 10px;">
-			<div style="margin-bottom: 15px;">
-					<label for="param-post" style="display: block; margin-bottom: 5px;">Simple word or Number</label>
-					<input id="param-post" required type="text" name="text" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ccc;">
-			</div>
-			<button class="button-style" style="width: 100%; padding: 10px; border-radius: 5px; background-color: #01300c; color: white; border: none;">ASCII Generator (POST)</button>
+		<div style="margin-bottom: 15px;">
+			<label for="param-post" style="display: block; margin-bottom: 10px;">Simple word or Number</label>
+			<input id="param-post" required type="text" name="text" style="width: 100%; padding: 8px; border-radius: 10px; border: 1px solid #ccc;">
+		</div>
+		<button class="button-style" style="width: 100%; padding: 10px; border-radius: 10px; background-color: #01300C; color: white; border: none;">ASCII Generator (POST)</button>
 	</form>
-</div>
+  </div>
+
+  <button onclick="goBack()" class="button-style" style="margin-top: 50px; ">
+	Back
+  </button>
