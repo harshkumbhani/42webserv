@@ -6,7 +6,7 @@
 /*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:09:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/27 01:29:06 by hkumbhan         ###   ########.fr       */
+/*   Updated: 2024/08/27 13:14:06 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,8 @@
 #include <unistd.h>
 #include <vector>
 #include <sys/stat.h>
+#include <chrono>
+#include <thread>
 #include "Utils.hpp"
 
 enum status { OK = 200, NOT_FOUND = 404, BAD_REQUEST = 400 };
@@ -36,12 +38,11 @@ class HttpRequest;
 
 class HttpResponse {
 	private:
-		std::string _StatusLine;
-		std::string _Header;
-		std::string _Body;
-		std::string _Response;
-		int fd[2];
-		pid_t pid;
+		std::string _status_line;
+		std::string _header;
+		std::string _body;
+		std::string _response;
+
 		const std::map<int, std::string> httpErrorMap
 		{
 			{200,"OK"},
@@ -54,7 +55,9 @@ class HttpResponse {
 			{405,"Method Not Allowed Error"},
 			{413,"Payload Too Large"},
 			{500,"Internal Server Error"},
-			{501,"Not Implemented"}
+			{501,"Not Implemented"},
+			{502,"Bad Gateway"},
+			{504,"Gateway Timeout Server"}
 		};
 
 	public:
@@ -83,6 +86,9 @@ class HttpResponse {
 		std::string processCgi(clientState &clientData);
 		void	execute(clientState &clientData);
 		std::string parentProcess(clientState &clientData); 
+
+		std::string buildHttpResponse(const std::string& statusLine, const std::string& contentType,
+					const std::string& body, const clientState& clientData);
 
 		bool is_valid_str(const std::string &str);
 		bool is_valid_char(char c);

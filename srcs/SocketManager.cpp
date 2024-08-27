@@ -191,6 +191,13 @@ void SocketManager::pollin(pollfd &pollFd) {
 
 void SocketManager::pollout(pollfd &pollFd) {
 
+	HttpResponse response;
+
+	if (clients[pollFd.fd].isForked == true) {
+		clients[pollFd.fd].writeString = response.respond(clients[pollFd.fd]);
+		return ;
+	}
+
   if (clients[pollFd.fd].writeString.empty() == true) {
     WARNING("Response buffer Empty on socket: " << pollFd.fd);
     clients[pollFd.fd].clear();

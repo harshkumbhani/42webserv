@@ -6,7 +6,7 @@
 /*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/25 12:38:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/25 21:17:28 by hkumbhan         ###   ########.fr       */
+/*   Updated: 2024/08/27 13:25:22 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -218,7 +218,7 @@ void Parser::finaliseServer(ServerParser &server) {
   if (server.keepalive_timeout == 0)
     server.keepalive_timeout = 60;
   if (server.send_timeout == 0)
-    server.send_timeout = 100;
+    server.send_timeout = 5;
   if (server.autoindex == "")
     server.autoindex = "off";
   if (server.listen == 0)

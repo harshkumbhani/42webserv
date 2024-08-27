@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: harsh <harsh@student.42.fr>                +#+  +:+       +#+        */
+/*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2024/08/27 09:45:07 by harsh            ###   ########.fr       */
+/*   Updated: 2024/08/27 13:26:10 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,6 +79,18 @@ std::string HttpResponse::webserverStamp(void) {
 	return std::string(buf);
 }
 
+std::string HttpResponse::buildHttpResponse(const std::string& statusLine, const std::string& contentType, const std::string& body, const clientState& clientData) {
+	std::string header;
+	header = "Content-Type: " + contentType + "\r\n";
+	header += "Content-Length: " + std::to_string(body.size()) + "\r\n";
+	header += "Connection: keep-alive\r\n";
+	header += "Date: " + webserverStamp() + "\r\n";
+	header += "Server: Webserv/harsh/oreste/v1.0\r\n";
+	header += metaData(const_cast<clientState &>(clientData));
+
+	return statusLine + header + body;
+}
+
 std::string HttpResponse::errorHandlingGet(int code, clientState &clientData) {
 	std::string errorCode;
 	std::stringstream ss;
@@ -90,19 +102,19 @@ std::string HttpResponse::errorHandlingGet(int code, clientState &clientData) {
 	else if (code == 404) sms = "Not Found";
 	else if (code == 500) sms = "Internal Server Error";
 	else sms = "Unknown Error";
-	_StatusLine = clientData.requestLine[2] + " " + errorCode + " " + sms + "\r\n";
+	_status_line = clientData.requestLine[2] + " " + errorCode + " " + sms + "\r\n";
 	std::string status_page = statusCodes(code);
 	std::stringstream pageSizeStream;
 	pageSizeStream << status_page.size();
 	std::string pageSize;
 	pageSizeStream >> pageSize;
 
-	_Header = "Content-Type: text/html\r\nContent-Length: " + pageSize + "\r\nConnection: close\r\n";
-	_Body = status_page;
+	_header = "Content-Type: text/html\r\nContent-Length: " + pageSize + "\r\nConnection: close\r\n";
+	_body = status_page;
 	std::string headerMetaData = metaData(clientData);
-	_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
-	_Response = _StatusLine + _Header + _Body;
-	return _Response;
+	_header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+	_response = _status_line + _header + _body;
+	return _response;
 }
 
 std::string HttpResponse::deleteListing(clientState &clientData) {
@@ -150,12 +162,12 @@ std::string HttpResponse::deleteListing(clientState &clientData) {
 					<< "Delete</button></td>\n"
 					<< "</tr>\n";
 		}
-	_StatusLine = clientData.requestLine[2] + " 200 OK\r\n";
-	_Header = "Content-Type: text/html\r\nContent-Length: " + std::to_string(html.str().size()) + "\r\nConnection: keep-alive\r\n";
+	_status_line = clientData.requestLine[2] + " 200 OK\r\n";
+	_header = "Content-Type: text/html\r\nContent-Length: " + std::to_string(html.str().size()) + "\r\nConnection: keep-alive\r\n";
 	std::string headerMetaData = metaData(clientData);
-	_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
-	_Response = _StatusLine + _Header + html.str();
-	return _Response;
+	_header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+	_response = _status_line + _header + html.str();
+	return _response;
 }
 
 std::string HttpResponse::directoryListing(clientState &clientData) {
@@ -188,12 +200,12 @@ std::string HttpResponse::directoryListing(clientState &clientData) {
 			 << "</tr>\n";
 	}
 
-	_StatusLine = clientData.requestLine[2] + " 200 OK\r\n";
-	_Header = "Content-Type: text/html\r\nContent-Length: " + std::to_string(html.str().size()) + "\r\nConnection: keep-alive\r\n";
+	_status_line = clientData.requestLine[2] + " 200 OK\r\n";
+	_header = "Content-Type: text/html\r\nContent-Length: " + std::to_string(html.str().size()) + "\r\nConnection: keep-alive\r\n";
 	std::string headerMetaData = metaData(clientData);
-	_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
-	_Response = _StatusLine + _Header + html.str();
-	return _Response;
+	_header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+	_response = _status_line + _header + html.str();
+	return _response;
 }
 
 std::string HttpResponse::handleGetFile(clientState &clientData) {
@@ -225,18 +237,18 @@ std::string HttpResponse::handleGetFile(clientState &clientData) {
 			exit(42);
 		}
 		std::string buffer((std::istreambuf_iterator<char>(route_file)), std::istreambuf_iterator<char>());
-		_StatusLine = clientData.requestLine[2] + " 200 OK\r\n";
+		_status_line = clientData.requestLine[2] + " 200 OK\r\n";
 
-		_Header = "Content-Type: " + contentType + "\r\n"
+		_header = "Content-Type: " + contentType + "\r\n"
 							"Content-Length: " + std::to_string(statFile.st_size) + "\r\n"
 							"Connection: keep-alive\r\n";
-		_Body = buffer;
+		_body = buffer;
 		route_file.close();
 	}
 	std::string headerMetaData = metaData(clientData);
-	_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
-	_Response = _StatusLine + _Header + _Body;
-	return _Response;
+	_header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+	_response = _status_line + _header + _body;
+	return _response;
 }
 
 std::string HttpResponse::respond_Get(clientState &clientData) {
@@ -264,21 +276,21 @@ std::string HttpResponse::respond_Get(clientState &clientData) {
 			exit(42);
 		}
 		std::string buffer((std::istreambuf_iterator<char>(route_file)), std::istreambuf_iterator<char>());
-		_StatusLine = clientData.requestLine[2] + " 200 OK\r\n";
+		_status_line = clientData.requestLine[2] + " 200 OK\r\n";
 
 		std::stringstream ss;
 		ss << statFile.st_size;
 		std::string fileSize;
 		ss >> fileSize;
 
-		_Header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
-		_Body = buffer;
+		_header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
+		_body = buffer;
 		route_file.close();
 	}
 	std::string headerMetaData = metaData(clientData);
-	_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
-	_Response = _StatusLine + _Header + _Body;
-	return _Response;
+	_header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+	_response = _status_line + _header + _body;
+	return _response;
 }
 
 bool HttpResponse::is_valid_char(char c) {
@@ -293,7 +305,7 @@ bool HttpResponse::is_valid_str(const std::string &str) {
 	return true;
 }
 
-std::string buildHttpResponse(const std::string &httpVersion, int statusCode, const std::string &statusMessage, const std::string &body, const std::string &contentType = "text/html") {
+std::string generateHttpResponse(const std::string &httpVersion, int statusCode, const std::string &statusMessage, const std::string &body, const std::string &contentType = "text/html") {
 	std::string statusLine = httpVersion + " " + std::to_string(statusCode) + " " + statusMessage + "\r\n";
 	std::stringstream ss;
 	ss << body.size();
@@ -321,12 +333,11 @@ std::string HttpResponse::successHandling(int statusCode, clientState &clientDat
 			break;
 	}
 	std::string responseBody = messageBody.empty() ? "<html><body><h1>" + statusMessage + "</h1></body></html>" : messageBody;
-	return buildHttpResponse(clientData.requestLine[2], statusCode, statusMessage, responseBody);
+	return generateHttpResponse(clientData.requestLine[2], statusCode, statusMessage, responseBody);
 }
 
 std::string HttpResponse::errorHandlingPost(int statusCode, clientState &clientData) {
-
-	return buildHttpResponse(clientData.requestLine[2], statusCode,
+	return generateHttpResponse(clientData.requestLine[2], statusCode,
 			httpErrorMap.at(statusCode), generateErrorPage(statusCode, httpErrorMap.at(statusCode)));
 }
 
@@ -549,12 +560,12 @@ std::string HttpResponse::respondRedirect(clientState &clientData) {
 			} else {
 				clientData.header["Location"] = location.redirect;
 			}
-			_StatusLine = clientData.requestLine[2] + " 302 Found\r\n";
+			_status_line = clientData.requestLine[2] + " 302 Found\r\n";
 			std::string headerMetaData = metaData(clientData);
-			_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
-			_Response = _StatusLine + _Header;
+			_header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+			_response = _status_line + _header;
 
-			return _Response;
+			return _response;
 		}
 	}
 	return genericHttpCodeResponse(404, "Page Not Found");
@@ -563,50 +574,85 @@ std::string HttpResponse::respondRedirect(clientState &clientData) {
 /*--------   CGI   -----------*/
 
 std::string HttpResponse::processCgi(clientState &clientData) {
-	if (pipe(fd) == -1) {
+	if (clientData.isForked == true)
+		return parentProcess(clientData);
+	INFO("CGI start");
+	if (pipe(clientData.fd) == -1) {
 		ERROR("Pipe failed");
 		return genericHttpCodeResponse(500, httpErrorMap.at(500));
 	}
-	pid = fork();
-	if (pid == -1) {
+	clientData.pid = fork();
+	if (clientData.pid == -1) {
 		ERROR("Fork Failed");
-		close(fd[0]);
-		close(fd[1]);
+		close(clientData.fd[0]);
+		close(clientData.fd[1]);
 		return genericHttpCodeResponse(500, httpErrorMap.at(500));
 	}
-	if (pid == 0) {
-		close(fd[0]);
-		dup2(fd[1], STDOUT_FILENO);
-		close(fd[1]);
+	
+	clientData.isForked = true;
+	
+	if (clientData.pid == 0) {
+		close(clientData.fd[0]);
+		dup2(clientData.fd[1], STDOUT_FILENO);
+		close(clientData.fd[1]);
 		execute(clientData);
+		exit(1);
 	} else {
-		close(fd[1]);
+		close(clientData.fd[1]);
 		return parentProcess(clientData);
 	}
-	return "";
 }
 
 std::string HttpResponse::parentProcess(clientState &clientData) {
-	(void)clientData;
 	std::string result;
 	std::vector<char> buffer(4096);
 	
 	int status;
 	ssize_t count;
-	waitpid(pid, &status, 0);
-	if (WIFEXITED(status)) {
-		while ((count = read(fd[0], buffer.data(), buffer.size())) > 0) {
-			result.append(buffer.data(), count);
+
+	pid_t resultPid = waitpid(clientData.pid, &status, WNOHANG);
+	if (resultPid == 0) {
+		time_t currentTime = 0;
+
+		std::time(&currentTime);
+		if (std::difftime(currentTime, clientData.lastEventTime) > clientData.serverData.send_timeout) {
+			ERROR("CGI script timed out");
+			kill(clientData.pid, SIGKILL);
+			close(clientData.fd[0]);
+			clientData.isForked = false;
+			return genericHttpCodeResponse(504, httpErrorMap.at(504));
 		}
-		//std::cout << "\n\n\n result: \n\n" << result << "\n\n\n";
+		return result; // result is empty at this stage
+	} else if (resultPid == -1) {
+		ERROR("waitpid failed");
+		return genericHttpCodeResponse(502, httpErrorMap.at(502));
 	}
-	close(fd[0]);
-	_StatusLine = clientData.requestLine[2] + " 200 OK\r\n";
-	_Header = "Content-Type: text/html\r\nContent-Length: " + std::to_string(result.size()) + "\r\nConnection: keep-alive\r\n";
-	std::string headerMetaData = metaData(clientData);
-	_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
-	_Response = _StatusLine + _Header + result;
-	return _Response;
+	
+	if (WIFEXITED(status)) {
+		int exitStatus = WEXITSTATUS(status);
+		if (exitStatus == 0) {
+			while ((count = read(clientData.fd[0], buffer.data(), buffer.size())) > 0) {
+				result.append(buffer.data(), count);
+			}
+			
+			close(clientData.fd[0]);
+			clientData.isForked = false;
+			
+			if (result.empty()) {
+				return genericHttpCodeResponse(502, httpErrorMap.at(502));
+			}
+			_status_line = clientData.requestLine[2] + " 200 OK\r\n";
+			return buildHttpResponse(_status_line, "text/html", result, clientData);
+		} else {
+			ERROR("CGI Script exited with error status: " + std::to_string(exitStatus));
+			close(clientData.fd[0]);
+			return genericHttpCodeResponse(500, httpErrorMap.at(500));
+		}
+	} else {
+		ERROR("CGI script did not exit normally");
+		close(clientData.fd[0]);
+		return genericHttpCodeResponse(500, httpErrorMap.at(500));
+	}
 }
 
 void	HttpResponse::execute(clientState &clientData) {
@@ -649,7 +695,6 @@ void	HttpResponse::execute(clientState &clientData) {
 	
 	execve(args[0], args, env.data());
 	ERROR("execve failed");
-	exit(1);
 }
 
 

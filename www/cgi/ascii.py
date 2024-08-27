@@ -4,6 +4,9 @@ import os
 import urllib.parse
 
 # Function to generate ASCII art from text
+
+text = "42"
+
 def generate_ascii_art(text):
     ascii_art = {
         'A': ['  A  ', ' A A ', 'AAAAA', 'A   A', 'A   A'],

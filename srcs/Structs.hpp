@@ -96,7 +96,10 @@ struct clientState {
 	bool closeConnection;
 	bool flagFileSizeTooBig;
 	bool flagFileStatus;
+	bool isForked;
 	methods method;
+	int	fd[2];
+	pid_t	pid;
 	ssize_t bytesRead;
 	ssize_t contentLength;
 	time_t lastEventTime;
@@ -104,7 +107,7 @@ struct clientState {
 	std::vector<char> body;
 	std::string readString;
 	std::string writeString;
-	// std::map<std::string, std::string> requestLine;
+
 	std::vector<std::string> requestLine;
 	std::map<std::string, std::string> header;
 	ServerParser serverData;
@@ -118,7 +121,9 @@ struct clientState {
 	flagPartiallyRead = false;
 	isKeepAlive = false;
 	closeConnection = false;
+	isForked = false;
 	method = DEFAULT; // Or some default method
+	pid = -1;
 	bytesRead = -1;
 	contentLength = 0;
 	bodyString.clear();
