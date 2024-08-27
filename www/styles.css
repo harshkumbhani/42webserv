@@ -125,15 +125,7 @@ h2 {
 	border-radius: 5px;
 }
 
-.button-style {
-	padding: 10px 20px;
-	margin: 5px;
-	background-color: hsl(0, 0%, 3%);
-	color: white;
-	font-size: 25px;
-	border-radius: 10px;
-	cursor: pointer;
-}
+
 
 .delete-style {
 	padding: 10px 20px;
@@ -217,6 +209,16 @@ button:hover {
 	padding: 10px;
 }
 
+.button-style {
+	padding: 10px 20px;
+	margin: 5px;
+	background-color: hsl(0, 0%, 3%);
+	color: white;
+	font-size: 25px;
+	border-radius: 10px;
+	cursor: pointer;
+}
+
 .cgi_style {
 	padding-top: 10px;
 	margin-bottom:50px ;
@@ -228,4 +230,39 @@ button:hover {
 .cgi-button-right {
 	flex: 1;
 	margin-left: 10px;
+}
+
+.Invalid-Script-button {
+	width: 100%;
+	margin: 5px;
+	font-size: 25px;
+	padding: 10px;
+	border-radius: 10px;
+	background-color: #3E0404;
+	color: white;
+	border: none;
+	cursor: pointer;	
+}
+
+.Shell-Script-button {
+	width: 100%;
+	margin: 5px;
+	font-size: 25px;
+	padding: 10px;
+	border-radius: 10px;
+	background-color: #3E0404;
+	color: white;
+	border: none;
+	cursor: pointer;	
+}
+.Infinite-Loop-Script {
+	width: 100%;
+	margin: 5px;
+	font-size: 25px;
+	padding: 10px;
+	border-radius: 10px;
+	background-color: #360143;
+	color: white;
+	border: none;
+	cursor: pointer;	
 }
