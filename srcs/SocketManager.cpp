@@ -163,8 +163,8 @@ void SocketManager::pollin(pollfd &pollFd) {
     clients[pollFd.fd].bytesRead = bytesRead;
     clients[pollFd.fd].readString = std::string(buffer, bytesRead);
 
-    HttpRequest::requestBlock(clients[pollFd.fd]);
-    assignServerBlock(pollFd.fd);
+    HttpRequest::requestBlock(clients[pollFd.fd], servers);
+    // assignServerBlock(pollFd.fd);
     std::time(&clients[pollFd.fd].lastEventTime);
 
     HttpResponse response;

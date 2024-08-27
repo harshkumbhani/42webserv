@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   HttpResponse.hpp                                   :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/06/18 19:09:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/27 15:09:39 by hkumbhan         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef HTTPRESPONSE_HPP
 #define HTTPRESPONSE_HPP
 
@@ -79,7 +67,7 @@ class HttpResponse {
 		std::string deleteListing(clientState &clientData);
 		std::string directoryListing(clientState &clientData);
 		std::string handleGetFile(clientState &clientData);
-		
+
 		std::string respond_Get(clientState &clientData);
 		std::string response_Post(clientState &clientData);
 		std::string responseDelete(clientState &clientData);
