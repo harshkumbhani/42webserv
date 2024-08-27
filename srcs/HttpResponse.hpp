@@ -6,7 +6,7 @@
 /*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 19:09:00 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/27 13:14:06 by hkumbhan         ###   ########.fr       */
+/*   Updated: 2024/08/27 15:09:39 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,8 @@
 #include <chrono>
 #include <thread>
 #include "Utils.hpp"
+
+extern char **environ;
 
 enum status { OK = 200, NOT_FOUND = 404, BAD_REQUEST = 400 };
 
@@ -92,6 +94,7 @@ class HttpResponse {
 
 		bool is_valid_str(const std::string &str);
 		bool is_valid_char(char c);
+		bool checkSuffix(const std::string &str, const std::string &suffix);
 
 		std::string errorHandlingPost(int statusCode, clientState &clientData);
 		bool 		write_to_file(clientState &clientData, const std::string& path, const std::string& content);

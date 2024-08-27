@@ -1,16 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   HttpResponse.cpp                                   :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2024/08/27 14:04:08 by hkumbhan         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-
 #include "HttpResponse.hpp"
 
 HttpResponse::HttpResponse() {}
@@ -573,6 +560,13 @@ std::string HttpResponse::respondRedirect(clientState &clientData) {
 
 /*--------   CGI   -----------*/
 
+bool HttpResponse::checkSuffix(const std::string &str, const std::string &suffix) {
+	if (str.size() >= suffix.size()) {
+		return (str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0);
+	}
+	return false;
+}
+
 std::string HttpResponse::processCgi(clientState &clientData) {
 	if (clientData.isForked == true)
 		return parentProcess(clientData);
@@ -674,30 +668,40 @@ void	HttpResponse::execute(clientState &clientData) {
 		}
 	}
 
-	std::vector<std::string> env_strings = {
-	"QUERY_STRING=" + query,
-    "REQUEST_METHOD=" + clientData.requestLine[0],
-    "CONTENT_LENGTH=" + std::to_string(clientData.contentLength),
-    "GATEWAY_INTERFACE=CGI/1.1",
-    "SCRIPT_NAME=" + scriptname,
-    "SERVER_NAME=" + clientData.serverData.server_name,
-    "SERVER_PORT=" + std::to_string(clientData.serverData.listen),
-    "SERVER_PROTOCOL=HTTP/1.1"
-	};
+	if (checkSuffix(scriptname, ".py") == true) {
+		std::vector<std::string> env_strings = {
+		"QUERY_STRING=" + query,
+			"REQUEST_METHOD=" + clientData.requestLine[0],
+			"CONTENT_LENGTH=" + std::to_string(clientData.contentLength),
+			"GATEWAY_INTERFACE=CGI/1.1",
+			"SCRIPT_NAME=" + scriptname,
+			"SERVER_NAME=" + clientData.serverData.server_name,
+			"SERVER_PORT=" + std::to_string(clientData.serverData.listen),
+			"SERVER_PROTOCOL=HTTP/1.1"
+		};
 
-	std::vector<char*> env;
-	for (auto& str : env_strings) {
-		env.push_back(const_cast<char*>(str.c_str()));
+		std::vector<char*> env;
+		for (auto& str : env_strings) {
+			env.push_back(const_cast<char*>(str.c_str()));
+		}
+		env.push_back(nullptr);
+
+		char *args[] = {
+			const_cast<char *>("/usr/bin/python3"),
+			const_cast<char *>(scriptname.c_str()),
+			NULL
+		};
+		execve(args[0], args, env.data());
 	}
-	env.push_back(nullptr);
 
-	char *args[] = {
-		const_cast<char *>("/usr/bin/python3"),
-		const_cast<char *>(scriptname.c_str()),
-		NULL
-  };
+	if (checkSuffix(scriptname, ".sh")) {
+		char *args[] = {
+			const_cast<char *>(scriptname.c_str()),
+			NULL
+		};
+		execve(args[0], args, environ);
+	}
 	
-	execve(args[0], args, env.data());
 	ERROR("execve failed");
 }
 
