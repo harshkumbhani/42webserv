@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
+/*   By: harsh <harsh@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2024/08/27 01:53:21 by hkumbhan         ###   ########.fr       */
+/*   Updated: 2024/08/27 09:45:07 by harsh            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -606,8 +606,7 @@ std::string HttpResponse::parentProcess(clientState &clientData) {
 	std::string headerMetaData = metaData(clientData);
 	_Header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
 	_Response = _StatusLine + _Header + result;
-	std::cout << "\n\n\n" << _Response << "\n\n\n";
-	return result;
+	return _Response;
 }
 
 void	HttpResponse::execute(clientState &clientData) {
@@ -626,7 +625,7 @@ void	HttpResponse::execute(clientState &clientData) {
 	}
 
 	std::vector<std::string> env_strings = {
-		"QUERY_STRING=" + query,
+	"QUERY_STRING=" + query,
     "REQUEST_METHOD=" + clientData.requestLine[0],
     "CONTENT_LENGTH=" + std::to_string(clientData.contentLength),
     "GATEWAY_INTERFACE=CGI/1.1",
@@ -638,7 +637,7 @@ void	HttpResponse::execute(clientState &clientData) {
 
 	std::vector<char*> env;
 	for (auto& str : env_strings) {
-			env.push_back(const_cast<char*>(str.c_str()));
+		env.push_back(const_cast<char*>(str.c_str()));
 	}
 	env.push_back(nullptr);
 
