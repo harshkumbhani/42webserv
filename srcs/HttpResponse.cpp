@@ -605,9 +605,11 @@ std::string HttpResponse::parentProcess(clientState &clientData) {
 
 	pid_t resultPid = waitpid(clientData.pid, &status, WNOHANG);
 	if (resultPid == 0) {
+		//std::cout << "waitpid: " << resultPid << std::endl;
 		time_t currentTime = 0;
 
 		std::time(&currentTime);
+		std::cout << "diff time: " << std::difftime(currentTime, clientData.lastEventTime) << std::endl;
 		if (std::difftime(currentTime, clientData.lastEventTime) > clientData.serverData.send_timeout) {
 			ERROR("CGI script timed out");
 			kill(clientData.pid, SIGKILL);
