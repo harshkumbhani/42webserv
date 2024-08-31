@@ -569,7 +569,7 @@ bool HttpResponse::checkSuffix(const std::string &str, const std::string &suffix
 std::string HttpResponse::processCgi(clientState &clientData) {
 	if (clientData.isForked == true)
 		return parentProcess(clientData);
-	INFO("CGI start");
+	INFO("CGI start on socket: " << clientData.socketFd);
 	if (pipe(clientData.fd) == -1) {
 		ERROR("Pipe failed");
 		return genericHttpCodeResponse(500, httpErrorMap.at(500));
@@ -605,13 +605,11 @@ std::string HttpResponse::parentProcess(clientState &clientData) {
 
 	pid_t resultPid = waitpid(clientData.pid, &status, WNOHANG);
 	if (resultPid == 0) {
-		//std::cout << "waitpid: " << resultPid << std::endl;
 		time_t currentTime = 0;
 
 		std::time(&currentTime);
-		std::cout << "diff time: " << std::difftime(currentTime, clientData.lastEventTime) << std::endl;
 		if (std::difftime(currentTime, clientData.lastEventTime) > clientData.serverData.send_timeout) {
-			ERROR("CGI script timed out");
+			ERROR("CGI script timed out on socket: " << clientData.socketFd);
 			kill(clientData.pid, SIGKILL);
 			close(clientData.fd[0]);
 			clientData.isForked = false;
@@ -619,7 +617,7 @@ std::string HttpResponse::parentProcess(clientState &clientData) {
 		}
 		return result; // result is empty at this stage
 	} else if (resultPid == -1) {
-		ERROR("waitpid failed");
+		ERROR("waitpid failed on socket: " << clientData.socketFd);
 		close(clientData.fd[0]);
 		clientData.isForked = false;
 		return genericHttpCodeResponse(502, httpErrorMap.at(502));
@@ -641,13 +639,13 @@ std::string HttpResponse::parentProcess(clientState &clientData) {
 			_status_line = clientData.requestLine[2] + " 200 OK\r\n";
 			return buildHttpResponse(_status_line, "text/html", result, clientData);
 		} else {
-			ERROR("CGI Script exited with error status: " + std::to_string(exitStatus));
+			ERROR("CGI Script exited with error status: " + std::to_string(exitStatus) + " on socket: " << clientData.socketFd);
 			close(clientData.fd[0]);
 			clientData.isForked = false;
 			return genericHttpCodeResponse(500, httpErrorMap.at(500));
 		}
 	} else {
-		ERROR("CGI script did not exit normally");
+		ERROR("CGI script did not exit normally on socket: " << clientData.socketFd);
 		close(clientData.fd[0]);
 		clientData.isForked = false;
 		return genericHttpCodeResponse(500, httpErrorMap.at(500));

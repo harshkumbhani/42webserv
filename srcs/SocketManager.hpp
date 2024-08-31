@@ -46,7 +46,7 @@ class SocketManager {
   void acceptConnection(int &pollFd);
   void closeClientConnection(int &pollFd);
   void assignServerBlock(int &pollFd);
-  void checkAndCloseStaleConnections(struct pollfd &pollfd);
+  bool checkAndCloseStaleConnections(struct pollfd &pollfd);
 };
 
 std::ostream &operator<<(std::ostream &output, const clientState &clientState);

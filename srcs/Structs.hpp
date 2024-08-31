@@ -98,6 +98,7 @@ struct clientState {
 	bool flagFileStatus;
 	bool isForked;
 	methods method;
+	int socketFd;
 	int	fd[2];
 	pid_t	pid;
 	ssize_t bytesRead;
