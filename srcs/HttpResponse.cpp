@@ -633,7 +633,7 @@ void	HttpResponse::execute(clientState &clientData) {
 			const_cast<char *>(scriptname.c_str()),
 			NULL
 		};
-		execve("harsh", args, environ);
+		execve(args[0], args, environ);
 	}
 	
 	ERROR("execve failed");
