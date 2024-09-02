@@ -242,6 +242,8 @@ std::string HttpResponse::respond_Get(clientState &clientData) {
 
 	std::string route = clientData.serverData.root + (clientData.requestLine[1] == "/" ? "/index.html" : clientData.requestLine[1]);
 	if (clientData.requestLine[1].substr(0, 7) == "/upload" && std::filesystem::is_directory(route)) {
+		if (clientData.serverData.directory_listing == "off")
+			return genericHttpCodeResponse(403, httpErrorMap.at(403));
 		if (clientData.requestLine[1] == "/upload")
 			return deleteListing(clientData);
 		else
@@ -723,13 +725,23 @@ bool isMethodsAllowed(clientState &clientData) {
 		}
 	}
 
-	auto loc = std::find_if(locations.begin(), locations.end(), [](const Location& loc) {
-		return loc.path == "/";
+	std::string locationPath = (clientData.method == DELETE ? "/upload" : "/");
+	auto loc = std::find_if(locations.begin(), locations.end(), [&locationPath](const Location& loc) {
+		return loc.path == locationPath;
 	});
 
-	for (auto &method : loc->methods) {
-		if (method == clientData.requestLine[0]) {
-			return true;
+	if (loc == locations.end() && clientData.method == DELETE) {
+		locationPath = "/";
+		loc = std::find_if(locations.begin(), locations.end(), [&locationPath](const Location& loc) {
+			return loc.path == locationPath;
+		});
+	}
+
+	if (loc != locations.end()) {
+		for (auto &method : loc->methods) {
+			if (method == clientData.requestLine[0]) {
+				return true;
+			}
 		}
 	}
 	return false;
