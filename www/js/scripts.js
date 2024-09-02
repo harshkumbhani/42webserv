@@ -189,6 +189,7 @@ function loadGetCGI() {
 }
 
 const goBack = () => {
+	document.getElementById('directory-listing').style.display = 'none';
 	document.getElementById('content-placeholder').innerHTML = '';
 	document.getElementById('buttons').style.display = 'block';
 };
