@@ -142,8 +142,6 @@ void SocketManager::pollin(pollfd &pollFd) {
 
     HttpRequest::requestBlock(clients[pollFd.fd], servers);
     std::time(&clients[pollFd.fd].lastEventTime);
-
-    INFO("Request: " + clients[pollFd.fd].requestLine[0] + " url: " + clients[pollFd.fd].requestLine[1] + " on: " << pollFd.fd);
     HttpResponse response;
     switch (clients[pollFd.fd].method) {
     case DEFAULT:

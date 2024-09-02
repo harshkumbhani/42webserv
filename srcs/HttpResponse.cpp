@@ -523,7 +523,7 @@ std::string HttpResponse::processCgi(clientState &clientData) {
 		dup2(clientData.fd[1], STDOUT_FILENO);
 		close(clientData.fd[1]);
 		execute(clientData);
-		exit(1);
+		exit(42);
 	} else {
 		close(clientData.fd[1]);
 		return parentProcess(clientData);
@@ -559,6 +559,7 @@ std::string HttpResponse::parentProcess(clientState &clientData) {
 	
 	if (WIFEXITED(status)) {
 		int exitStatus = WEXITSTATUS(status);
+		std::cout << "exit value: " << exitStatus << std::endl;
 		if (exitStatus == 0) {
 			while ((count = read(clientData.fd[0], buffer.data(), buffer.size())) > 0) {
 				result.append(buffer.data(), count);
@@ -632,7 +633,7 @@ void	HttpResponse::execute(clientState &clientData) {
 			const_cast<char *>(scriptname.c_str()),
 			NULL
 		};
-		execve(args[0], args, environ);
+		execve("harsh", args, environ);
 	}
 	
 	ERROR("execve failed");

@@ -6,7 +6,7 @@
 /*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 18:55:01 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/09/02 16:06:56 by hkumbhan         ###   ########.fr       */
+/*   Updated: 2024/09/02 17:31:35 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,7 @@ void HttpRequest::requestBlock(clientState &clientData, std::vector<ServerParser
 				clientData.readString.clear();
 			}
 		}
+		INFO("Request: " + clientData.requestLine[0] + " url: " + clientData.requestLine[1] + " on: " << clientData.socketFd);
 	} else if (!clientData.flagBodyRead) {
 		clientData.bodyString.append(clientData.readString);
 	}
@@ -66,7 +67,6 @@ void HttpRequest::requestBlock(clientState &clientData, std::vector<ServerParser
 		clientData.contentLength = static_cast<ssize_t>(std::atol(contentLengthIt->second.c_str()));
 		if (clientData.contentLength > static_cast<ssize_t>(clientData.serverData.client_body_size)) {
 			clientData.flagFileSizeTooBig = true;
-			clientData.flagBodyRead = true;
 		}
 		if (static_cast<ssize_t>(clientData.bodyString.size()) == static_cast<ssize_t>(clientData.contentLength))
 			clientData.flagBodyRead = true;
