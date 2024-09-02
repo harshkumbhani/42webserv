@@ -6,7 +6,7 @@
 /*   By: hkumbhan <hkumbhan@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 18:55:01 by otuyishi          #+#    #+#             */
-/*   Updated: 2024/08/27 16:53:29 by hkumbhan         ###   ########.fr       */
+/*   Updated: 2024/09/02 16:06:56 by hkumbhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,6 +70,8 @@ void HttpRequest::requestBlock(clientState &clientData, std::vector<ServerParser
 		}
 		if (static_cast<ssize_t>(clientData.bodyString.size()) == static_cast<ssize_t>(clientData.contentLength))
 			clientData.flagBodyRead = true;
+	} else if (clientData.method == POST) {
+		clientData.flagBodyRead = true;
 	}
 	clientData.readString.clear();
 }

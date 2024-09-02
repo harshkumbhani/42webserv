@@ -29,19 +29,6 @@ std::string HttpResponse::generateHtml(int code, const std::string& codeMessage)
 	return stream.str();
 }
 
-std::string HttpResponse::statusCodes(int code) {
-	std::string codeMessage;
-	if (code == 400)
-		codeMessage = "Bad Request";
-	else if (code == 404)
-		codeMessage = "Not Found";
-	else if (code == 500)
-		codeMessage = "Internal Server Error";
-	else
-		codeMessage = "Unknown Code";
-	return generateHtml(code, codeMessage);
-}
-
 std::string HttpResponse::metaData(clientState &clientData) {
 	std::string headerMetaData = "";
 	std::map<std::string, std::string>::iterator hd = clientData.header.begin();
@@ -76,32 +63,6 @@ std::string HttpResponse::buildHttpResponse(const std::string& statusLine, const
 	header += metaData(const_cast<clientState &>(clientData));
 
 	return statusLine + header + body;
-}
-
-std::string HttpResponse::errorHandlingGet(int code, clientState &clientData) {
-	std::string errorCode;
-	std::stringstream ss;
-	ss << code;
-	ss >> errorCode;
-
-	std::string sms;
-	if (code == 400) sms = "Bad Request";
-	else if (code == 404) sms = "Not Found";
-	else if (code == 500) sms = "Internal Server Error";
-	else sms = "Unknown Error";
-	_status_line = clientData.requestLine[2] + " " + errorCode + " " + sms + "\r\n";
-	std::string status_page = statusCodes(code);
-	std::stringstream pageSizeStream;
-	pageSizeStream << status_page.size();
-	std::string pageSize;
-	pageSizeStream >> pageSize;
-
-	_header = "Content-Type: text/html\r\nContent-Length: " + pageSize + "\r\nConnection: close\r\n";
-	_body = status_page;
-	std::string headerMetaData = metaData(clientData);
-	_header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
-	_response = _status_line + _header + _body;
-	return _response;
 }
 
 std::string HttpResponse::deleteListing(clientState &clientData) {
@@ -216,7 +177,7 @@ std::string HttpResponse::handleGetFile(clientState &clientData) {
 	std::string contentType = g_mimeTypes[route.substr(pos + 1)];
 	std::ifstream route_file(route.c_str());
 	if (route_file.fail())
-		return errorHandlingGet(404, clientData);
+		return genericHttpCodeResponse(404, httpErrorMap.at(404));
 	else {
 		struct stat statFile;
 		if(stat(route.c_str(), &statFile) != 0) {
@@ -257,7 +218,7 @@ std::string HttpResponse::respond_Get(clientState &clientData) {
 	std::string contentType = g_mimeTypes[route.substr(pos + 1)];
 	std::ifstream route_file(route.c_str());
 	if (route_file.fail())
-		return errorHandlingGet(404, clientData);
+		return genericHttpCodeResponse(404, httpErrorMap.at(404));
 	else {
 		struct stat statFile;
 		if(stat(route.c_str(), &statFile) != 0) {
@@ -292,42 +253,6 @@ bool HttpResponse::is_valid_str(const std::string &str) {
 			return false;
 	}
 	return true;
-}
-
-std::string generateHttpResponse(const std::string &httpVersion, int statusCode, const std::string &statusMessage, const std::string &body, const std::string &contentType = "text/html") {
-	std::string statusLine = httpVersion + " " + std::to_string(statusCode) + " " + statusMessage + "\r\n";
-	std::stringstream ss;
-	ss << body.size();
-	std::string contentLength;
-	ss >> contentLength;
-	std::string headers = "Content-Type: " + contentType + "\r\nContent-Length: " + contentLength + "\r\nConnection: close\r\n";
-	return statusLine + headers + "\r\n" + body;
-}
-
-std::string HttpResponse::successHandling(int statusCode, clientState &clientData, const std::string &messageBody) {
-	std::string statusMessage;
-	switch (statusCode) {
-		case 200:
-			statusMessage = "OK";
-			break;
-		case 201:
-			statusMessage = "Created";
-			break;
-		case 202:
-			statusMessage = "Accepted";
-			break;
-		default:
-			statusCode = 200;
-			statusMessage = "OK";
-			break;
-	}
-	std::string responseBody = messageBody.empty() ? "<html><body><h1>" + statusMessage + "</h1></body></html>" : messageBody;
-	return generateHttpResponse(clientData.requestLine[2], statusCode, statusMessage, responseBody);
-}
-
-std::string HttpResponse::errorHandlingPost(int statusCode, clientState &clientData) {
-	return generateHttpResponse(clientData.requestLine[2], statusCode,
-			httpErrorMap.at(statusCode), generateErrorPage(statusCode, httpErrorMap.at(statusCode)));
 }
 
 bool HttpResponse::write_to_file(clientState &clientData, const std::string& path, const std::string& content) {
@@ -385,18 +310,18 @@ std::string HttpResponse::findBoundary(const std::map<std::string, std::string>&
 	return boundary;
 }
 
-void HttpResponse::parseRequestBody(clientState &clientData) {
+bool HttpResponse::parseRequestBody(clientState &clientData) {
 	std::string boundary = "--" + clientData.boundary;
 	std::size_t boundaryStart = clientData.bodyString.find(boundary);
 	if (boundaryStart == std::string::npos)
-		return;
+		return true;
 	std::size_t boundaryEnd = clientData.bodyString.find("\r\n", boundaryStart);
 	if (boundaryEnd == std::string::npos)
-		return;
+		return true;
 	boundaryEnd += 2;
 	std::size_t nextBoundaryStart = clientData.bodyString.find(boundary, boundaryEnd);
 	if (nextBoundaryStart == std::string::npos)
-		return;
+		return true;
 	std::string bodyPart = clientData.bodyString.substr(boundaryEnd, nextBoundaryStart - boundaryEnd);
 	std::istringstream contentStream(bodyPart);
 	std::string fileName;
@@ -404,27 +329,35 @@ void HttpResponse::parseRequestBody(clientState &clientData) {
 
 	parse_headers(contentStream, fileName, fileContent);
 	std::string filePath = "./www/upload/" + fileName;
+	clientData.fileName = filePath;
+	if (access(clientData.fileName.c_str(), F_OK) == 0)
+		return false;
 	write_to_file(clientData, filePath, fileContent);
-	clientData.fileName = fileName;
 	clientData.bodyString.erase(0, nextBoundaryStart);
 	clientData.flagBodyRead = true;
-	return;
+	return true;
 }
 
 std::string HttpResponse::response_Post(clientState &clientData) {
 	std::string route = "./www" + clientData.requestLine[1];
 	if (!is_valid_str(route))
-		return errorHandlingPost(400, clientData);
+		return genericHttpCodeResponse(400, httpErrorMap.at(400));
 
 	size_t pos = route.find_last_of('.');
 	std::string contentType = g_mimeTypes[route.substr(pos + 1)];
 
 	clientData.boundary = findBoundary(clientData.header);
-	parseRequestBody(clientData);
+	if (!parseRequestBody(clientData)) {
+		std::ifstream file(clientData.fileName.c_str());
+		std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+		size_t pos = clientData.fileName.find_last_of('.');
+		std::string contentType = g_mimeTypes[clientData.fileName.substr(pos + 1)];
+		_status_line = clientData.requestLine[2] + " 302 Found\r\n";
+		return buildHttpResponse(_status_line, contentType, buffer, clientData);
+	}
 	clientData.bodyString.clear();
 	if (clientData.flagFileStatus == true)
-		return (genericHttpCodeResponse(400, httpErrorMap.at(400)));
-	
+		return genericHttpCodeResponse(400, httpErrorMap.at(400));
 	return genericHttpCodeResponse(201, httpErrorMap.at(201));
 }
 
@@ -528,7 +461,6 @@ std::string urlDecode(const std::string& value) {
 std::string HttpResponse::responseDelete(clientState &clientData) {
 	std::string filename = urlDecode(clientData.requestLine[1].substr(clientData.requestLine[1].find("=") + 1));
 	const std::string& filePath = clientData.serverData.root + "/upload/" + filename;
-	std::cout << "\n\n\n\n\nfile name: " << filename << "\n\n\n";
 
 	FILE* file = std::fopen(filePath.c_str(), "r");
 	if (!file)
