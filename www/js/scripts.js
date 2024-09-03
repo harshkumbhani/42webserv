@@ -214,7 +214,7 @@ function closeTeapotModal() {
 
 
 const display = (whatToDisplay) => {
-	if (Math.random() < 1.0) { // 20% chance
+	if (Math.random() < 0.0) { // 20% chance
 		showTeapotModal();
 	} else if (whatToDisplay === 'get') {
 		loadGetPage();

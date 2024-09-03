@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Webserv</title>
+		<link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+		<link rel="stylesheet" href="../styles.css">
+	</head>
+	
+	<body>
+		<video autoplay muted loop id="background-video" id="troll">
+			<source src="catty.mp4" type="video/mp4">
+			Your browser does not support the video tag.
+		</video>
+		<audio src="audio.mp3" id="troll-audio"></audio>
+		<div>
+			<button onclick="closeTeapotModal()" class="button-style">OK, no coffee then!</button>
+		</div>
+
+		<script src="../js/scripts.js"></script>
+	</body>
+	<script>
+		window.addEventListener('DOMContentLoaded', (event) => {
+			const audioPlayer = document.getElementById('troll-audio');
+			audioPlayer.loop = true;
+			audioPlayer.play();
+		});
+	</script>
+</html>
