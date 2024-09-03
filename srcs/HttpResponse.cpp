@@ -559,7 +559,6 @@ std::string HttpResponse::parentProcess(clientState &clientData) {
 	
 	if (WIFEXITED(status)) {
 		int exitStatus = WEXITSTATUS(status);
-		std::cout << "exit value: " << exitStatus << std::endl;
 		if (exitStatus == 0) {
 			while ((count = read(clientData.fd[0], buffer.data(), buffer.size())) > 0) {
 				result.append(buffer.data(), count);
