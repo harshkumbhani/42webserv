@@ -87,18 +87,6 @@ document.getElementById('deleteButton').addEventListener('click', function() {
 	}
 });
 
-document.addEventListener('click', function() {
-	var audio = document.getElementById('notification');
-	audio.muted = false;
-	audio.play().catch(function(error) {
-		console.error('Audio playback failed:', error);
-	});
-}, { once: true });
-
-//function loadDeleteListing() {
-//	window.location.href = './../delete_listing.html';
-//}
-
 function loadDirectoryListing(path) {
 	document.getElementById('buttons').style.display = 'none';
 	fetch(path)
@@ -226,7 +214,7 @@ function closeTeapotModal() {
 
 
 const display = (whatToDisplay) => {
-	if (Math.random() < 0.0) { // 20% chance
+	if (Math.random() < 1.0) { // 20% chance
 		showTeapotModal();
 	} else if (whatToDisplay === 'get') {
 		loadGetPage();
