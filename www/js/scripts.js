@@ -133,19 +133,20 @@ function addDirectoryLinkListeners() {
 		link.addEventListener('click', function (event) {
 			event.preventDefault();  // Prevent default link behavior
 			loadDirectoryListing(this.getAttribute('href'));  // Load the clicked directory
-		});
-	});
-}
-
-// Initial setup
-document.addEventListener('DOMContentLoaded', function() {
-	addDirectoryLinkListeners();
-});
-
+			});
+			});
+			}
+			
+			// Initial setup
+			document.addEventListener('DOMContentLoaded', function() {
+				addDirectoryLinkListeners();
+				});
+				
 function loadGetPage() {
 	// Hide the buttons
 	document.getElementById('buttons').style.display = 'none';
-
+	console.log(" I am here in GET");
+	
 	// Load the content of getPage.html
 	fetch('/pages/getPage.html')
 	.then(response => response.text())
@@ -214,3 +215,28 @@ const getImage = async () => {
 			alert('Error: ' + error.message);
 	}
 };
+
+function showTeapotModal() {
+	window.location.href='./../.troll/troll.html';
+}
+
+function closeTeapotModal() {
+	window.history.back();
+}
+
+
+const display = (whatToDisplay) => {
+	if (Math.random() < 0.0) { // 20% chance
+		showTeapotModal();
+	} else if (whatToDisplay === 'get') {
+		loadGetPage();
+	} else if (whatToDisplay === 'post') {
+		openModal();
+	} else if (whatToDisplay === 'upload') {
+		loadDirectoryListing('/upload');
+	} else if (whatToDisplay === 'cgi') {
+		loadGetCGI();
+	} else if (whatToDisplay === 'redirect') {
+		window.location.href='/redirect';
+	}
+}

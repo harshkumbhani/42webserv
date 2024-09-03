@@ -20,11 +20,11 @@
 		
     <!-- Button container will disappear when DELETE is clicked -->
     <div class="button-container" id="buttons">
-			<button class="button-style" onclick="loadGetPage()">GET</button>
-			<button class="button-style" onclick="openModal()">POST</button>
-			<button class="button-style" onclick="loadDirectoryListing('/upload')">DELETE</button>
-			<button class="button-style" onclick="loadGetCGI()">CGI</button>
-			<button class="button-style" onclick="window.location.href='/redirect'">REDIRECTION</button>
+			<button class="button-style" onclick="display('get')">GET</button>
+			<button class="button-style" onclick="display('post')">POST</button>
+			<button class="button-style" onclick="display('upload')">DELETE</button>
+			<button class="button-style" onclick="display('cgi')">CGI</button>
+			<button class="button-style" onclick="display('redirect')">REDIRECTION</button>
 			</div>
 			
 		<div id="content-placeholder"></div>
@@ -63,6 +63,9 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- Teapot Modal -->
+
 
 	<script src="./js/scripts.js"></script>
 
