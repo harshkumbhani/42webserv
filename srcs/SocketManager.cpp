@@ -165,7 +165,6 @@ void SocketManager::pollin(pollfd &pollFd) {
 
 
 void SocketManager::pollout(pollfd &pollFd) {
-
 	HttpResponse response;
 
 	if (clients[pollFd.fd].isForked == true) {
@@ -203,8 +202,11 @@ void SocketManager::pollout(pollfd &pollFd) {
 }
 
 bool SocketManager::checkAndCloseStaleConnections(struct pollfd &pollFd) {
-  time_t currentTime = 0;
+  if (clients[pollFd.fd].serverData.server_name.empty() == true) {
+    return false;
+  }
 
+  time_t currentTime = 0;
   std::time(&currentTime);
   if ((clients[pollFd.fd].closeConnection == true) ||
       std::difftime(currentTime, clients[pollFd.fd].lastEventTime) > clients[pollFd.fd].serverData.keepalive_timeout) {

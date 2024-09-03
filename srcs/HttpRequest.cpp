@@ -33,12 +33,7 @@ void HttpRequest::requestBlock(clientState &clientData, std::vector<ServerParser
 				clientData.readString.clear();
 			}
 		}
-		INFO("Request: " + clientData.requestLine[0] + " url: " + clientData.requestLine[1] + " on: " << clientData.socketFd);
-	} else if (!clientData.flagBodyRead) {
-		clientData.bodyString.append(clientData.readString);
-	}
 
-	if (clientData.serverData.root.empty() == true) {
 		auto hostIt = clientData.header.find("Host");
 
 		if (hostIt == clientData.header.end())
@@ -60,6 +55,9 @@ void HttpRequest::requestBlock(clientState &clientData, std::vector<ServerParser
 				}
 			}
 		}
+		INFO("Request: " + clientData.requestLine[0] + " url: " + clientData.requestLine[1] + " on: " << clientData.socketFd);
+	} else if (!clientData.flagBodyRead) {
+		clientData.bodyString.append(clientData.readString);
 	}
 
 	std::map<std::string, std::string>::iterator contentLengthIt = clientData.header.find("Content-Length");

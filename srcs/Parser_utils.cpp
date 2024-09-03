@@ -15,7 +15,7 @@
 
 void Parser::finaliseServer(ServerParser &server) {
   if (server.keepalive_timeout == 0)
-    server.keepalive_timeout = 60;
+    server.keepalive_timeout = 15;
   if (server.send_timeout == 0)
     server.send_timeout = 5;
   if (server.autoindex == "")

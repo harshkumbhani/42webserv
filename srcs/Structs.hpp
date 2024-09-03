@@ -133,7 +133,6 @@ struct clientState {
 	writeString.clear();
 	requestLine.clear();
 	header.clear();
-	serverData.clear(); // Assuming ServerParser has a clear method
 	contentType.clear();
 	boundary.clear();
 	fileName.clear();
