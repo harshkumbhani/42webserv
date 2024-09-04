@@ -330,6 +330,10 @@ bool HttpResponse::parseRequestBody(clientState &clientData) {
 	parse_headers(contentStream, fileName, fileContent);
 	std::string filePath = "./www/upload/" + fileName;
 	clientData.fileName = filePath;
+	if (fileName.empty()) {
+		clientData.flagFileStatus = true;
+		return true;
+	}
 	if (access(clientData.fileName.c_str(), F_OK) == 0)
 		return false;
 	write_to_file(clientData, filePath, fileContent);
