@@ -182,23 +182,25 @@ void SocketManager::pollout(pollfd &pollFd) {
 	ssize_t bytesSend = send(pollFd.fd, clients[pollFd.fd].writeString.c_str(),
 														clients[pollFd.fd].writeString.size(), 0);
 
-	if (bytesSend > 0) {
-		std::time(&clients[pollFd.fd].lastEventTime);
-		clients[pollFd.fd].writeString.erase(0, bytesSend);
-		if (clients[pollFd.fd].writeString.empty() == true) {
-			SUCCESS("Response sent successfully on socket: " << pollFd.fd);
-			if (clients[pollFd.fd].isKeepAlive == false) {
-				clients[pollFd.fd].closeConnection = true;
-			}
-			pollFd.events = POLLIN;
-			clients[pollFd.fd].clear();
-		}
-	} else if (bytesSend == 0) {
-		WARNING("Empty response sent on socket: " << pollFd.fd);
-	} else {
+  if (bytesSend == 0) {
+    WARNING("Empty response sent on socket: " << pollFd.fd);
+    return;
+  } else if (bytesSend == -1) {
 		ERROR("Failed to send a response on socket: " << pollFd.fd);
 		clients[pollFd.fd].closeConnection = true;
-	}
+    return ;
+  }
+
+  std::time(&clients[pollFd.fd].lastEventTime);
+  clients[pollFd.fd].writeString.erase(0, bytesSend);
+  if (clients[pollFd.fd].writeString.empty() == true) {
+    SUCCESS("Response sent successfully on socket: " << pollFd.fd);
+    if (clients[pollFd.fd].isKeepAlive == false) {
+      clients[pollFd.fd].closeConnection = true;
+    }
+    pollFd.events = POLLIN;
+    clients[pollFd.fd].clear();
+  }
 }
 
 bool SocketManager::checkAndCloseStaleConnections(struct pollfd &pollFd) {

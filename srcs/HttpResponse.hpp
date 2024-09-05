@@ -63,16 +63,15 @@ class HttpResponse {
 		std::string generateErrorPage(int code, const std::string& message);
 		std::string generateHtml(int code, const std::string& codeMessage);
 		std::string respond(clientState &clientData);
-		std::string successHandling(int statusCode, clientState &clientData, const std::string &messageBody = "");
 
 		std::string deleteListing(clientState &clientData);
 		std::string directoryListing(clientState &clientData);
 		std::string handleGetFile(clientState &clientData);
 
-		std::string respond_Get(clientState &clientData);
-		std::string response_Post(clientState &clientData);
+		std::string responseGet(clientState &clientData);
+		std::string responsePost(clientState &clientData);
 		std::string responseDelete(clientState &clientData);
-		std::string respondRedirect(clientState &clientData);
+		std::string responseRedirect(clientState &clientData);
 
 		std::string processCgi(clientState &clientData);
 		void	execute(clientState &clientData);
@@ -85,8 +84,8 @@ class HttpResponse {
 		bool is_valid_char(char c);
 		bool checkSuffix(const std::string &str, const std::string &suffix);
 
-		bool 		write_to_file(clientState &clientData, const std::string& path, const std::string& content);
-		void		parse_headers(std::istringstream& contentStream, std::string& fileName, std::string& fileContent);
+		bool 		writeToFile(clientState &clientData, const std::string& path, const std::string& content);
+		void		parseHeaders(std::istringstream& contentStream, std::string& fileName, std::string& fileContent);
 		std::string	findBoundary(const std::map<std::string, std::string>& headers);
 		bool		parseRequestBody(clientState &clientData);
 		std::string	genericHttpCodeResponse(int statusCode, const std::string& message);

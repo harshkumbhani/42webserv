@@ -90,7 +90,7 @@ std::string HttpResponse::deleteListing(clientState &clientData) {
 		const auto &path = entry.path();
 		std::string filename = path.filename().string();
 		std::string icon = entry.is_directory() ? "📁" : "📄";
-		std::string deleteLink = "/delete?file=" + filename;
+		std::string deleteLink = "/delete?file=" + clientData.requestLine[1] + "/" + filename;
 
 		html << "<tr>\n"
 					<< "    <td>" << icon << "</td>\n"
@@ -99,7 +99,7 @@ std::string HttpResponse::deleteListing(clientState &clientData) {
 					<< "fetch('" << deleteLink << "', {method: 'DELETE'})"
 					<< ".then(function(response) { "
 					<< "if (response.ok) { "
-					<< "loadDirectoryListing('/upload');"  // Reload the directory listing without closing it
+					<< "loadDirectoryListing('" << clientData.requestLine[1] << "');"  // Reload the directory listing without closing it
 					<< "} else { "
 					<< "alert('Delete failed with status: ' + response.status);"
 					<< "}"
@@ -119,42 +119,61 @@ std::string HttpResponse::deleteListing(clientState &clientData) {
 }
 
 std::string HttpResponse::directoryListing(clientState &clientData) {
-	std::string directoryPath = clientData.serverData.root + clientData.requestLine[1];
-	
-	if (!std::filesystem::is_directory(directoryPath)) {
-		return genericHttpCodeResponse(404, "Not Found");
-	}
-	
-	std::ostringstream html;
-	html << "<table style=\"width: 100%; text-align: center;\">\n"
-		 << "    <thead>\n"
-		 << "        <tr>\n"
-		 << "            <th colspan=\"2\" style=\"font-weight: bold; color: black; text-align: center;\">Directory: " + directoryPath + "</th>\n"
-		 << "        </tr>\n"
-		 << "        <tr>\n"
-		 << "            <th>Icon</th>\n"
-		 << "            <th>Name</th>\n"
-		 << "        </tr>\n"
-		 << "    </thead>\n";
+    std::string directoryPath = clientData.serverData.root + clientData.requestLine[1];
+    
+    std::ostringstream html;
+    // Adding a dark background style and light-colored text for the directory listing
+    html << "<!DOCTYPE html>\n"
+         << "<html>\n"
+         << "<head>\n"
+		 << "<link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css\">\n"
+         << "<title>Directory Listing</title>\n"
+         << "<style>\n"
+         << "  body { background-color: #121212; color: #f5f5f5; font-family: Arial, sans-serif; }\n"
+         << "  table { width: 100%; text-align: left; border-collapse: collapse; }\n"
+         << "  th, td { padding: 10px; border-bottom: 1px solid #333; }\n"
+         << "  a { color: #64b5f6; text-decoration: none; }\n"
+         << "  a:hover { text-decoration: underline; }\n"
+         << "  th { color: #f5f5f5; font-weight: bold; }\n"
+         << "</style>\n"
+         << "</head>\n"
+         << "<body>\n"
+         << "<h2>Directory: " + directoryPath + "</h2>\n"
+         << "<table>\n"
+         << "    <thead>\n"
+         << "        <tr>\n"
+         << "            <th>Icon</th>\n"
+         << "            <th>Name</th>\n"
+         << "        </tr>\n"
+         << "    </thead>\n"
+         << "    <tbody>\n";
 
-	for (const auto &entry : std::filesystem::directory_iterator(directoryPath)) {
-		const auto &path = entry.path();
-		std::string filename = path.filename().string();
-		std::string icon = entry.is_directory() ? "📁" : "📄";
+    for (const auto &entry : std::filesystem::directory_iterator(directoryPath)) {
+        const auto &path = entry.path();
+        std::string filename = path.filename().string();
+        // Use FontAwesome icons instead of emojis
+		std::string icon = entry.is_directory() ? "<i class=\"fa-solid fa-folder\" style=\"color: #B197FC;\"></i>" : "<i class=\"fa-solid fa-file\" style=\"color: #babec5;\"></i>";
 
-		html << "<tr>\n"
-			 << "    <td>" << icon << "</td>\n"
-			 << "    <td><a href=\"" << clientData.requestLine[1] + "/" + filename << "\">" << filename << "</a></td>\n"
-			 << "</tr>\n";
-	}
 
-	_status_line = clientData.requestLine[2] + " 200 OK\r\n";
-	_header = "Content-Type: text/html\r\nContent-Length: " + std::to_string(html.str().size()) + "\r\nConnection: keep-alive\r\n";
-	std::string headerMetaData = metaData(clientData);
-	_header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
-	_response = _status_line + _header + html.str();
-	return _response;
+        html << "<tr>\n"
+             << "    <td>" << icon << "</td>\n"
+             << "    <td><a href=\"" << clientData.requestLine[1] + "/" + filename << "\">" << filename << "</a></td>\n"
+             << "</tr>\n";
+    }
+
+    html << "    </tbody>\n"
+         << "</table>\n"
+         << "</body>\n"
+         << "</html>\n";
+
+    _status_line = clientData.requestLine[2] + " 200 OK\r\n";
+    _header = "Content-Type: text/html\r\nContent-Length: " + std::to_string(html.str().size()) + "\r\nConnection: keep-alive\r\n";
+    std::string headerMetaData = metaData(clientData);
+    _header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+    _response = _status_line + _header + html.str();
+    return _response;
 }
+
 
 std::string HttpResponse::handleGetFile(clientState &clientData) {
 	static int i = 0;
@@ -199,27 +218,29 @@ std::string HttpResponse::handleGetFile(clientState &clientData) {
 	return _response;
 }
 
-std::string HttpResponse::respond_Get(clientState &clientData) {
+std::string HttpResponse::responseGet(clientState &clientData) {
 
 	std::string route = clientData.serverData.root + (clientData.requestLine[1] == "/" ? "/index.html" : clientData.requestLine[1]);
 	if (clientData.requestLine[1].substr(0, 7) == "/upload" && std::filesystem::is_directory(route)) {
 		if (clientData.serverData.directory_listing == "off")
 			return genericHttpCodeResponse(403, httpErrorMap.at(403));
-		if (clientData.requestLine[1] == "/upload")
-			return deleteListing(clientData);
-		else
-			return directoryListing(clientData);
+		return deleteListing(clientData);
 	}
 	if (clientData.requestLine[1] == "/get-files") {
+		clientData.header["X-File-Type"] = "file";
 		return handleGetFile(clientData);
 	}
-	clientData.header["X-File-Type"] = "file";
 	size_t pos = route.find_last_of('.');
 	std::string contentType = g_mimeTypes[route.substr(pos + 1)];
 	std::ifstream route_file(route.c_str());
 	if (route_file.fail())
 		return genericHttpCodeResponse(404, httpErrorMap.at(404));
 	else {
+		if (std::filesystem::is_directory(route)) {
+			return directoryListing(clientData); 
+		}
+		clientData.header["X-File-Type"] = "file";
+
 		struct stat statFile;
 		if(stat(route.c_str(), &statFile) != 0) {
 			WARNING("Unable to get file properties");
@@ -255,7 +276,7 @@ bool HttpResponse::is_valid_str(const std::string &str) {
 	return true;
 }
 
-bool HttpResponse::write_to_file(clientState &clientData, const std::string& path, const std::string& content) {
+bool HttpResponse::writeToFile(clientState &clientData, const std::string& path, const std::string& content) {
 	std::ofstream outFile(path.c_str(), std::ios::binary);
 	if (!outFile){
 		WARNING("Error: Unable to open file for writing: " + path);
@@ -270,7 +291,7 @@ bool HttpResponse::write_to_file(clientState &clientData, const std::string& pat
 	return (clientData.flagFileStatus);
 }
 
-void HttpResponse::parse_headers(std::istringstream& contentStream, std::string& fileName, std::string& fileContent) {
+void HttpResponse::parseHeaders(std::istringstream& contentStream, std::string& fileName, std::string& fileContent) {
 	std::string line;
 	bool headerParsed = false;
 
@@ -327,7 +348,7 @@ bool HttpResponse::parseRequestBody(clientState &clientData) {
 	std::string fileName;
 	std::string fileContent;
 
-	parse_headers(contentStream, fileName, fileContent);
+	parseHeaders(contentStream, fileName, fileContent);
 	std::string filePath = "./www/upload/" + fileName;
 	clientData.fileName = filePath;
 	if (fileName.empty()) {
@@ -336,13 +357,13 @@ bool HttpResponse::parseRequestBody(clientState &clientData) {
 	}
 	if (access(clientData.fileName.c_str(), F_OK) == 0)
 		return false;
-	write_to_file(clientData, filePath, fileContent);
+	writeToFile(clientData, filePath, fileContent);
 	clientData.bodyString.erase(0, nextBoundaryStart);
 	clientData.flagBodyRead = true;
 	return true;
 }
 
-std::string HttpResponse::response_Post(clientState &clientData) {
+std::string HttpResponse::responsePost(clientState &clientData) {
 	std::string route = "./www" + clientData.requestLine[1];
 	if (!is_valid_str(route))
 		return genericHttpCodeResponse(400, httpErrorMap.at(400));
@@ -464,7 +485,7 @@ std::string urlDecode(const std::string& value) {
 
 std::string HttpResponse::responseDelete(clientState &clientData) {
 	std::string filename = urlDecode(clientData.requestLine[1].substr(clientData.requestLine[1].find("=") + 1));
-	const std::string& filePath = clientData.serverData.root + "/upload/" + filename;
+	const std::string& filePath = clientData.serverData.root + filename;
 
 	FILE* file = std::fopen(filePath.c_str(), "r");
 	if (!file)
@@ -476,7 +497,7 @@ std::string HttpResponse::responseDelete(clientState &clientData) {
 		return genericHttpCodeResponse(500, std::strerror(errno));
 }
 
-std::string HttpResponse::respondRedirect(clientState &clientData) {
+std::string HttpResponse::responseRedirect(clientState &clientData) {
 	for (auto &location : clientData.serverData.location) {
 		if (!location.redirect.empty()) {
 			if (location.redirect.substr(0, 7) != "http://" && location.redirect.substr(0, 8) != "https://") {
@@ -594,8 +615,8 @@ void	HttpResponse::execute(clientState &clientData) {
 	std::string scriptname;
 	std::string query;
 	
+	scriptname = clientData.serverData.root + clientData.requestLine[1];
 	if (clientData.method == POST) {
-		scriptname = clientData.serverData.root + clientData.requestLine[1];
 		query = clientData.bodyString;
 	} else if (clientData.method == GET) {
 		size_t pos = clientData.requestLine[1].find('?');
@@ -686,16 +707,17 @@ bool isMethodsAllowed(clientState &clientData) {
 std::string HttpResponse::respond(clientState &clientData) {
 	if (isMethodsAllowed(clientData) == false)
 		return genericHttpCodeResponse(405, httpErrorMap.at(405));
+
 	if (clientData.requestLine[1] == "/redirect") {
-		return respondRedirect(clientData);
-	} else if (clientData.requestLine[1].substr(0, 4) == "/cgi") {
+		return responseRedirect(clientData);
+	} else if (clientData.requestLine[1].size() > 4 && clientData.requestLine[1].substr(0, 4) == "/cgi") {
 		return processCgi(clientData);
 	} else if (clientData.requestLine[0] == "GET") {
-		return respond_Get(clientData);
+		return responseGet(clientData);
 	} else if (clientData.requestLine[0] == "POST") {
 		if (clientData.flagFileSizeTooBig)
 			return (genericHttpCodeResponse(413, httpErrorMap.at(413)));
-		return response_Post(clientData);
+		return responsePost(clientData);
 	} else if (clientData.requestLine[0] == "DELETE") {
 		return responseDelete(clientData);
 	} else {
