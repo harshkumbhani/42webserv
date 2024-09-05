@@ -93,6 +93,12 @@ function loadDirectoryListing(path) {
 	.then(response => {
 		const contentType = response.headers.get('Content-Type');
 		const isFile = response.headers.get('X-File-Type') === 'file';
+		const fileURL = response.url;
+
+		// Debugging logs
+		console.log('Content-Type:', contentType);
+		console.log('Is File:', isFile);
+		console.log('File URL:', fileURL);
 
 		if (contentType && contentType.startsWith('text/html') && !isFile) {
 			return response.text().then(htmlSnippet => {
@@ -101,14 +107,14 @@ function loadDirectoryListing(path) {
 				addDirectoryLinkListeners();  // Re-add listeners to the newly loaded content
 			});
 		} else {
-			const fileURL = response.url;
 			window.open(fileURL, '_blank');  // Open the file in a new tab
 		}
 	})
 	.catch(error => {
-			console.error('Error loading directory listing:', error);
+		console.error('Error loading directory listing:', error);
 	});
 }
+
 
 function closeDirectoryListing() {
 	document.getElementById('directory-listing').style.display = 'none';
@@ -121,14 +127,14 @@ function addDirectoryLinkListeners() {
 		link.addEventListener('click', function (event) {
 			event.preventDefault();  // Prevent default link behavior
 			loadDirectoryListing(this.getAttribute('href'));  // Load the clicked directory
-			});
-			});
-			}
+		});
+	});
+}
 			
 			// Initial setup
-			document.addEventListener('DOMContentLoaded', function() {
-				addDirectoryLinkListeners();
-				});
+document.addEventListener('DOMContentLoaded', function() {
+	addDirectoryLinkListeners();
+});
 				
 function loadGetPage() {
 	// Hide the buttons

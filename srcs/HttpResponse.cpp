@@ -235,42 +235,43 @@ std::string HttpResponse::responseGet(clientState &clientData) {
 	std::ifstream route_file(route.c_str());
 	if (route_file.fail())
 		return genericHttpCodeResponse(404, httpErrorMap.at(404));
-	else {
-		if (std::filesystem::is_directory(route)) {
-			return directoryListing(clientData); 
-		}
-		clientData.header["X-File-Type"] = "file";
 
-		struct stat statFile;
-		if(stat(route.c_str(), &statFile) != 0) {
-			WARNING("Unable to get file properties");
-			exit(42);
-		}
-		std::string buffer((std::istreambuf_iterator<char>(route_file)), std::istreambuf_iterator<char>());
-		_status_line = clientData.requestLine[2] + " 200 OK\r\n";
-
-		std::stringstream ss;
-		ss << statFile.st_size;
-		std::string fileSize;
-		ss >> fileSize;
-
-		_header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
-		_body = buffer;
-		route_file.close();
+	if (std::filesystem::is_directory(route) && clientData.serverData.directory_listing == "on") {
+		return directoryListing(clientData); 
 	}
+	clientData.header["X-File-Type"] = "file";
+
+	struct stat statFile;
+	if(stat(route.c_str(), &statFile) != 0) {
+		WARNING("Unable to get file properties");
+		return genericHttpCodeResponse(500, httpErrorMap.at(500));
+	}
+
+	std::string buffer((std::istreambuf_iterator<char>(route_file)), std::istreambuf_iterator<char>());
+	_status_line = clientData.requestLine[2] + " 200 OK\r\n";
+
+	std::stringstream ss;
+	ss << statFile.st_size;
+	std::string fileSize;
+	ss >> fileSize;
+
+	_header = "Content-Type: " + contentType + "\r\nContent-Length: " + fileSize + "\r\nConnection: keep-alive\r\n";
+	_body = buffer;
+	route_file.close();
+
 	std::string headerMetaData = metaData(clientData);
 	_header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
 	_response = _status_line + _header + _body;
 	return _response;
 }
 
-bool HttpResponse::is_valid_char(char c) {
+bool HttpResponse::isValidChar(char c) {
 	return isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~' || c == '/';
 }
 
-bool HttpResponse::is_valid_str(const std::string &str) {
+bool HttpResponse::isValidStr(const std::string &str) {
 	for (size_t i = 0; i < str.length(); ++i) {
-		if (!is_valid_char(str[i]))
+		if (!isValidChar(str[i]))
 			return false;
 	}
 	return true;
@@ -365,7 +366,7 @@ bool HttpResponse::parseRequestBody(clientState &clientData) {
 
 std::string HttpResponse::responsePost(clientState &clientData) {
 	std::string route = "./www" + clientData.requestLine[1];
-	if (!is_valid_str(route))
+	if (!isValidStr(route) || clientData.bodyString.empty())
 		return genericHttpCodeResponse(400, httpErrorMap.at(400));
 
 	size_t pos = route.find_last_of('.');
@@ -526,6 +527,7 @@ bool HttpResponse::checkSuffix(const std::string &str, const std::string &suffix
 }
 
 std::string HttpResponse::processCgi(clientState &clientData) {
+	
 	if (clientData.isForked == true)
 		return parentProcess(clientData);
 	INFO("CGI start on socket: " << clientData.socketFd);
@@ -710,7 +712,9 @@ std::string HttpResponse::respond(clientState &clientData) {
 
 	if (clientData.requestLine[1] == "/redirect") {
 		return responseRedirect(clientData);
-	} else if (clientData.requestLine[1].size() > 4 && clientData.requestLine[1].substr(0, 4) == "/cgi") {
+	} else if (clientData.requestLine[1].substr(0, 4) == "/cgi") {
+		if (std::filesystem::is_directory(clientData.serverData.root + clientData.requestLine[1]))
+			return directoryListing(clientData);
 		return processCgi(clientData);
 	} else if (clientData.requestLine[0] == "GET") {
 		return responseGet(clientData);

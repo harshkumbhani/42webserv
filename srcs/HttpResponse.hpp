@@ -80,8 +80,8 @@ class HttpResponse {
 		std::string buildHttpResponse(const std::string& statusLine, const std::string& contentType,
 					const std::string& body, const clientState& clientData);
 
-		bool is_valid_str(const std::string &str);
-		bool is_valid_char(char c);
+		bool isValidStr(const std::string &str);
+		bool isValidChar(char c);
 		bool checkSuffix(const std::string &str, const std::string &suffix);
 
 		bool 		writeToFile(clientState &clientData, const std::string& path, const std::string& content);
