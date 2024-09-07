@@ -1,4 +1,4 @@
-# Webserv Project - 42 School
+# Webserv
 
 ## Overview
 
