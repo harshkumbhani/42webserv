@@ -4,31 +4,6 @@ HttpResponse::HttpResponse() {}
 
 HttpResponse::~HttpResponse() {}
 
-std::string HttpResponse::generateHtml(int code, const std::string& codeMessage) {
-	std::ostringstream stream;
-
-	std::string code_str;
-	std::stringstream ss;
-	ss << code;
-	ss >> code_str;
-
-	stream << "<!DOCTYPE html>"
-		<< "<html lang=\"en\">"
-		<< "<head>"
-		<< "<meta charset=\"UTF-8\">"
-		<< "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
-		<< "<title>Webserv - " << code_str << "</title>"
-		<< "</head>"
-		<< "<body class=\"background\">"
-		<< "<div class=\"error\">" << code_str << " - " << codeMessage << "</div>"
-		<< "<hr>"
-		<< "<button onclick=\"window.history.back()\" class=\"back-button\">Back</button>"
-		<< "</body>"
-		<< "</html>";
-
-	return stream.str();
-}
-
 std::string HttpResponse::metaData(clientState &clientData) {
 	std::string headerMetaData = "";
 	std::map<std::string, std::string>::iterator hd = clientData.header.begin();
@@ -119,59 +94,58 @@ std::string HttpResponse::deleteListing(clientState &clientData) {
 }
 
 std::string HttpResponse::directoryListing(clientState &clientData) {
-    std::string directoryPath = clientData.serverData.root + clientData.requestLine[1];
-    
-    std::ostringstream html;
-    // Adding a dark background style and light-colored text for the directory listing
-    html << "<!DOCTYPE html>\n"
-         << "<html>\n"
-         << "<head>\n"
+	std::string directoryPath = clientData.serverData.root + clientData.requestLine[1];
+	
+	std::ostringstream html;
+	html << "<!DOCTYPE html>\n"
+		 << "<html>\n"
+		 << "<head>\n"
 		 << "<link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css\">\n"
-         << "<title>Directory Listing</title>\n"
-         << "<style>\n"
-         << "  body { background-color: #121212; color: #f5f5f5; font-family: Arial, sans-serif; }\n"
-         << "  table { width: 100%; text-align: left; border-collapse: collapse; }\n"
-         << "  th, td { padding: 10px; border-bottom: 1px solid #333; }\n"
-         << "  a { color: #64b5f6; text-decoration: none; }\n"
-         << "  a:hover { text-decoration: underline; }\n"
-         << "  th { color: #f5f5f5; font-weight: bold; }\n"
-         << "</style>\n"
-         << "</head>\n"
-         << "<body>\n"
-         << "<h2>Directory: " + directoryPath + "</h2>\n"
-         << "<table>\n"
-         << "    <thead>\n"
-         << "        <tr>\n"
-         << "            <th>Icon</th>\n"
-         << "            <th>Name</th>\n"
-         << "        </tr>\n"
-         << "    </thead>\n"
-         << "    <tbody>\n";
+		 << "<title>Directory Listing</title>\n"
+		 << "<style>\n"
+		 << "  body { background-color: #121212; color: #f5f5f5; font-family: Arial, sans-serif; }\n"
+		 << "  table { width: 100%; text-align: left; border-collapse: collapse; }\n"
+		 << "  th, td { padding: 10px; border-bottom: 1px solid #333; }\n"
+		 << "  a { color: #64b5f6; text-decoration: none; }\n"
+		 << "  a:hover { text-decoration: underline; }\n"
+		 << "  th { color: #f5f5f5; font-weight: bold; }\n"
+		 << "</style>\n"
+		 << "</head>\n"
+		 << "<body>\n"
+		 << "<h2>Directory: " + directoryPath + "</h2>\n"
+		 << "<table>\n"
+		 << "	<thead>\n"
+		 << "		<tr>\n"
+		 << "			<th>Icon</th>\n"
+		 << "			<th>Name</th>\n"
+		 << "		</tr>\n"
+		 << "	</thead>\n"
+		 << "	<tbody>\n";
 
-    for (const auto &entry : std::filesystem::directory_iterator(directoryPath)) {
-        const auto &path = entry.path();
-        std::string filename = path.filename().string();
-        // Use FontAwesome icons instead of emojis
+	for (const auto &entry : std::filesystem::directory_iterator(directoryPath)) {
+		const auto &path = entry.path();
+		std::string filename = path.filename().string();
+		// Use FontAwesome icons instead of emojis
 		std::string icon = entry.is_directory() ? "<i class=\"fa-solid fa-folder\" style=\"color: #B197FC;\"></i>" : "<i class=\"fa-solid fa-file\" style=\"color: #babec5;\"></i>";
 
 
-        html << "<tr>\n"
-             << "    <td>" << icon << "</td>\n"
-             << "    <td><a href=\"" << clientData.requestLine[1] + "/" + filename << "\">" << filename << "</a></td>\n"
-             << "</tr>\n";
-    }
+		html << "<tr>\n"
+			 << "	<td>" << icon << "</td>\n"
+			 << "	<td><a href=\"" << clientData.requestLine[1] + "/" + filename << "\">" << filename << "</a></td>\n"
+			 << "</tr>\n";
+	}
 
-    html << "    </tbody>\n"
-         << "</table>\n"
-         << "</body>\n"
-         << "</html>\n";
+	html << "	</tbody>\n"
+		 << "</table>\n"
+		 << "</body>\n"
+		 << "</html>\n";
 
-    _status_line = clientData.requestLine[2] + " 200 OK\r\n";
-    _header = "Content-Type: text/html\r\nContent-Length: " + std::to_string(html.str().size()) + "\r\nConnection: keep-alive\r\n";
-    std::string headerMetaData = metaData(clientData);
-    _header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
-    _response = _status_line + _header + html.str();
-    return _response;
+	_status_line = clientData.requestLine[2] + " 200 OK\r\n";
+	_header = "Content-Type: text/html\r\nContent-Length: " + std::to_string(html.str().size()) + "\r\nConnection: keep-alive\r\n";
+	std::string headerMetaData = metaData(clientData);
+	_header += "Date: " + webserverStamp() + "\r\nServer: Webserv/harsh/oreste/v1.0\r\n" + headerMetaData;
+	_response = _status_line + _header + html.str();
+	return _response;
 }
 
 
@@ -390,7 +364,7 @@ std::string HttpResponse::responsePost(clientState &clientData) {
 
 //================================DELETE=====================================
 std::string HttpResponse::generateErrorPage(int code, const std::string& message) {
-    return R"(
+	return R"(
 <!DOCTYPE html>
 <html lang="en">
 <head>

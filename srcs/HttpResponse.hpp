@@ -61,7 +61,6 @@ class HttpResponse {
 		std::string	webserverStamp(void);
 
 		std::string generateErrorPage(int code, const std::string& message);
-		std::string generateHtml(int code, const std::string& codeMessage);
 		std::string respond(clientState &clientData);
 
 		std::string deleteListing(clientState &clientData);
